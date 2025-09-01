@@ -1,0 +1,222 @@
+# tRPC Router Development Rules
+
+## Project Structure
+
+This project uses a modular tRPC router structure with separation of concerns between API routes and validation schemas.
+
+### Directory Structure
+
+```
+packages/
+├── api/src/router/
+│   └── {entity}/
+│       ├── _router.ts          # Main router aggregator
+│       ├── {action}.route.ts   # Individual route handlers
+│       └── ...
+└── validators/src/router/
+    └── {entity}/
+        ├── {action}.schema.ts  # Zod validation schemas
+        └── ...
+```
+
+## Naming Conventions
+
+### Files and Directories
+
+- **Entity directories**: Use singular form (e.g., `post/`, `organization/`, `profile/`)
+- **Route files**: `{action}.route.ts` (e.g., `create.route.ts`, `byId.route.ts`, `update.route.ts`)
+- **Schema files**: `{action}.schema.ts` (e.g., `create.schema.ts`, `byId.schema.ts`, `delete.schema.ts`)
+- **Router aggregator**: Always named `_router.ts`
+
+### Variables and Exports
+
+- **Schema exports**: `Z{Entity}{Action}Schema` (e.g., `ZPostCreateSchema`, `ZOrganizationUpdateSchema`)
+- **Type exports**: `T{Entity}{Action}Schema` (e.g., `TPostCreateSchema`, `TOrganizationUpdateSchema`)
+- **Route exports**: Use descriptive action names (e.g., `create`, `byId`, `deletePost`, `uploadLogo`)
+- **Router exports**: `{entity}Router` (e.g., `postRouter`, `organizationRouter`)
+
+### Schema Field Naming
+
+- Use descriptive field names with entity prefix for IDs: `postId`, `organizationId`, `profileId`
+- Avoid generic names like `id` in input schemas
+
+## File Templates
+
+### Schema Template (`{action}.schema.ts`)
+
+```typescript
+import { z } from "zod/v4"
+
+export const Z{Entity}{Action}Schema = z.object({
+  // Define your schema fields here
+})
+
+export type T{Entity}{Action}Schema = z.infer<typeof Z{Entity}{Action}Schema>
+```
+
+### Route Template (`{action}.route.ts`)
+
+```typescript
+import { Z{Entity}{Action}Schema } from "@acme/validators"
+
+import { {procedureType} } from "../../trpc"
+
+export const {actionName} = {procedureType}.input(Z{Entity}{Action}Schema).{method}(async ({ ctx, input }) => {
+  // Implementation here
+  return result
+})
+```
+
+### Router Aggregator Template (`_router.ts`)
+
+```typescript
+import type { TRPCRouterRecord } from "@trpc/server"
+
+import { action1 } from "./action1.route"
+import { action2 } from "./action2.route"
+// ... other imports
+
+export const {entity}Router = {
+  action1: action1,
+  action2: action2,
+  // ... other routes
+} satisfies TRPCRouterRecord
+```
+
+## Validation Rules
+
+### Schema Design
+
+- Always use Zod v4: `import { z } from "zod/v4"`
+- Prefer objects over primitives for input schemas (even for single values)
+- Use descriptive field names with entity context
+- Export both schema and TypeScript type
+
+### Examples
+
+```typescript
+// ✅ Good - descriptive field name
+export const ZPostByIdSchema = z.object({
+  postId: z.string(),
+})
+
+// ❌ Bad - generic field name
+export const ZPostByIdSchema = z.object({
+  id: z.string(),
+})
+
+// ✅ Good - object for consistency
+export const ZPostDeleteSchema = z.object({
+  postId: z.string(),
+})
+
+// ❌ Bad - primitive type
+export const ZPostDeleteSchema = z.string()
+```
+
+## Procedure Types
+
+### Available Procedures
+
+- `publicProcedure`: No authentication required
+- `userProcedure`: Requires user authentication
+- `profileProcedure`: Requires user with profile
+- `organizationProcedure`: Requires user with profile and organization membership (automatically includes `organizationId` input)
+
+### Method Types
+
+- `.query()`: For read operations (GET-like)
+- `.mutation()`: For write operations (POST/PUT/DELETE-like)
+
+## Export Management
+
+### Validators Package (`packages/validators/src/index.ts`)
+
+Always export new schemas in alphabetical order by entity, then by action:
+
+```typescript
+// Organization schemas
+export * from "./router/organization/create.schema"
+export * from "./router/organization/update.schema"
+export * from "./router/organization/upload-logo.schema"
+
+// Post schemas
+export * from "./router/post/byId.schema"
+export * from "./router/post/create.schema"
+export * from "./router/post/delete.schema"
+
+// Profile schemas
+export * from "./router/profile/create.schema"
+```
+
+### Main Router (`packages/api/src/root.ts`)
+
+Import routers from their `_router.ts` files:
+
+```typescript
+import { organizationRouter } from "./router/organization/_router"
+import { postRouter } from "./router/post/_router"
+```
+
+## Common Patterns
+
+### Entity CRUD Operations
+
+For a typical entity, create these routes:
+
+- `all.route.ts` - Get all entities (usually public)
+- `byId.route.ts` - Get single entity by ID (usually public)
+- `create.route.ts` - Create new entity (usually requires auth)
+- `update.route.ts` - Update existing entity (usually requires auth)
+- `delete.route.ts` - Delete entity (usually requires auth)
+
+### Special Operations
+
+- Use descriptive names: `uploadLogo.route.ts`, `changePassword.route.ts`
+- Avoid conflicts with reserved words: use `deletePost` instead of `delete` for exports
+
+## Error Handling
+
+### Validation Errors
+
+Let Zod handle validation errors automatically through tRPC integration.
+
+### Custom Errors
+
+Use tRPC error codes:
+
+```typescript
+import { TRPCError } from "@trpc/server"
+
+throw new TRPCError({
+  code: "NOT_FOUND",
+  message: "Post not found",
+})
+```
+
+## Development Workflow
+
+1. **Create Schema First**: Define validation in `validators` package
+2. **Implement Route**: Create route handler in `api` package
+3. **Update Aggregator**: Add route to `_router.ts`
+4. **Export Schema**: Add to `validators/src/index.ts`
+5. **Test**: Ensure no linting errors and functionality works
+
+## Best Practices
+
+- **Separation of Concerns**: Keep validation separate from business logic
+- **Consistency**: Follow established naming patterns exactly
+- **Type Safety**: Always export TypeScript types from schemas
+- **Modularity**: One route per file for maintainability
+- **Documentation**: Use descriptive names that explain the operation
+- **Validation**: Validate all inputs, even simple ones, for consistency
+
+## Anti-Patterns to Avoid
+
+- ❌ Putting multiple routes in a single file
+- ❌ Inline Zod schemas in route files
+- ❌ Using generic field names like `id` without entity context
+- ❌ Missing TypeScript type exports
+- ❌ Inconsistent naming conventions
+- ❌ Forgetting to update the main router imports
+- ❌ Not exporting schemas from validators index
