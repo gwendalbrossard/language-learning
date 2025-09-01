@@ -5,6 +5,7 @@ model Profile {
   avatar   String?
   timezone String /// IANA timezone identifier (e.g., "America/New_York", "Europe/London", "Asia/Tokyo"). All our dates are stored in UTC so we'll need to convert to the user's timezone when needed.
 
+  metadata            Json    @default("{}")
   completedOnboarding Boolean @default(false)
 
   createdAt DateTime @default(now())
