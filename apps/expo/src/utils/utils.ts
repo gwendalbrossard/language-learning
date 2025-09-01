@@ -1,9 +1,9 @@
 import type { ClassValue } from "clsx"
-import type { LucideIcon } from "lucide-react"
+import type { LucideIcon } from "lucide-react-native"
 import type { PressableStateCallbackType } from "react-native"
 import type { SvgProps } from "react-native-svg"
 import { clsx } from "clsx"
-import * as LucideIcons from "lucide-react"
+import * as LucideIcons from "lucide-react-native"
 import { cssInterop } from "nativewind"
 import { twMerge } from "tailwind-merge"
 
