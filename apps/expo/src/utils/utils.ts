@@ -38,5 +38,8 @@ export const interopAllLucideIcons = () => {
 }
 
 export const prefetchMain = async () => {
-  await Promise.all([queryClient.prefetchQuery(trpc.profile.me.queryOptions())])
+  await Promise.all([
+    queryClient.prefetchQuery(trpc.profile.me.queryOptions()),
+    queryClient.prefetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
+  ])
 }
