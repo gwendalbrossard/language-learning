@@ -2,13 +2,15 @@ import { authRouter } from "./router/auth/_router"
 import { organizationRouter } from "./router/organization/_router"
 import { postRouter } from "./router/post/_router"
 import { profileRouter } from "./router/profile/_router"
+import { userRouter } from "./router/user/_router"
 import { createCallerFactory, createTRPCRouter } from "./trpc"
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   post: postRouter,
-  profile: profileRouter,
   organization: organizationRouter,
+  profile: profileRouter,
+  user: userRouter,
 })
 
 // export type definition of API

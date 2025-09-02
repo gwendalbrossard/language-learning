@@ -7,6 +7,10 @@ export const profileSelect = Prisma.validator<Prisma.ProfileSelect>()({
   name: true,
   timezone: true,
   completedOnboarding: true,
+  currentStreak: true,
+  longestStreak: true,
+  revenueCatCustomer: true,
+  createdAt: true,
 })
 
 export type ProfileSelected = Prisma.ProfileGetPayload<{ select: typeof profileSelect }>

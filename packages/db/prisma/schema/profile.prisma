@@ -5,8 +5,12 @@ model Profile {
   avatar   String?
   timezone String /// IANA timezone identifier (e.g., "America/New_York", "Europe/London", "Asia/Tokyo"). All our dates are stored in UTC so we'll need to convert to the user's timezone when needed.
 
-  metadata            Json    @default("{}")
+  currentStreak       Int     @default(0)
+  longestStreak       Int     @default(0)
   completedOnboarding Boolean @default(false)
+
+  metadata           Json  @default("{}")
+  revenueCatCustomer Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -16,6 +20,7 @@ model Profile {
 
   members     Member[]
   invitations Invitation[]
+  streakDays  StreakDay[]
 
   @@map("profile")
 }

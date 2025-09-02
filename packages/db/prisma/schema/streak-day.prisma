@@ -1,0 +1,16 @@
+model StreakDay {
+  id   String   @id @default(cuid())
+  date DateTime @db.Timestamptz // Store date with timezone information. Beginning of the day.
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, date]) // Ensure one entry per day per profile
+  @@index([profileId, date])
+  @@index([profileId])
+  @@index([date])
+  @@map("streak_day")
+}
