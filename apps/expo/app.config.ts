@@ -46,6 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-web-browser",
+    ["expo-apple-authentication"],
     [
       "expo-splash-screen",
       {
@@ -60,6 +61,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         iosUrlScheme: "com.googleusercontent.apps.253659385011-etsd109cgtifr93hapbodc00f73td2b7",
       },
     ],
-    ["expo-apple-authentication"],
+    [
+      "expo-av",
+      {
+        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone to speak to our AI.",
+      },
+    ],
   ],
 })
