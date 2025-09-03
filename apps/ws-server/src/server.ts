@@ -29,7 +29,8 @@ io.on("connection", (socket) => {
 
   client.updateSession({
     instructions: "You are a helpful, english speaking assistant.",
-    voice: "alloy",
+    model: "gpt-4o-mini-realtime-preview",
+    voice: "ballad",
     turn_detection: null, // Disable server VAD since we're using manual recording
     input_audio_format: "pcm16", // Set input audio format
     output_audio_format: "pcm16", // Set output audio format
