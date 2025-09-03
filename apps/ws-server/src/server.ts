@@ -6,6 +6,7 @@ import express from "express"
 import { Server } from "socket.io"
 
 import { env } from "./env.server"
+import { EventHandlerResult, Realtime } from "./types"
 
 // Express setup
 const app = express()
@@ -24,7 +25,6 @@ app.get("/", (req, res) => {
 
 // Socket.io setup
 io.on("connection", (socket) => {
-  console.log("Client connected")
   const client = new RealtimeClient({ apiKey: env.OPENAI_API_KEY })
 
   client.updateSession({
@@ -41,13 +41,16 @@ io.on("connection", (socket) => {
     socket.emit("error", "Failed to connect to OpenAI API.")
   })
 
-  client.on("error", (error) => {
+  client.on("error", (error: Realtime.Error) => {
     console.error("Realtime API error:", error)
   })
 
   // Handle conversation updates for transcription and audio
-  client.on("conversation.updated", (event) => {
+  client.on("conversation.updated", (event: EventHandlerResult) => {
     const { item, delta } = event
+    if (!item) throw new Error("No item found")
+    if (!item.formatted) throw new Error("No formatted item found")
+
     console.log(`Conversation updated - Role: ${item.role}, Status: ${item.status}, Type: ${item.type}`)
 
     // Handle user input (partial or complete transcription)
@@ -90,8 +93,13 @@ io.on("connection", (socket) => {
     }
   })
 
+  // Handle conversation interruption
+  client.on("conversation.interrupted", async () => {
+    socket.emit("conversationInterrupted")
+  })
+
   // Handle complete audio data from the client
-  socket.on("completeAudio", async (audioBuffer) => {
+  socket.on("completeAudio", async (audioBuffer: ArrayBuffer) => {
     if (audioBuffer) {
       try {
         // Convert ArrayBuffer to base64 for the WebSocket API
@@ -118,11 +126,6 @@ io.on("connection", (socket) => {
         console.error("Error processing complete audio:", error)
       }
     }
-  })
-
-  // Handle conversation interruption
-  client.on("conversation.interrupted", async () => {
-    socket.emit("conversationInterrupted")
   })
 
   // Handle cancel response requests from the client
