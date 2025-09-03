@@ -104,7 +104,7 @@ const Main: FC = () => {
         <View className="flex flex-col gap-6">
           <Streak />
 
-          <Button.Root variant="primary" onPress={() => router.push("/record")}>
+          <Button.Root variant="primary" onPress={() => router.push("/record-test")}>
             <Button.Text>Record</Button.Text>
           </Button.Root>
         </View>

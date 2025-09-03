@@ -74,6 +74,7 @@
     "react-native-screens": "~4.15.4",
     "react-native-svg": "^15.12.1",
     "rive-react-native": "^9.5.0",
+    "socket.io-client": "^4.8.1",
     "superjson": "2.2.2",
     "zustand": "^5.0.8"
   },
