@@ -1,3 +1,5 @@
+// https://github.com/transitive-bullshit/openai-realtime-api/blob/main/src/types.ts
+
 export namespace Realtime {
   export type AudioFormat = "pcm16" | "g711_ulaw" | "g711_alaw"
   export type AudioTranscriptionModel = "whisper-1" | (string & {})
