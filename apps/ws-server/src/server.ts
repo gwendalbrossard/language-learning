@@ -106,8 +106,8 @@ io.on("connection", (socket) => {
     if (item.role === "user" && item.formatted.transcript) {
       console.log(`User transcript: ${item.formatted.transcript}`)
       socket.emit("displayUserMessage", {
+        id: item.id,
         text: item.formatted.transcript,
-        isFinal: item.status === "completed",
       })
 
       // Check grammar when transcript is final
@@ -125,8 +125,7 @@ io.on("connection", (socket) => {
           console.log(`Grammar correction found for: "${transcript}"`)
           console.log(`Corrected text: "${grammarResult.correction.correctedText}"`)
           socket.emit("grammarCorrection", {
-            original: transcript,
-            hasError: grammarResult.hasError,
+            messageId: item.id,
             correction: grammarResult.correction,
           })
         }
@@ -135,15 +134,15 @@ io.on("connection", (socket) => {
       // Emit placeholder while waiting for transcript if audio is present
       console.log("User audio received, awaiting transcript")
       socket.emit("displayUserMessage", {
+        id: item.id,
         text: "(awaiting transcript)",
-        isFinal: false,
       })
     } else if (item.role === "user" && !item.formatted.transcript) {
       // Fallback in case neither transcript nor audio is present
       console.log("User item sent without transcript")
       socket.emit("displayUserMessage", {
+        id: item.id,
         text: "(item sent)",
-        isFinal: true,
       })
     }
 
@@ -151,8 +150,8 @@ io.on("connection", (socket) => {
     if (item.role !== "user" && item.formatted.transcript) {
       console.log(`Assistant transcript: ${item.formatted.transcript}`)
       socket.emit("conversationUpdate", {
+        id: item.id,
         text: item.formatted.transcript,
-        isFinal: item.status === "completed",
       })
     }
 

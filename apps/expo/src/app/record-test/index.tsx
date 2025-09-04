@@ -10,30 +10,22 @@ import { io } from "socket.io-client"
 
 import { Text } from "~/ui/text"
 
-interface GrammarCorrection {
-  original: string
-  hasError: boolean
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  transcript: string
   correction?: {
     correctedText: string
     explanation: string
   }
 }
 
-interface Message {
-  id: string
-  text: string
-  sender: "user" | "bot"
-  isFinal: boolean
-  grammarCorrection?: GrammarCorrection
-}
-
 const RecordTest: FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! How can I assist you today?",
-      sender: "bot",
-      isFinal: true,
+      role: "assistant",
+      transcript: "Hello! How can I assist you today?",
     },
   ])
   const [userInput, setUserInput] = useState("")
@@ -46,8 +38,6 @@ const RecordTest: FC = () => {
   const recordingRef = useRef<Audio.Recording | null>(null)
   const soundRef = useRef<Audio.Sound | null>(null)
   const scrollViewRef = useRef<ScrollView>(null)
-  const currentUserMessageRef = useRef<string | null>(null)
-  const currentBotMessageRef = useRef<string | null>(null)
   const sentUserMessageRef = useRef<string | null>(null)
 
   const initializeSocket = useCallback((): void => {
@@ -58,19 +48,12 @@ const RecordTest: FC = () => {
       console.log("Connected to server")
     })
 
-    socketRef.current.on("displayUserMessage", ({ text, isFinal }: { text: string; isFinal: boolean }) => {
-      displayUserMessage(text, isFinal)
+    socketRef.current.on("displayUserMessage", ({ id, text }: { id: string; text: string }) => {
+      displayUserMessage(id, text)
     })
 
-    socketRef.current.on("conversationUpdate", ({ text, isFinal }: { text: string; isFinal: boolean }) => {
-      updateBotMessage(text, isFinal)
-
-      if (isFinal) {
-        setTimeout(() => {
-          setIsPlayingAudio(false)
-          console.log("Audio playback completed")
-        }, 1000)
-      }
+    socketRef.current.on("conversationUpdate", ({ id, text }: { id: string; text: string }) => {
+      updateBotMessage(id, text)
     })
 
     socketRef.current.on("audioStream", async (arrayBuffer: ArrayBuffer, id: string) => {
@@ -88,8 +71,8 @@ const RecordTest: FC = () => {
       void interruptAudio()
     })
 
-    socketRef.current.on("grammarCorrection", (correction: GrammarCorrection) => {
-      addGrammarCorrectionToLastUserMessage(correction)
+    socketRef.current.on("grammarCorrection", (data: { messageId: string; correction?: { correctedText: string; explanation: string } }) => {
+      addGrammarCorrectionToMessage(data)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -147,62 +130,76 @@ const RecordTest: FC = () => {
     }
   }
 
-  const displayUserMessage = (text: string, isFinal = false) => {
-    if (!currentUserMessageRef.current) {
-      const messageId = Date.now().toString()
-      currentUserMessageRef.current = messageId
+  const displayUserMessage = (id: string, transcript: string) => {
+    setMessages((prev) => {
+      // Check if message already exists
+      const existingIndex = prev.findIndex((msg) => msg.id === id)
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          text: `You: ${text}`,
-          sender: "user",
-          isFinal,
-        },
-      ])
-    } else {
-      setMessages((prev) => prev.map((msg) => (msg.id === currentUserMessageRef.current ? { ...msg, text: `You: ${text}`, isFinal } : msg)))
-    }
+      if (existingIndex >= 0) {
+        // Update existing message
+        const updated = [...prev]
+        const existingMessage = updated[existingIndex]
+        if (existingMessage) {
+          updated[existingIndex] = {
+            ...existingMessage,
+            transcript,
+          }
+        }
+        return updated
+      } else {
+        // Create new message
+        return [
+          ...prev,
+          {
+            id,
+            role: "user",
+            transcript,
+          },
+        ]
+      }
+    })
 
     // Handle typed messages
-    if (sentUserMessageRef.current && text === "(item sent)") {
+    if (sentUserMessageRef.current && transcript === "(item sent)") {
       const sentMessage = sentUserMessageRef.current
       sentUserMessageRef.current = null
 
-      setMessages((prev) => prev.map((msg) => (msg.id === currentUserMessageRef.current ? { ...msg, text: `You: ${sentMessage}` } : msg)))
+      setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, transcript: sentMessage } : msg)))
     }
 
     scrollToBottom()
-
-    if (isFinal) {
-      currentUserMessageRef.current = null
-    }
   }
 
-  const updateBotMessage = (newText: string, isFinal = false) => {
-    if (!currentBotMessageRef.current) {
-      const messageId = Date.now().toString()
-      currentBotMessageRef.current = messageId
+  const updateBotMessage = (id: string, transcript: string) => {
+    setMessages((prev) => {
+      // Check if message already exists
+      const existingIndex = prev.findIndex((msg) => msg.id === id)
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: messageId,
-          text: `Assistant: ${newText}`,
-          sender: "bot",
-          isFinal,
-        },
-      ])
-    } else {
-      setMessages((prev) => prev.map((msg) => (msg.id === currentBotMessageRef.current ? { ...msg, text: `Assistant: ${newText}`, isFinal } : msg)))
-    }
+      if (existingIndex >= 0) {
+        // Update existing message
+        const updated = [...prev]
+        const existingMessage = updated[existingIndex]
+        if (existingMessage) {
+          updated[existingIndex] = {
+            ...existingMessage,
+            transcript,
+          }
+        }
+        return updated
+      } else {
+        // Create new message
+        return [
+          ...prev,
+          {
+            id,
+            role: "assistant",
+            transcript,
+          },
+        ]
+      }
+    })
 
     scrollToBottom()
-
-    if (isFinal) {
-      currentBotMessageRef.current = null
-    }
   }
 
   const scrollToBottom = () => {
@@ -211,19 +208,18 @@ const RecordTest: FC = () => {
     }, 100)
   }
 
-  const addGrammarCorrectionToLastUserMessage = (correction: GrammarCorrection) => {
+  const addGrammarCorrectionToMessage = (data: { messageId: string; correction?: { correctedText: string; explanation: string } }) => {
     setMessages((prev) => {
-      // Find the last user message
-      const lastUserMessageIndex = [...prev].reverse().findIndex((msg) => msg.sender === "user")
-      if (lastUserMessageIndex === -1) return prev
+      // Find the message by ID
+      const messageIndex = prev.findIndex((msg) => msg.id === data.messageId)
+      if (messageIndex === -1) return prev
 
-      const actualIndex = prev.length - 1 - lastUserMessageIndex
       const updatedMessages = [...prev]
-      const currentMessage = updatedMessages[actualIndex]
+      const currentMessage = updatedMessages[messageIndex]
       if (currentMessage) {
-        updatedMessages[actualIndex] = {
+        updatedMessages[messageIndex] = {
           ...currentMessage,
-          grammarCorrection: correction,
+          correction: data.correction,
         }
       }
 
@@ -242,7 +238,7 @@ const RecordTest: FC = () => {
         setRecordedAudioUri(null)
 
         // Add visual feedback for recording
-        displayUserMessage("🎤 Recording...", false)
+        displayUserMessage(`recording-${Date.now()}`, "🎤 Recording...")
 
         console.log("Requesting microphone access...")
 
@@ -284,7 +280,7 @@ const RecordTest: FC = () => {
       } catch (error) {
         console.error("Error starting recording:", error)
         setIsRecording(false)
-        displayUserMessage("❌ Failed to start recording. Please check microphone permissions.", true)
+        displayUserMessage(`error-${Date.now()}`, "❌ Failed to start recording. Please check microphone permissions.")
         Alert.alert("Error", "Failed to start recording. Please check microphone permissions.")
       }
     }
@@ -327,9 +323,6 @@ const RecordTest: FC = () => {
           recordingRef.current = null
         }
 
-        // Update UI to show processing
-        displayUserMessage("🔄 Processing audio...", false)
-
         if (uri) {
           setRecordedAudioUri(uri)
           console.log("Audio recorded at:", uri)
@@ -345,20 +338,20 @@ const RecordTest: FC = () => {
             }
 
             // Update UI to show audio was sent
-            displayUserMessage("🎵 Audio sent, waiting for response...", true)
+            displayUserMessage(`sent-${Date.now()}`, "🎵 Audio sent, waiting for response...")
           } else {
             console.warn("No audio data in recorded file")
-            displayUserMessage("⚠️ No audio data in recorded file", true)
+            displayUserMessage(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
           }
         } else {
           console.warn("No audio file was created")
-          displayUserMessage("⚠️ No audio recorded - check microphone permissions and try speaking", true)
+          displayUserMessage(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
         }
 
         console.log("Stopped recording and sent complete audio")
       } catch (error) {
         console.error("Failed to stop recording:", error)
-        displayUserMessage("❌ Error stopping recording", true)
+        displayUserMessage(`error-${Date.now()}`, "❌ Error stopping recording")
       }
     }
   }
@@ -411,23 +404,23 @@ const RecordTest: FC = () => {
           {messages.map((message) => (
             <View key={message.id} className="mb-3">
               <View
-                className={`rounded-lg p-3 ${message.sender === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"}`}
+                className={`rounded-lg p-3 ${message.role === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"}`}
               >
-                <Text className={`${message.sender === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.text}</Text>
+                <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
               </View>
 
               {/* Grammar correction display */}
-              {message.grammarCorrection && message.grammarCorrection.hasError && message.grammarCorrection.correction && (
+              {message.correction && (
                 <View className="mt-2 max-w-[80%] self-end rounded-lg border border-green-200 bg-green-50 p-3">
                   <Text className="mb-2 text-sm font-semibold text-green-800">✨ Grammar Suggestion</Text>
                   <View className="mb-2">
                     <Text className="text-sm text-green-700">Corrected: </Text>
-                    <Text className="text-sm font-medium text-green-800">"{message.grammarCorrection.correction.correctedText}"</Text>
+                    <Text className="text-sm font-medium text-green-800">"{message.correction.correctedText}"</Text>
                   </View>
 
                   <View>
                     <Text className="mb-1 text-xs font-semibold text-green-700">Explanation:</Text>
-                    <Text className="text-xs text-green-600 italic">{message.grammarCorrection.correction.explanation}</Text>
+                    <Text className="text-xs text-green-600 italic">{message.correction.explanation}</Text>
                   </View>
                 </View>
               )}
