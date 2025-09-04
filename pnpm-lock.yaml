@@ -416,6 +416,9 @@ importers:
 
   apps/ws-server:
     dependencies:
+      '@ai-sdk/azure':
+        specifier: ^2.0.23
+        version: 2.0.23(zod@4.1.5)
       '@ai-sdk/openai':
         specifier: ^2.0.23
         version: 2.0.23(zod@4.1.5)
@@ -829,6 +832,12 @@ packages:
     peerDependenciesMeta:
       graphql:
         optional: true
+
+  '@ai-sdk/azure@2.0.23':
+    resolution: {integrity: sha512-+Epq/QF8B8E1xD+dT4LsJ6FF2rHPqSEbWDLjqnzuoj5nRXLK0LSFQIQ8/zNAl9Sg3xud4FT3KaUtbz595JKAVQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/gateway@1.0.15':
     resolution: {integrity: sha512-xySXoQ29+KbGuGfmDnABx+O6vc7Gj7qugmj1kGpn0rW0rQNn6UKUuvscKMzWyv1Uv05GyC1vqHq8ZhEOLfXscQ==}
@@ -8807,6 +8816,13 @@ packages:
 snapshots:
 
   '@0no-co/graphql.web@1.2.0': {}
+
+  '@ai-sdk/azure@2.0.23(zod@4.1.5)':
+    dependencies:
+      '@ai-sdk/openai': 2.0.23(zod@4.1.5)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.7(zod@4.1.5)
+      zod: 4.1.5
 
   '@ai-sdk/gateway@1.0.15(zod@4.1.5)':
     dependencies:

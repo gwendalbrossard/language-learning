@@ -1,6 +1,7 @@
 // server.js
 
 import http from "http"
+import { azure } from "@ai-sdk/azure"
 import { openai } from "@ai-sdk/openai"
 import { RealtimeClient } from "@openai/realtime-api-beta"
 import { generateObject } from "ai"
@@ -17,54 +18,99 @@ const server = http.createServer(app)
 const io = new Server(server)
 
 // OpenAI model configuration for grammar checking
-const openaiModel = openai("gpt-4o-mini")
+const azureOpenaiModel = azure("gpt-4o-mini")
 
-// Grammar correction schema for structured output
-const ZGrammarCorrectionSchema = z.object({
-  hasError: z.boolean().describe("Whether the text contains grammar mistakes or could be improved"),
-  correction: z
-    .object({
-      correctedText: z.string().describe("The corrected version of the text"),
-      explanation: z.string().describe("Brief explanation of the correction (should be short)"),
-    })
-    .optional()
-    .describe("Correction details if hasError is true"),
+// Comprehensive language analysis schema combining grammar and detailed feedback
+const ZLanguageAnalysisSchema = z.object({
+  // Basic feedback (similar to getFeedback)
+  quality: z.number().min(1).max(100).describe("Overall correctness score from 1-100"),
+  message: z
+    .string()
+    .describe("Friendly, constructive feedback message focusing on specific improvements needed, in markdown format in the user's native language"),
+  correctedPhrase: z.string().describe("The fully corrected version of the user's message"),
+  corrections: z
+    .array(
+      z.object({
+        wrong: z.string().describe("The incorrect part from the original message"),
+        correct: z.string().describe("The corrected version of that part, extracted from the correctedPhrase"),
+        explanation: z.string().describe("Short explanation for the correction"),
+      }),
+    )
+    .describe("Array of wrong/correct pairs for highlighting corrections on the frontend"),
+
+  // Detailed scoring (similar to getMessageScore)
+  accuracy: z.object({
+    score: z.number().min(1).max(100),
+    message: z.string().describe("Helpful, supportive feedback about grammar and accuracy issues in the user's native language"),
+  }),
+  fluency: z.object({
+    score: z.number().min(1).max(100),
+    message: z.string().describe("Friendly feedback about naturalness and fluency in the user's native language"),
+  }),
+  vocabulary: z.object({
+    score: z.number().min(1).max(100),
+    message: z.string().describe("Supportive feedback about vocabulary choices and usage in the user's native language"),
+  }),
+  detailedFeedback: z
+    .string()
+    .describe(
+      "Concise, supportive analysis (maximum 3 sentences) focusing on main language patterns and key improvement areas in the user's native language",
+    ),
 })
 
-// Grammar checking function
-async function checkGrammar(text: string, learningLanguage: string, userLanguage: string) {
+// Comprehensive language analysis function combining grammar checking and detailed feedback
+async function analyzeLanguage(text: string, learningLanguage: string, userLanguage: string, previousContext?: string, difficulty = "A1") {
   const { object } = await generateObject({
-    model: openaiModel,
-    schemaName: "grammar-correction",
-    schema: ZGrammarCorrectionSchema,
-    prompt: `You are a helpful language tutor assisting someone learning a language with ISO code ${learningLanguage}. 
+    model: azureOpenaiModel,
+    schemaName: "language-analysis",
+    schema: ZLanguageAnalysisSchema,
+    prompt: `You are an expert language tutor providing comprehensive analysis for someone learning ${learningLanguage} (their native language is ${userLanguage}).
 
-IMPORTANT CONTEXT:
-- The user is learning a language with ISO code ${learningLanguage} and their native language has ISO code ${userLanguage}
-- This text comes from an audio transcript, so ignore punctuation issues, capitalization problems, or unclear words that might be transcription errors
-- Focus ONLY on actual grammar, vocabulary, and sentence structure mistakes that a language learner would make
-- Provide your analysis and explanations in the language with ISO code ${userLanguage}
+CRITICAL: ALL feedback messages, explanations, and detailed feedback MUST be written in ${userLanguage} (the user's native language).
 
-WHAT TO CORRECT:
-✅ Grammar mistakes (verb tenses, subject-verb agreement, etc.)
-✅ Wrong word choices or vocabulary errors
-✅ Sentence structure issues
-✅ Unnatural phrasing that native speakers wouldn't use
+LEARNER PROFILE:
+- Learning language: ${learningLanguage} (ISO code)
+- Native language: ${userLanguage} (ISO code)
+- Difficulty level: ${difficulty} (CEFR)
+- Text source: Audio transcript (ignore minor transcription artifacts)
 
-WHAT NOT TO CORRECT:
-❌ Missing punctuation or capitalization (transcript artifacts)
-❌ Filler words like "um", "uh", "like" (natural in speech)
-❌ Minor transcription errors or unclear words
-❌ Informal speech patterns that are actually correct in spoken language
+CONTEXT:
+${previousContext ? `Previous conversation context: ${previousContext}` : "No previous context available"}
 
-Text to analyze: "${text}"
+TEXT TO ANALYZE: "${text}"
 
-Be encouraging and focus on helping the learner improve their language skills. 
+ANALYSIS REQUIREMENTS:
 
-RESPONSE FORMAT:
-- Set hasError to true if corrections are needed, false if the text is already correct
-- If hasError is true, provide the correction object with correctedText and a short explanation
-- If hasError is false, omit the correction object`,
+1. OVERALL QUALITY (1-100): Evaluate overall correctness and appropriateness
+2. DIRECT MESSAGE: Provide specific, actionable feedback in markdown format with a friendly and supportive tone. Focus on the main issues that need attention while being constructive and helpful. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${userLanguage})
+3. CORRECTIONS ARRAY: For each mistake, provide:
+   - "wrong": the incorrect part from the original text
+   - "correct": the corrected version of that part
+   - "explanation": a clear, concise explanation for the correction
+   Example: { "wrong": "Je appelle", "correct": "Je m'appelle" }
+
+4. DETAILED SCORING (all messages in ${userLanguage}):
+   - ACCURACY (1-100): Grammar, syntax, word choice correctness - provide helpful guidance on specific issues found
+   - FLUENCY (1-100): How natural and smooth the expression sounds - offer friendly suggestions for improvement
+   - VOCABULARY (1-100): Appropriateness and variety of word choices - suggest alternatives in a supportive way
+
+5. CORRECTED PHRASE: Provide the complete corrected version
+6. DETAILED FEEDBACK: Concise, friendly summary (maximum 3 sentences) focusing on the main language patterns and key improvement areas. Use a supportive tone while providing technical guidance (in ${userLanguage})
+
+FOCUS AREAS:
+✅ Grammar mistakes (tenses, agreement, structure)
+✅ Vocabulary errors or unnatural word choices  
+✅ Sentence structure and flow issues
+✅ Appropriateness for the difficulty level
+✅ Natural expression vs. literal translation
+
+IGNORE:
+❌ Punctuation/capitalization (transcript artifacts)
+❌ Filler words ("um", "uh", "like")
+❌ Minor transcription errors
+❌ Acceptable informal speech patterns
+
+TONE: Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve through constructive guidance. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${userLanguage}.`,
     temperature: 0.3,
   })
 
@@ -120,15 +166,30 @@ io.on("connection", (socket) => {
           userLanguage: "EN",
         }
 
-        const grammarResult = await checkGrammar(transcript, userLanguagePreferences.learningLanguage, userLanguagePreferences.userLanguage)
-        if (grammarResult.hasError && grammarResult.correction) {
-          console.log(`Grammar correction found for: "${transcript}"`)
-          console.log(`Corrected text: "${grammarResult.correction.correctedText}"`)
-          socket.emit("grammarCorrection", {
-            messageId: item.id,
-            correction: grammarResult.correction,
-          })
-        }
+        const analysisStartTime = performance.now()
+
+        const analysisResult = await analyzeLanguage(
+          transcript,
+          userLanguagePreferences.learningLanguage,
+          userLanguagePreferences.userLanguage,
+          undefined, // TODO: Add previous context when available
+          "A1", // TODO: Get user's actual difficulty level
+        )
+
+        const analysisEndTime = performance.now()
+        const analysisDuration = Math.round(analysisEndTime - analysisStartTime)
+
+        console.log(`Language analysis completed for: "${transcript}"`)
+        console.log(`Analysis took: ${analysisDuration}ms`)
+
+        console.log(analysisResult)
+
+        // Emit comprehensive analysis result
+        socket.emit("languageAnalysis", {
+          messageId: item.id,
+          analysis: analysisResult,
+          analysisDuration,
+        })
       }
     } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
       // Emit placeholder while waiting for transcript if audio is present
