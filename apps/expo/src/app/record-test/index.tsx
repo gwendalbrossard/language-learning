@@ -1,6 +1,6 @@
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
 import { Mic, Send, Square } from "lucide-react-native"
@@ -10,11 +10,21 @@ import { io } from "socket.io-client"
 
 import { Text } from "~/ui/text"
 
+interface GrammarCorrection {
+  original: string
+  hasError: boolean
+  correction?: {
+    correctedText: string
+    explanation: string
+  }
+}
+
 interface Message {
   id: string
   text: string
   sender: "user" | "bot"
   isFinal: boolean
+  grammarCorrection?: GrammarCorrection
 }
 
 const RecordTest: FC = () => {
@@ -30,7 +40,7 @@ const RecordTest: FC = () => {
   const [isRecording, setIsRecording] = useState(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
   const [audioInitialized, setAudioInitialized] = useState(false)
-  const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
+  const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
@@ -40,7 +50,7 @@ const RecordTest: FC = () => {
   const currentBotMessageRef = useRef<string | null>(null)
   const sentUserMessageRef = useRef<string | null>(null)
 
-  const initializeSocket = (): void => {
+  const initializeSocket = useCallback((): void => {
     // Replace with your server URL
     socketRef.current = io("http://localhost:3002")
 
@@ -77,7 +87,12 @@ const RecordTest: FC = () => {
     socketRef.current.on("conversationInterrupted", () => {
       void interruptAudio()
     })
-  }
+
+    socketRef.current.on("grammarCorrection", (correction: GrammarCorrection) => {
+      addGrammarCorrectionToLastUserMessage(correction)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     initializeSocket()
@@ -94,7 +109,7 @@ const RecordTest: FC = () => {
         void soundRef.current.unloadAsync()
       }
     }
-  }, [])
+  }, [initializeSocket])
 
   const initializeAudio = async (): Promise<void> => {
     try {
@@ -194,6 +209,28 @@ const RecordTest: FC = () => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true })
     }, 100)
+  }
+
+  const addGrammarCorrectionToLastUserMessage = (correction: GrammarCorrection) => {
+    setMessages((prev) => {
+      // Find the last user message
+      const lastUserMessageIndex = [...prev].reverse().findIndex((msg) => msg.sender === "user")
+      if (lastUserMessageIndex === -1) return prev
+
+      const actualIndex = prev.length - 1 - lastUserMessageIndex
+      const updatedMessages = [...prev]
+      const currentMessage = updatedMessages[actualIndex]
+      if (currentMessage) {
+        updatedMessages[actualIndex] = {
+          ...currentMessage,
+          grammarCorrection: correction,
+        }
+      }
+
+      return updatedMessages
+    })
+
+    scrollToBottom()
   }
 
   const startRecording = async (): Promise<void> => {
@@ -372,13 +409,28 @@ const RecordTest: FC = () => {
       <View className="flex flex-1 flex-col">
         <ScrollView ref={scrollViewRef} className="flex-1 px-4 py-2" showsVerticalScrollIndicator={false}>
           {messages.map((message) => (
-            <View
-              key={message.id}
-              className={`mb-3 rounded-lg p-3 ${
-                message.sender === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"
-              }`}
-            >
-              <Text className={`${message.sender === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.text}</Text>
+            <View key={message.id} className="mb-3">
+              <View
+                className={`rounded-lg p-3 ${message.sender === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"}`}
+              >
+                <Text className={`${message.sender === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.text}</Text>
+              </View>
+
+              {/* Grammar correction display */}
+              {message.grammarCorrection && message.grammarCorrection.hasError && message.grammarCorrection.correction && (
+                <View className="mt-2 max-w-[80%] self-end rounded-lg border border-green-200 bg-green-50 p-3">
+                  <Text className="mb-2 text-sm font-semibold text-green-800">✨ Grammar Suggestion</Text>
+                  <View className="mb-2">
+                    <Text className="text-sm text-green-700">Corrected: </Text>
+                    <Text className="text-sm font-medium text-green-800">"{message.grammarCorrection.correction.correctedText}"</Text>
+                  </View>
+
+                  <View>
+                    <Text className="mb-1 text-xs font-semibold text-green-700">Explanation:</Text>
+                    <Text className="text-xs text-green-600 italic">{message.grammarCorrection.correction.explanation}</Text>
+                  </View>
+                </View>
+              )}
             </View>
           ))}
         </ScrollView>

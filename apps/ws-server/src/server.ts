@@ -1,9 +1,12 @@
 // server.js
 
 import http from "http"
+import { openai } from "@ai-sdk/openai"
 import { RealtimeClient } from "@openai/realtime-api-beta"
+import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
+import { z } from "zod"
 
 import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "./env.server"
@@ -13,15 +16,60 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
-// Set up view engine and static files
-app.set("view engine", "ejs")
-app.set("views", "./views")
-app.use(express.static("public"))
+// OpenAI model configuration for grammar checking
+const openaiModel = openai("gpt-4o-mini")
 
-// Main Route
-app.get("/", (req, res) => {
-  res.render("index")
+// Grammar correction schema for structured output
+const ZGrammarCorrectionSchema = z.object({
+  hasError: z.boolean().describe("Whether the text contains grammar mistakes or could be improved"),
+  correction: z
+    .object({
+      correctedText: z.string().describe("The corrected version of the text"),
+      explanation: z.string().describe("Brief explanation of the correction (should be short)"),
+    })
+    .optional()
+    .describe("Correction details if hasError is true"),
 })
+
+// Grammar checking function
+async function checkGrammar(text: string, learningLanguage: string, userLanguage: string) {
+  const { object } = await generateObject({
+    model: openaiModel,
+    schemaName: "grammar-correction",
+    schema: ZGrammarCorrectionSchema,
+    prompt: `You are a helpful language tutor assisting someone learning a language with ISO code ${learningLanguage}. 
+
+IMPORTANT CONTEXT:
+- The user is learning a language with ISO code ${learningLanguage} and their native language has ISO code ${userLanguage}
+- This text comes from an audio transcript, so ignore punctuation issues, capitalization problems, or unclear words that might be transcription errors
+- Focus ONLY on actual grammar, vocabulary, and sentence structure mistakes that a language learner would make
+- Provide your analysis and explanations in the language with ISO code ${userLanguage}
+
+WHAT TO CORRECT:
+✅ Grammar mistakes (verb tenses, subject-verb agreement, etc.)
+✅ Wrong word choices or vocabulary errors
+✅ Sentence structure issues
+✅ Unnatural phrasing that native speakers wouldn't use
+
+WHAT NOT TO CORRECT:
+❌ Missing punctuation or capitalization (transcript artifacts)
+❌ Filler words like "um", "uh", "like" (natural in speech)
+❌ Minor transcription errors or unclear words
+❌ Informal speech patterns that are actually correct in spoken language
+
+Text to analyze: "${text}"
+
+Be encouraging and focus on helping the learner improve their language skills. 
+
+RESPONSE FORMAT:
+- Set hasError to true if corrections are needed, false if the text is already correct
+- If hasError is true, provide the correction object with correctedText and a short explanation
+- If hasError is false, omit the correction object`,
+    temperature: 0.3,
+  })
+
+  return object
+}
 
 // Socket.io setup
 io.on("connection", (socket) => {
@@ -47,7 +95,7 @@ io.on("connection", (socket) => {
   })
 
   // Handle conversation updates for transcription and audio
-  client.on("conversation.updated", (event: EventHandlerResult) => {
+  client.on("conversation.updated", async (event: EventHandlerResult) => {
     const { item, delta } = event
     if (!item) throw new Error("No item found")
     if (!item.formatted) throw new Error("No formatted item found")
@@ -61,6 +109,28 @@ io.on("connection", (socket) => {
         text: item.formatted.transcript,
         isFinal: item.status === "completed",
       })
+
+      // Check grammar when transcript is final
+      if (item.status === "completed" && item.formatted.transcript) {
+        const transcript = item.formatted.transcript
+
+        // Language preferences for this socket connection
+        const userLanguagePreferences = {
+          learningLanguage: "FR",
+          userLanguage: "EN",
+        }
+
+        const grammarResult = await checkGrammar(transcript, userLanguagePreferences.learningLanguage, userLanguagePreferences.userLanguage)
+        if (grammarResult.hasError && grammarResult.correction) {
+          console.log(`Grammar correction found for: "${transcript}"`)
+          console.log(`Corrected text: "${grammarResult.correction.correctedText}"`)
+          socket.emit("grammarCorrection", {
+            original: transcript,
+            hasError: grammarResult.hasError,
+            correction: grammarResult.correction,
+          })
+        }
+      }
     } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
       // Emit placeholder while waiting for transcript if audio is present
       console.log("User audio received, awaiting transcript")
