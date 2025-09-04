@@ -5,8 +5,8 @@ import { RealtimeClient } from "@openai/realtime-api-beta"
 import express from "express"
 import { Server } from "socket.io"
 
+import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "./env.server"
-import { EventHandlerResult, Realtime } from "./types"
 
 // Express setup
 const app = express()
