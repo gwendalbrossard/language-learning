@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
         text: item.formatted.transcript,
         isFinal: item.status === "completed",
       })
-    } else if (item.role === "user" && item.formatted.audio?.length && !item.formatted.transcript) {
+    } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
       // Emit placeholder while waiting for transcript if audio is present
       console.log("User audio received, awaiting transcript")
       socket.emit("displayUserMessage", {
@@ -101,47 +101,43 @@ io.on("connection", (socket) => {
 
   // Handle complete audio data from the client
   socket.on("completeAudio", async (audioBuffer: ArrayBuffer) => {
-    if (audioBuffer) {
-      try {
-        // Convert ArrayBuffer to base64 for the WebSocket API
-        const uint8Array = new Uint8Array(audioBuffer)
-        const base64Audio = Buffer.from(uint8Array).toString("base64")
+    try {
+      // Convert ArrayBuffer to base64 for the WebSocket API
+      const uint8Array = new Uint8Array(audioBuffer)
+      const base64Audio = Buffer.from(uint8Array).toString("base64")
 
-        console.log(`Received complete audio: ${uint8Array.length} bytes`)
+      console.log(`Received complete audio: ${uint8Array.length} bytes`)
 
-        // Use the lower-level WebSocket API to send audio properly
-        // First, clear the input audio buffer
-        client.realtime.send("input_audio_buffer.clear", {})
+      // Use the lower-level WebSocket API to send audio properly
+      // First, clear the input audio buffer
+      client.realtime.send("input_audio_buffer.clear", {})
 
-        // Append the audio data to the buffer
-        client.realtime.send("input_audio_buffer.append", {
-          audio: base64Audio,
-        })
+      // Append the audio data to the buffer
+      client.realtime.send("input_audio_buffer.append", {
+        audio: base64Audio,
+      })
 
-        // Commit the audio buffer to create a user message
-        client.realtime.send("input_audio_buffer.commit", {})
+      // Commit the audio buffer to create a user message
+      client.realtime.send("input_audio_buffer.commit", {})
 
-        // Create a response from the model
-        client.realtime.send("response.create", {})
-      } catch (error) {
-        console.error("Error processing complete audio:", error)
-      }
+      // Create a response from the model
+      client.realtime.send("response.create", {})
+    } catch (error) {
+      console.error("Error processing complete audio:", error)
     }
   })
 
   // Handle cancel response requests from the client
-  socket.on("cancelResponse", async ({ trackId, offset }) => {
-    if (trackId) {
-      try {
-        await client.cancelResponse(trackId, offset)
-      } catch (error) {
-        console.error("Error canceling response:", error)
-      }
+  socket.on("cancelResponse", ({ trackId, offset }: { trackId: string; offset: number }) => {
+    try {
+      client.cancelResponse(trackId, offset)
+    } catch (error) {
+      console.error("Error canceling response:", error)
     }
   })
 
   // Handle text messages from the user
-  socket.on("userMessage", (message) => {
+  socket.on("userMessage", (message: string) => {
     client.sendUserMessageContent([{ type: "input_text", text: message }])
   })
 
