@@ -18,9 +18,10 @@ model Profile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  members     Member[]
-  invitations Invitation[]
-  streakDays  StreakDay[]
+  members          Member[]
+  invitations      Invitation[]
+  streakDays       StreakDay[]
+  roleplaySessions RoleplaySession[]
 
   @@map("profile")
 }

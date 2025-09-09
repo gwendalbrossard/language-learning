@@ -13,6 +13,7 @@
     "db:generate": "npm run with-env prisma generate && prisma format",
     "db:migrate": "npm run with-env prisma migrate dev --name mig",
     "db:push": "npm run with-env prisma db push --skip-generate",
+    "db:seed": "npm run with-env tsx src/seed.ts",
     "db:studio": "npm run with-env prisma studio --port 5556",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -34,6 +35,7 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "prisma": "^6.15.0",
+    "tsx": "^4.7.0",
     "typescript": "catalog:"
   },
   "prettier": "@acme/prettier-config"

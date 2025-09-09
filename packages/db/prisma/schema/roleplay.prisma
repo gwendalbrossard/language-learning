@@ -1,0 +1,60 @@
+model RoleplayScenario {
+  id           String   @id @default(cuid())
+  emoji        String
+  title        String
+  description  String
+  instructions String
+  tags         String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions RoleplaySession[]
+
+  @@map("roleplay_scenario")
+}
+
+model RoleplaySession {
+  id String @id @default(cuid())
+
+  scenarioId String
+  scenario   RoleplayScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages RoleplaySessionMessage[]
+
+  @@index([profileId])
+  @@index([profileId, scenarioId])
+  @@map("roleplay_session")
+}
+
+model RoleplaySessionMessage {
+  id      String                     @id @default(cuid())
+  role    RoleplaySessionMessageRole
+  content String
+  order   Int
+
+  feedback Json?
+
+  sessionId String
+  session   RoleplaySession @relation(fields: [sessionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@map("roleplay_session_message")
+}
+
+enum RoleplaySessionMessageRole {
+  ASSISTANT
+  USER
+  SYSTEM
+
+  @@map("openai_role")
+}
