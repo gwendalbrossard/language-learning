@@ -2,6 +2,7 @@ import { authRouter } from "./router/auth/_router"
 import { organizationRouter } from "./router/organization/_router"
 import { postRouter } from "./router/post/_router"
 import { profileRouter } from "./router/profile/_router"
+import { roleplayScenarioRouter } from "./router/roleplay-scenario/_router"
 import { userRouter } from "./router/user/_router"
 import { createCallerFactory, createTRPCRouter } from "./trpc"
 
@@ -10,6 +11,7 @@ export const appRouter = createTRPCRouter({
   post: postRouter,
   organization: organizationRouter,
   profile: profileRouter,
+  roleplayScenario: roleplayScenarioRouter,
   user: userRouter,
 })
 

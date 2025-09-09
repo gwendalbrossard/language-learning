@@ -41,5 +41,6 @@ export const prefetchMain = async () => {
   await Promise.all([
     queryClient.prefetchQuery(trpc.profile.me.queryOptions()),
     queryClient.prefetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
+    queryClient.prefetchQuery(trpc.roleplayScenario.getAll.queryOptions()),
   ])
 }
