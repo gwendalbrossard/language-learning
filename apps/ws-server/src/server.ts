@@ -10,7 +10,8 @@ import { Server } from "socket.io"
 import { ZLanguageAnalysisSchema } from "@acme/validators"
 
 import type { EventHandlerResult, Realtime } from "./types"
-import { env } from "./env.server"
+import { env } from "~/env.server"
+import { auth } from "./auth"
 
 // Express setup
 const app = express()
@@ -84,7 +85,23 @@ TONE: Be friendly, supportive, and educational while remaining specific and acti
 }
 
 // Socket.io setup
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
+  const bearerToken = socket.handshake.headers.authorization
+
+  if (!bearerToken) {
+    socket.disconnect()
+    return
+  }
+
+  const session = await auth.api.getSession({
+    headers: new Headers({ Authorization: bearerToken }),
+  })
+
+  if (!session) {
+    socket.disconnect()
+    return
+  }
+
   const client = new RealtimeClient({ apiKey: env.OPENAI_API_KEY })
 
   client.updateSession({
