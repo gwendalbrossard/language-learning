@@ -1,10 +1,11 @@
 model RoleplayScenario {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   emoji        String
   title        String
   description  String
   instructions String
-  tags         String[]
+  category     String
+  difficulty   Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

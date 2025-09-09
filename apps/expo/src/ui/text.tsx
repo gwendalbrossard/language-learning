@@ -1,7 +1,7 @@
+import type { SlottableTextProps, TextRef } from "@rn-primitives/types"
 import * as React from "react"
-import { Text as RNText } from "react-native"
 import * as Slot from "@rn-primitives/slot"
-import { type SlottableTextProps, type TextRef } from "@rn-primitives/types"
+import { Text as RNText } from "react-native"
 
 import { cn } from "~/utils/utils"
 

@@ -5,7 +5,8 @@ export const roleplayScenarioSelect = Prisma.validator<Prisma.RoleplayScenarioSe
   emoji: true,
   title: true,
   description: true,
-  tags: true,
+  category: true,
+  difficulty: true,
   createdAt: true,
   updatedAt: true,
 })

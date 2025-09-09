@@ -97,6 +97,13 @@ export default {
             letterSpacing: "normal",
           },
         ],
+        xxs: [
+          "0.625rem",
+          {
+            lineHeight: "0.875rem",
+            letterSpacing: "normal",
+          },
+        ],
       },
       ringWidth: {
         3: "3px",
