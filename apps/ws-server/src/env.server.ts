@@ -13,7 +13,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     OPENAI_API_KEY: z.string().min(1),
-    URL_API: z.string().min(1),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

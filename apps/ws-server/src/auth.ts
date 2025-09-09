@@ -1,14 +1,15 @@
 import { initAuth } from "@acme/auth"
 
-import { env } from "~/env.server"
+import { env as envClient } from "~/env.client"
+import { env as envServer } from "~/env.server"
 
 export const auth = initAuth({
-  baseUrl: env.URL_API,
-  productionUrl: env.URL_API,
-  secret: env.AUTH_SECRET,
-  googleClientId: env.GOOGLE_CLIENT_ID,
-  googleClientSecret: env.GOOGLE_CLIENT_SECRET,
-  appleClientId: env.APPLE_CLIENT_ID,
-  appleClientSecret: env.APPLE_CLIENT_SECRET,
-  appleAppBundleIdentifier: env.APPLE_APP_BUNDLE_IDENTIFIER,
+  baseUrl: envClient.NEXT_PUBLIC_URL_API,
+  productionUrl: envClient.NEXT_PUBLIC_URL_API,
+  secret: envServer.AUTH_SECRET,
+  googleClientId: envServer.GOOGLE_CLIENT_ID,
+  googleClientSecret: envServer.GOOGLE_CLIENT_SECRET,
+  appleClientId: envServer.APPLE_CLIENT_ID,
+  appleClientSecret: envServer.APPLE_CLIENT_SECRET,
+  appleAppBundleIdentifier: envServer.APPLE_APP_BUNDLE_IDENTIFIER,
 })

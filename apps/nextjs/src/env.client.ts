@@ -9,12 +9,12 @@ export const env = createEnv({
   },
   // Add NEXT_PUBLIC_ vars as needed
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_URL_API: z.string().min(1),
   },
   // You only need to destructure client variables here + NODE_ENV from the shared variables
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    NEXT_PUBLIC_URL_API: process.env.NEXT_PUBLIC_URL_API,
   },
   skipValidation: !!process.env.CI || process.env.npm_lifecycle_event === "lint",
 })
