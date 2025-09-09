@@ -8,16 +8,15 @@ import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
 
+import type { TLanguageAnalysisSchema } from "@acme/validators"
+
 import { Text } from "~/ui/text"
 
 interface Message {
   id: string
   role: "user" | "assistant"
   transcript: string
-  correction?: {
-    correctedText: string
-    explanation: string
-  }
+  analysis?: TLanguageAnalysisSchema
 }
 
 const RecordTest: FC = () => {
@@ -71,10 +70,9 @@ const RecordTest: FC = () => {
       void interruptAudio()
     })
 
-    socketRef.current.on("grammarCorrection", (data: { messageId: string; correction?: { correctedText: string; explanation: string } }) => {
-      addGrammarCorrectionToMessage(data)
+    socketRef.current.on("languageAnalysis", (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
+      addLanguageAnalysisToMessage(data)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -208,7 +206,7 @@ const RecordTest: FC = () => {
     }, 100)
   }
 
-  const addGrammarCorrectionToMessage = (data: { messageId: string; correction?: { correctedText: string; explanation: string } }) => {
+  const addLanguageAnalysisToMessage = (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
     setMessages((prev) => {
       // Find the message by ID
       const messageIndex = prev.findIndex((msg) => msg.id === data.messageId)
@@ -219,13 +217,14 @@ const RecordTest: FC = () => {
       if (currentMessage) {
         updatedMessages[messageIndex] = {
           ...currentMessage,
-          correction: data.correction,
+          analysis: data.analysis,
         }
       }
 
       return updatedMessages
     })
 
+    console.log(`Language analysis completed in ${data.analysisDuration}ms`)
     scrollToBottom()
   }
 
@@ -409,18 +408,69 @@ const RecordTest: FC = () => {
                 <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
               </View>
 
-              {/* Grammar correction display */}
-              {message.correction && (
-                <View className="mt-2 max-w-[80%] self-end rounded-lg border border-green-200 bg-green-50 p-3">
-                  <Text className="mb-2 text-sm font-semibold text-green-800">✨ Grammar Suggestion</Text>
-                  <View className="mb-2">
-                    <Text className="text-sm text-green-700">Corrected: </Text>
-                    <Text className="text-sm font-medium text-green-800">"{message.correction.correctedText}"</Text>
+              {/* Language analysis display */}
+              {message.analysis && (
+                <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  {/* Header with quality score */}
+                  <View className="mb-3 flex-row items-center justify-between">
+                    <Text className="text-sm font-semibold text-blue-800">📝 Language Analysis</Text>
+                    <View className="rounded-full bg-blue-100 px-2 py-1">
+                      <Text className="text-xs font-bold text-blue-700">{message.analysis.quality}/100</Text>
+                    </View>
                   </View>
 
-                  <View>
-                    <Text className="mb-1 text-xs font-semibold text-green-700">Explanation:</Text>
-                    <Text className="text-xs text-green-600 italic">{message.correction.explanation}</Text>
+                  {/* Main feedback */}
+                  <View className="mb-3">
+                    <Text className="text-sm text-blue-700">{message.analysis.feedback}</Text>
+                  </View>
+
+                  {/* Corrected phrase */}
+                  {message.analysis.correctedPhrase !== message.transcript && (
+                    <View className="mb-3 rounded-lg bg-green-100 p-2">
+                      <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
+                      <Text className="text-sm font-medium text-green-800">"{message.analysis.correctedPhrase}"</Text>
+                    </View>
+                  )}
+
+                  {/* Individual corrections */}
+                  {message.analysis.corrections.length > 0 && (
+                    <View className="mb-3">
+                      <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
+                      {message.analysis.corrections.map((correction, index) => (
+                        <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
+                          <View className="mb-1 flex-row">
+                            <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
+                            <Text className="mx-1 text-xs text-gray-500">→</Text>
+                            <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
+                          </View>
+                          <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Scoring breakdown */}
+                  <View className="mb-3">
+                    <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
+                    <View className="space-y-1">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs text-gray-600">Accuracy:</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.analysis.accuracy.score}/100</Text>
+                      </View>
+                      <Text className="text-xs italic text-gray-500">{message.analysis.accuracy.message}</Text>
+
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs text-gray-600">Fluency:</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.analysis.fluency.score}/100</Text>
+                      </View>
+                      <Text className="text-xs italic text-gray-500">{message.analysis.fluency.message}</Text>
+
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs text-gray-600">Vocabulary:</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.analysis.vocabulary.score}/100</Text>
+                      </View>
+                      <Text className="text-xs italic text-gray-500">{message.analysis.vocabulary.message}</Text>
+                    </View>
                   </View>
                 </View>
               )}

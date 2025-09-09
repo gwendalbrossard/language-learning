@@ -2,12 +2,12 @@
 
 import http from "http"
 import { azure } from "@ai-sdk/azure"
-import { openai } from "@ai-sdk/openai"
 import { RealtimeClient } from "@openai/realtime-api-beta"
 import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
-import { z } from "zod"
+
+import { ZLanguageAnalysisSchema } from "@acme/validators"
 
 import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "./env.server"
@@ -20,44 +20,6 @@ const io = new Server(server)
 // OpenAI model configuration for grammar checking
 const azureOpenaiModel = azure("gpt-4o-mini")
 
-// Comprehensive language analysis schema combining grammar and detailed feedback
-const ZLanguageAnalysisSchema = z.object({
-  // Basic feedback (similar to getFeedback)
-  quality: z.number().min(1).max(100).describe("Overall correctness score from 1-100"),
-  message: z
-    .string()
-    .describe("Friendly, constructive feedback message focusing on specific improvements needed, in markdown format in the user's native language"),
-  correctedPhrase: z.string().describe("The fully corrected version of the user's message"),
-  corrections: z
-    .array(
-      z.object({
-        wrong: z.string().describe("The incorrect part from the original message"),
-        correct: z.string().describe("The corrected version of that part, extracted from the correctedPhrase"),
-        explanation: z.string().describe("Short explanation for the correction"),
-      }),
-    )
-    .describe("Array of wrong/correct pairs for highlighting corrections on the frontend"),
-
-  // Detailed scoring (similar to getMessageScore)
-  accuracy: z.object({
-    score: z.number().min(1).max(100),
-    message: z.string().describe("Helpful, supportive feedback about grammar and accuracy issues in the user's native language"),
-  }),
-  fluency: z.object({
-    score: z.number().min(1).max(100),
-    message: z.string().describe("Friendly feedback about naturalness and fluency in the user's native language"),
-  }),
-  vocabulary: z.object({
-    score: z.number().min(1).max(100),
-    message: z.string().describe("Supportive feedback about vocabulary choices and usage in the user's native language"),
-  }),
-  detailedFeedback: z
-    .string()
-    .describe(
-      "Concise, supportive analysis (maximum 3 sentences) focusing on main language patterns and key improvement areas in the user's native language",
-    ),
-})
-
 // Comprehensive language analysis function combining grammar checking and detailed feedback
 async function analyzeLanguage(text: string, learningLanguage: string, userLanguage: string, previousContext?: string, difficulty = "A1") {
   const { object } = await generateObject({
@@ -68,11 +30,13 @@ async function analyzeLanguage(text: string, learningLanguage: string, userLangu
 
 CRITICAL: ALL feedback messages, explanations, and detailed feedback MUST be written in ${userLanguage} (the user's native language).
 
+IMPORTANT: This text comes from ORAL CONVERSATION, not written text. It's a speech transcript from someone speaking naturally. Adapt your analysis for spoken language patterns, not formal writing standards.
+
 LEARNER PROFILE:
 - Learning language: ${learningLanguage} (ISO code)
 - Native language: ${userLanguage} (ISO code)
 - Difficulty level: ${difficulty} (CEFR)
-- Text source: Audio transcript (ignore minor transcription artifacts)
+- Text source: ORAL CONVERSATION TRANSCRIPT (speech-to-text conversion)
 
 CONTEXT:
 ${previousContext ? `Previous conversation context: ${previousContext}` : "No previous context available"}
@@ -82,35 +46,37 @@ TEXT TO ANALYZE: "${text}"
 ANALYSIS REQUIREMENTS:
 
 1. OVERALL QUALITY (1-100): Evaluate overall correctness and appropriateness
-2. DIRECT MESSAGE: Provide specific, actionable feedback in markdown format with a friendly and supportive tone. Focus on the main issues that need attention while being constructive and helpful. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${userLanguage})
-3. CORRECTIONS ARRAY: For each mistake, provide:
+2. FEEDBACK: Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${userLanguage})
+3. CORRECTED PHRASE: Provide the complete corrected version
+4. CORRECTIONS ARRAY: For each mistake, provide:
    - "wrong": the incorrect part from the original text
    - "correct": the corrected version of that part
    - "explanation": a clear, concise explanation for the correction
    Example: { "wrong": "Je appelle", "correct": "Je m'appelle" }
 
-4. DETAILED SCORING (all messages in ${userLanguage}):
+5. DETAILED SCORING (all messages in ${userLanguage}):
    - ACCURACY (1-100): Grammar, syntax, word choice correctness - provide helpful guidance on specific issues found
    - FLUENCY (1-100): How natural and smooth the expression sounds - offer friendly suggestions for improvement
    - VOCABULARY (1-100): Appropriateness and variety of word choices - suggest alternatives in a supportive way
 
-5. CORRECTED PHRASE: Provide the complete corrected version
-6. DETAILED FEEDBACK: Concise, friendly summary (maximum 3 sentences) focusing on the main language patterns and key improvement areas. Use a supportive tone while providing technical guidance (in ${userLanguage})
+FOCUS AREAS FOR ORAL CONVERSATION:
+✅ Grammar mistakes that affect meaning or sound unnatural in speech
+✅ Vocabulary errors or unnatural word choices for spoken language
+✅ Sentence structure issues that disrupt conversational flow
+✅ Appropriateness for oral communication at this difficulty level
+✅ Natural spoken expression vs. literal translation from native language
+✅ Pronunciation-related grammar issues (liaisons, contractions, etc.)
 
-FOCUS AREAS:
-✅ Grammar mistakes (tenses, agreement, structure)
-✅ Vocabulary errors or unnatural word choices  
-✅ Sentence structure and flow issues
-✅ Appropriateness for the difficulty level
-✅ Natural expression vs. literal translation
-
-IGNORE:
+IGNORE (COMMON IN ORAL SPEECH):
 ❌ Punctuation/capitalization (transcript artifacts)
-❌ Filler words ("um", "uh", "like")
-❌ Minor transcription errors
-❌ Acceptable informal speech patterns
+❌ Filler words ("um", "uh", "like", "euh", etc.)
+❌ Minor transcription errors or misheard words
+❌ Acceptable informal speech patterns and colloquialisms
+❌ Incomplete sentences that are natural in conversation
+❌ Repetitions or self-corrections during speech
+❌ Casual contractions and spoken shortcuts
 
-TONE: Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve through constructive guidance. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${userLanguage}.`,
+TONE: Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve their SPOKEN language skills through constructive guidance. Remember this is oral communication, not academic writing. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${userLanguage}.`,
     temperature: 0.3,
   })
 
@@ -173,7 +139,7 @@ io.on("connection", (socket) => {
           userLanguagePreferences.learningLanguage,
           userLanguagePreferences.userLanguage,
           undefined, // TODO: Add previous context when available
-          "A1", // TODO: Get user's actual difficulty level
+          "C2", // TODO: Get user's actual difficulty level
         )
 
         const analysisEndTime = performance.now()
