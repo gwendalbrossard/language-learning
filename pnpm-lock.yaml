@@ -453,6 +453,9 @@ importers:
       '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@acme/validators':
+        specifier: workspace:*
+        version: link:../../packages/validators
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
