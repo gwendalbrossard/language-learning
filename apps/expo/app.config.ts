@@ -20,13 +20,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "your.bundle.identifier",
+    bundleIdentifier: "com.daybyday.mobile",
     supportsTablet: false,
     usesAppleSignIn: true,
     icon: "./assets/icon.png",
   },
   android: {
-    package: "your.bundle.identifier",
+    package: "com.daybyday.mobile",
     adaptiveIcon: {
       foregroundImage: "./assets/icon.png",
       backgroundColor: "#FFFFFF",
