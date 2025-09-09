@@ -71,6 +71,7 @@ export function initAuth(options: {
         },
       },
     },
+    telemetry: { enabled: false },
   } satisfies BetterAuthOptions
 
   return betterAuth(config)
