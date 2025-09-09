@@ -1,5 +1,5 @@
 export const publicApiKeys = {
-  apple: "appl_RqpHIezARxaRoQLaUqgsMpXUxVP",
+  apple: "appl_orgHogEULfRQZuWPvqSQqalWKSx",
   google: "",
 }
 export const FREE_USER_NOTES_LIMIT = 3

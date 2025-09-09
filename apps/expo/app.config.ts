@@ -20,13 +20,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   assetBundlePatterns: ["**/*"],
   ios: {
-    bundleIdentifier: "com.daybyday.mobile",
+    bundleIdentifier: "com.studyunfold.mobile",
     supportsTablet: false,
     usesAppleSignIn: true,
     icon: "./assets/icon.png",
   },
   android: {
-    package: "com.daybyday.mobile",
+    package: "com.studyunfold.mobile",
     adaptiveIcon: {
       foregroundImage: "./assets/icon.png",
       backgroundColor: "#FFFFFF",
@@ -35,7 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     eas: {
-      projectId: "24651605-54b2-4583-a93c-d127cf288d78",
+      projectId: "fd9cb9d3-c56a-48ff-88cb-9e827cf954a4",
     },
   },
   experiments: {
