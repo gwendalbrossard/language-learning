@@ -11,6 +11,8 @@ import { io } from "socket.io-client"
 import type { TLanguageAnalysisSchema } from "@acme/validators"
 
 import { Text } from "~/ui/text"
+import { getWsBaseUrl } from "~/utils/base-url"
+import { getBearerToken } from "~/utils/bearer-store"
 
 interface Message {
   id: string
@@ -40,8 +42,11 @@ const RecordTest: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
 
   const initializeSocket = useCallback((): void => {
-    // Replace with your server URL
-    socketRef.current = io("http://localhost:3002")
+    socketRef.current = io(getWsBaseUrl(), {
+      extraHeaders: {
+        Authorization: `Bearer ${getBearerToken()}`,
+      },
+    })
 
     socketRef.current.on("connect", () => {
       console.log("Connected to server")

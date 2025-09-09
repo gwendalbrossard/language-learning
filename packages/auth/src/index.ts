@@ -2,7 +2,7 @@ import type { BetterAuthOptions } from "better-auth"
 import { expo } from "@better-auth/expo"
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
-import { oAuthProxy } from "better-auth/plugins"
+import { bearer, oAuthProxy } from "better-auth/plugins"
 
 import { prisma } from "@acme/db"
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
@@ -41,6 +41,7 @@ export function initAuth(options: {
         productionURL: options.productionUrl,
       }),
       expo(),
+      bearer(),
     ],
     emailAndPassword: {
       enabled: true,
