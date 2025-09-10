@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
+    "@acme/db": "workspace:*",
     "@ai-sdk/azure": "^2.0.23",
     "@ai-sdk/openai": "^2.0.23",
     "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta",

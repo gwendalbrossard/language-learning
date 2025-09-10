@@ -7,7 +7,8 @@ import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
 
-import { ZLanguageAnalysisSchema } from "@acme/validators"
+import { prisma } from "@acme/db"
+import { ZLanguageAnalysisSchema, ZPracticeSchema } from "@acme/validators"
 
 import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "~/env.server"
@@ -89,6 +90,7 @@ io.on("connection", async (socket) => {
   const bearerToken = socket.handshake.headers.authorization
 
   if (!bearerToken) {
+    console.error("No bearer token found")
     socket.disconnect()
     return
   }
@@ -98,6 +100,61 @@ io.on("connection", async (socket) => {
   })
 
   if (!session) {
+    socket.disconnect()
+    return
+  }
+
+  const profile = await prisma.profile.findUnique({ where: { userId: session.user.id } })
+
+  if (!profile) {
+    console.error("Could not find profile")
+    socket.disconnect()
+    return
+  }
+
+  // Either roleplay or lesson
+  const practice = socket.handshake.query.practice
+  if (!practice) {
+    console.error("Could not find practice query")
+    socket.disconnect()
+    return
+  }
+
+  if (typeof practice !== "string") {
+    console.error("Practice is of wrong type")
+    socket.disconnect()
+    return
+  }
+
+  console.log(practice)
+  const parsedPractice = ZPracticeSchema.safeParse(JSON.parse(practice))
+
+  if (!parsedPractice.success) {
+    console.error("Could not parse practice data")
+    socket.disconnect()
+    return
+  }
+
+  if (!parsedPractice.data.roleplaySessionId) {
+    console.error("Could not parse practice roleplaySessionId")
+    socket.disconnect()
+    return
+  }
+
+  const roleplaySession = await prisma.roleplaySession.findUnique({
+    where: { id: parsedPractice.data.roleplaySessionId },
+  })
+
+  if (!roleplaySession) {
+    console.error("Could not find roleplay session")
+    socket.disconnect()
+    return
+  }
+
+  if (roleplaySession.profileId !== profile.id) {
+    console.error(
+      `Roleplay session does not belong to user, profileId: ${roleplaySession.profileId}, userId: ${session.user.id}, roleplaySessionId: ${parsedPractice.data.roleplaySessionId}`,
+    )
     socket.disconnect()
     return
   }

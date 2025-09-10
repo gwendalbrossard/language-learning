@@ -9,7 +9,7 @@ import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
 
-import type { TLanguageAnalysisSchema } from "@acme/validators"
+import type { TLanguageAnalysisSchema, TPracticeSchema } from "@acme/validators"
 
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
@@ -22,7 +22,7 @@ interface Message {
   analysis?: TLanguageAnalysisSchema
 }
 
-const Roleplay: FC = () => {
+const RoleplaySession: FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>()
 
   const [messages, setMessages] = useState<Message[]>([
@@ -47,12 +47,16 @@ const Roleplay: FC = () => {
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
 
+    const practice: TPracticeSchema = {
+      roleplaySessionId: id,
+    }
+
     socketRef.current = io(getWsBaseUrl(), {
       extraHeaders: {
         Authorization: `Bearer ${getBearerToken()}`,
       },
       query: {
-        sessionId: id,
+        practice: JSON.stringify(practice),
       },
     })
 
@@ -523,4 +527,4 @@ const Roleplay: FC = () => {
   )
 }
 
-export default Roleplay
+export default RoleplaySession
