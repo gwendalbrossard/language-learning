@@ -3,6 +3,7 @@ import type { Socket } from "socket.io-client"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
+import { useLocalSearchParams } from "expo-router"
 import { Mic, Send, Square } from "lucide-react-native"
 import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -22,6 +23,8 @@ interface Message {
 }
 
 const Roleplay: FC = () => {
+  const { sessionId } = useLocalSearchParams<{ sessionId: string }>()
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -42,9 +45,14 @@ const Roleplay: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
 
   const initializeSocket = useCallback((): void => {
+    if (!sessionId) throw new Error("Session ID is required")
+
     socketRef.current = io(getWsBaseUrl(), {
       extraHeaders: {
         Authorization: `Bearer ${getBearerToken()}`,
+      },
+      query: {
+        sessionId,
       },
     })
 
@@ -78,7 +86,7 @@ const Roleplay: FC = () => {
     socketRef.current.on("languageAnalysis", (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
       addLanguageAnalysisToMessage(data)
     })
-  }, [])
+  }, [sessionId])
 
   useEffect(() => {
     initializeSocket()
