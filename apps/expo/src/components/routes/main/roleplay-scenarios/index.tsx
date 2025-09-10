@@ -1,27 +1,33 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Filter, Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
+import type { RouterOutputs } from "~/utils/api"
 import * as Badge from "~/ui/badge"
 import * as Button from "~/ui/button"
 import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
+import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario-details"
 import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
 
 const RoleplayScenarios: FC = () => {
   const roleplayScenarios = useQuery(trpc.roleplayScenario.getAll.queryOptions())
   if (!roleplayScenarios.data) throw new Error("Roleplay scenarios not found")
 
-  // Bottom sheet ref
-  const bottomSheetRef = useRef<BottomSheetModal>(null)
+  // Bottom sheet refs
+  const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
+  const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
+
+  // Selected scenario state
+  const [selectedScenario, setSelectedScenario] = useState<RouterOutputs["roleplayScenario"]["getAll"][number] | null>(null)
 
   // Get unique categories and difficulties for filters
   const categories = useMemo(() => {
@@ -38,9 +44,17 @@ const RoleplayScenarios: FC = () => {
     })
   }, [roleplayScenarios.data, selectedCategory, selectedDifficulty])
 
-  const handleScenarioPress = (scenarioId: string) => {
-    // TODO: Navigate to roleplay session
-    console.log("Selected scenario:", scenarioId)
+  const handleRoleplayScenarioPress = (scenario: RouterOutputs["roleplayScenario"]["getAll"][number]) => {
+    setSelectedScenario(scenario)
+  }
+
+  useEffect(() => {
+    if (!selectedScenario) return
+    roleplayScenarioDetailsBottomSheetRef.current?.present()
+  }, [selectedScenario])
+
+  const handleCloseDetails = () => {
+    setSelectedScenario(null)
   }
 
   // Helper function to render difficulty stars
@@ -63,7 +77,7 @@ const RoleplayScenarios: FC = () => {
       <View className="flex flex-row items-center justify-between">
         <Text className="text-xl font-bold">Practice Roleplay</Text>
 
-        <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => bottomSheetRef.current?.present()}>
+        <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayScenarioFiltersBottomSheetRef.current?.present()}>
           <Button.Icon icon={Filter} />
           <Button.Text>Filters</Button.Text>
           {hasActiveFilters && (
@@ -79,7 +93,7 @@ const RoleplayScenarios: FC = () => {
         {filteredScenarios.map((scenario) => (
           <Pressable
             key={scenario.id}
-            onPress={() => handleScenarioPress(scenario.id)}
+            onPress={() => handleRoleplayScenarioPress(scenario)}
             className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm active:bg-neutral-50"
           >
             {/* Header with emoji and title */}
@@ -102,9 +116,8 @@ const RoleplayScenarios: FC = () => {
         ))}
       </View>
 
-      {/* Filter Bottom Sheet */}
       <BottomSheetRoleplayScenarioFilters
-        ref={bottomSheetRef}
+        ref={roleplayScenarioFiltersBottomSheetRef}
         categories={categories}
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
@@ -112,6 +125,8 @@ const RoleplayScenarios: FC = () => {
         onDifficultyChange={setSelectedDifficulty}
         filteredCount={filteredScenarios.length}
       />
+
+      <BottomSheetRoleplayScenarioDetails ref={roleplayScenarioDetailsBottomSheetRef} scenario={selectedScenario} onClose={handleCloseDetails} />
     </View>
   )
 }

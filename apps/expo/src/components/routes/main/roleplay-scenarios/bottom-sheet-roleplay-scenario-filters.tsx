@@ -112,7 +112,6 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
         backdropComponent={BottomSheetBackdrop}
         enablePanDownToClose
         stackBehavior="push"
-        enableDynamicSizing={false}
       >
         <View className="flex-1">
           {/* Fixed Header */}
