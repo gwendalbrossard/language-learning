@@ -61,7 +61,7 @@ const RoleplayScenarios: FC = () => {
   return (
     <View className="flex flex-col gap-4">
       <View className="flex flex-row items-center justify-between">
-        <Text className="text-xl font-bold">Practice Scenarios</Text>
+        <Text className="text-xl font-bold">Practice Roleplay</Text>
 
         <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => bottomSheetRef.current?.present()}>
           <Button.Icon icon={Filter} />

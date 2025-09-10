@@ -21,7 +21,7 @@ interface Message {
   analysis?: TLanguageAnalysisSchema
 }
 
-const RecordTest: FC = () => {
+const Roleplay: FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -515,4 +515,4 @@ const RecordTest: FC = () => {
   )
 }
 
-export default RecordTest
+export default Roleplay
