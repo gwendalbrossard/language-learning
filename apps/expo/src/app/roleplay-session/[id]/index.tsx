@@ -23,7 +23,7 @@ interface Message {
 }
 
 const Roleplay: FC = () => {
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>()
+  const { id } = useLocalSearchParams<{ id: string }>()
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -45,14 +45,14 @@ const Roleplay: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
 
   const initializeSocket = useCallback((): void => {
-    if (!sessionId) throw new Error("Session ID is required")
+    if (!id) throw new Error("Session ID is required")
 
     socketRef.current = io(getWsBaseUrl(), {
       extraHeaders: {
         Authorization: `Bearer ${getBearerToken()}`,
       },
       query: {
-        sessionId,
+        sessionId: id,
       },
     })
 
@@ -86,7 +86,7 @@ const Roleplay: FC = () => {
     socketRef.current.on("languageAnalysis", (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
       addLanguageAnalysisToMessage(data)
     })
-  }, [sessionId])
+  }, [id])
 
   useEffect(() => {
     initializeSocket()
