@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
 import { useLocalSearchParams } from "expo-router"
-import { Mic, Send, Square } from "lucide-react-native"
+import { Mic, Send, Square, X } from "lucide-react-native"
 import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
@@ -37,12 +37,16 @@ const RoleplaySession: FC = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
+  const [sessionEnded, setSessionEnded] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
   const soundRef = useRef<Audio.Sound | null>(null)
   const scrollViewRef = useRef<ScrollView>(null)
   const sentUserMessageRef = useRef<string | null>(null)
+  const sessionStartTimeRef = useRef<number>(Date.now())
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -90,11 +94,31 @@ const RoleplaySession: FC = () => {
     socketRef.current.on("feedback", (data: { messageId: string; feedback: TFeedbackSchema }) => {
       addFeedbackToMessage(data)
     })
+
+    socketRef.current.on("sessionEnded", () => {
+      endSession()
+      // Disconnect after server confirms session is ended
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+      }
+    })
   }, [id])
 
   useEffect(() => {
     initializeSocket()
     void initializeAudio()
+
+    // Start the session timer
+    sessionStartTimeRef.current = Date.now()
+    timerIntervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+      const remaining = Math.max(0, 5 * 60 - elapsed) // 5 minutes - elapsed
+      setTimeRemaining(remaining)
+
+      if (remaining === 0) {
+        endSession()
+      }
+    }, 1000)
 
     return () => {
       if (socketRef.current) {
@@ -105,6 +129,9 @@ const RoleplaySession: FC = () => {
       }
       if (soundRef.current) {
         void soundRef.current.unloadAsync()
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
       }
     }
   }, [initializeSocket])
@@ -132,7 +159,37 @@ const RoleplaySession: FC = () => {
     }
   }
 
+  const endSession = () => {
+    setSessionEnded(true)
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+    }
+  }
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+  }
+
+  const handleEndSession = () => {
+    Alert.alert("End Conversation", "Are you sure you want to end this conversation? This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "End Conversation",
+        style: "destructive",
+        onPress: () => {
+          if (socketRef.current) {
+            socketRef.current.emit("endSession")
+          }
+        },
+      },
+    ])
+  }
+
   const sendMessage = async () => {
+    if (sessionEnded) return
+
     const message = userInput.trim()
     if (message && socketRef.current) {
       if (!audioInitialized) {
@@ -245,6 +302,8 @@ const RoleplaySession: FC = () => {
   }
 
   const startRecording = async (): Promise<void> => {
+    if (sessionEnded) return
+
     if (!isRecording) {
       try {
         await initializeAudio()
@@ -415,6 +474,25 @@ const RoleplaySession: FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col">
+        {/* Timer Header */}
+        <View className="border-b border-gray-200 px-4 py-3">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 items-center">
+              <Text className={`text-lg font-semibold ${timeRemaining < 60 ? "text-red-600" : "text-gray-800"}`}>
+                Time remaining: {formatTime(timeRemaining)}
+              </Text>
+            </View>
+            {!sessionEnded && (
+              <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">
+                <View className="flex-row items-center gap-1">
+                  <X size={16} color="white" />
+                  <Text className="text-sm font-medium text-white">End</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         <ScrollView ref={scrollViewRef} className="flex-1 px-4 py-2" showsVerticalScrollIndicator={false}>
           {messages.map((message) => (
             <View key={message.id} className="mb-3">
@@ -499,20 +577,28 @@ const RoleplaySession: FC = () => {
             <TextInput
               value={userInput}
               onChangeText={setUserInput}
-              placeholder="Type your message..."
+              placeholder={sessionEnded ? "Session ended" : "Type your message..."}
               className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-base"
               onSubmitEditing={sendMessage}
               returnKeyType="send"
-              editable={!isRecording}
+              editable={!isRecording && !sessionEnded}
             />
 
-            <TouchableOpacity onPress={sendMessage} className="rounded-lg bg-blue-500 p-2" disabled={!userInput.trim() || isRecording}>
-              <Send size={20} color="white" />
+            <TouchableOpacity
+              onPress={sendMessage}
+              className={`rounded-lg p-2 ${sessionEnded ? "bg-gray-300" : "bg-blue-500"}`}
+              disabled={!userInput.trim() || isRecording || sessionEnded}
+            >
+              <Send size={20} color={sessionEnded ? "gray" : "white"} />
             </TouchableOpacity>
 
             {!isRecording ? (
-              <TouchableOpacity onPress={() => void startRecording()} className="rounded-lg bg-green-500 p-2" disabled={!audioInitialized}>
-                <Mic size={20} color="white" />
+              <TouchableOpacity
+                onPress={() => void startRecording()}
+                className={`rounded-lg p-2 ${sessionEnded ? "bg-gray-300" : "bg-green-500"}`}
+                disabled={!audioInitialized || sessionEnded}
+              >
+                <Mic size={20} color={sessionEnded ? "gray" : "white"} />
               </TouchableOpacity>
             ) : (
               <TouchableOpacity onPress={() => void stopRecording()} className="rounded-lg bg-red-500 p-2">

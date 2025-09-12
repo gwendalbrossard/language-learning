@@ -159,6 +159,52 @@ io.on("connection", async (socket) => {
     return
   }
 
+  // Track session start time for 5-minute timeout
+  const sessionStartTime = Date.now()
+  const SESSION_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+  console.log(`Session started for user: ${session.user.id} and sessionId: ${roleplaySession.id} at time: ${sessionStartTime}`)
+
+  let sessionEnded = false
+
+  const checkSessionTimeout = () => {
+    const elapsed = Date.now() - sessionStartTime
+    return elapsed >= SESSION_TIMEOUT_MS
+  }
+
+  // Shared function to update session duration
+  const updateSessionDuration = async () => {
+    const currentTime = Date.now()
+    const currentDuration = Math.floor((currentTime - sessionStartTime) / 1000) // duration in seconds
+
+    console.log(`Updating session duration: sessionStartTime=${sessionStartTime}, currentTime=${currentTime}, duration=${currentDuration}s`)
+
+    await prisma.roleplaySession.update({
+      where: { id: roleplaySession.id },
+      data: { duration: currentDuration },
+    })
+    return currentDuration
+  }
+
+  const endSession = async () => {
+    if (sessionEnded) return
+    sessionEnded = true
+
+    console.log(`Ending session at time: ${Date.now()}, session started at: ${sessionStartTime}`)
+
+    // Update final duration before ending
+    const finalDuration = await updateSessionDuration()
+
+    console.log(`Session ended for user: ${session.user.id} and sessionId: ${roleplaySession.id} after ${finalDuration} seconds`)
+    socket.emit("sessionEnded")
+    socket.disconnect()
+  }
+
+  // Set up automatic session timeout
+  const timeoutTimer = setTimeout(() => {
+    void endSession()
+  }, SESSION_TIMEOUT_MS)
+
   const client = new RealtimeClient({ apiKey: env.OPENAI_API_KEY })
 
   client.updateSession({
@@ -182,6 +228,12 @@ io.on("connection", async (socket) => {
 
   // Handle conversation updates for transcription and audio
   client.on("conversation.updated", async (event: EventHandlerResult) => {
+    // Check session timeout before processing
+    if (checkSessionTimeout()) {
+      void endSession()
+      return
+    }
+
     const { item, delta } = event
     if (!item) throw new Error("No item found")
     if (!item.formatted) throw new Error("No formatted item found")
@@ -241,6 +293,8 @@ io.on("connection", async (socket) => {
           },
         })
 
+        await updateSessionDuration()
+
         // Emit comprehensive feedback result
         socket.emit("feedback", {
           messageId: item.id,
@@ -276,6 +330,8 @@ io.on("connection", async (socket) => {
         },
       })
 
+      await updateSessionDuration()
+
       socket.emit("conversationUpdate", {
         id: item.id,
         text: item.formatted.transcript,
@@ -303,6 +359,12 @@ io.on("connection", async (socket) => {
 
   // Handle complete audio data from the client
   socket.on("completeAudio", (audioBuffer: ArrayBuffer) => {
+    // Check session timeout before processing
+    if (checkSessionTimeout()) {
+      void endSession()
+      return
+    }
+
     // Convert ArrayBuffer to base64 for the WebSocket API
     const uint8Array = new Uint8Array(audioBuffer)
     const base64Audio = Buffer.from(uint8Array).toString("base64")
@@ -336,6 +398,12 @@ io.on("connection", async (socket) => {
 
   // Handle text messages from the user
   socket.on("userMessage", async (message: string) => {
+    // Check session timeout before processing
+    if (checkSessionTimeout()) {
+      void endSession()
+      return
+    }
+
     // Store user text message
     await prisma.roleplaySessionMessage.create({
       data: {
@@ -348,7 +416,13 @@ io.on("connection", async (socket) => {
     client.sendUserMessageContent([{ type: "input_text", text: message }])
   })
 
+  // Handle manual session end from client
+  socket.on("endSession", async () => {
+    await endSession()
+  })
+
   socket.on("disconnect", () => {
+    clearTimeout(timeoutTimer)
     client.disconnect()
   })
 })
