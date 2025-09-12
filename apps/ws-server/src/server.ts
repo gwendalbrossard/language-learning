@@ -7,8 +7,8 @@ import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
 
-import { prisma } from "@acme/db"
-import { ZLanguageAnalysisSchema, ZPracticeSchema } from "@acme/validators"
+import { prisma, RoleplaySessionMessageRole } from "@acme/db"
+import { ZFeedbackSchema, ZPracticeSchema } from "@acme/validators"
 
 import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "~/env.server"
@@ -22,17 +22,17 @@ const io = new Server(server)
 // OpenAI model configuration for grammar checking
 const azureOpenaiModel = azure("gpt-4o-mini")
 
-// Comprehensive language analysis function combining grammar checking and detailed feedback
-async function analyzeLanguage(text: string, learningLanguage: string, userLanguage: string, previousContext?: string, difficulty = "A1") {
+// Comprehensive feedback function combining grammar checking and detailed feedback
+async function getFeedback(text: string, learningLanguage: string, userLanguage: string, previousContext?: string, difficulty = "A1") {
   const { object } = await generateObject({
     model: azureOpenaiModel,
-    schemaName: "language-analysis",
-    schema: ZLanguageAnalysisSchema,
-    prompt: `You are an expert language tutor providing comprehensive analysis for someone learning ${learningLanguage} (their native language is ${userLanguage}).
+    schemaName: "feedback",
+    schema: ZFeedbackSchema,
+    prompt: `You are an expert language tutor providing comprehensive feedback for someone learning ${learningLanguage} (their native language is ${userLanguage}).
 
 CRITICAL: ALL feedback messages, explanations, and detailed feedback MUST be written in ${userLanguage} (the user's native language).
 
-IMPORTANT: This text comes from ORAL CONVERSATION, not written text. It's a speech transcript from someone speaking naturally. Adapt your analysis for spoken language patterns, not formal writing standards.
+IMPORTANT: This text comes from ORAL CONVERSATION, not written text. It's a speech transcript from someone speaking naturally. Adapt your feedback for spoken language patterns, not formal writing standards.
 
 LEARNER PROFILE:
 - Learning language: ${learningLanguage} (ISO code)
@@ -45,7 +45,7 @@ ${previousContext ? `Previous conversation context: ${previousContext}` : "No pr
 
 TEXT TO ANALYZE: "${text}"
 
-ANALYSIS REQUIREMENTS:
+FEEDBACK REQUIREMENTS:
 
 1. OVERALL QUALITY (1-100): Evaluate overall correctness and appropriateness
 2. FEEDBACK: Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${userLanguage})
@@ -196,19 +196,27 @@ io.on("connection", async (socket) => {
         text: item.formatted.transcript,
       })
 
-      // Check grammar when transcript is final
+      // Store user message when transcript is complete
       if (item.status === "completed" && item.formatted.transcript) {
         const transcript = item.formatted.transcript
 
-        // Language preferences for this socket connection
+        // Store user message
+        const userMessage = await prisma.roleplaySessionMessage.create({
+          data: {
+            sessionId: roleplaySession.id,
+            role: RoleplaySessionMessageRole.USER,
+            content: transcript,
+          },
+        })
+
+        // User language preferences for this socket connection
+        // TODO: Get user's actual learning language and user language
         const userLanguagePreferences = {
           learningLanguage: "FR",
           userLanguage: "EN",
         }
 
-        const analysisStartTime = performance.now()
-
-        const analysisResult = await analyzeLanguage(
+        const feedbackResult = await getFeedback(
           transcript,
           userLanguagePreferences.learningLanguage,
           userLanguagePreferences.userLanguage,
@@ -216,19 +224,18 @@ io.on("connection", async (socket) => {
           "C2", // TODO: Get user's actual difficulty level
         )
 
-        const analysisEndTime = performance.now()
-        const analysisDuration = Math.round(analysisEndTime - analysisStartTime)
+        // Update user message with feedback
+        await prisma.roleplaySessionMessage.update({
+          where: { id: userMessage.id },
+          data: {
+            feedback: feedbackResult,
+          },
+        })
 
-        console.log(`Language analysis completed for: "${transcript}"`)
-        console.log(`Analysis took: ${analysisDuration}ms`)
-
-        console.log(analysisResult)
-
-        // Emit comprehensive analysis result
-        socket.emit("languageAnalysis", {
+        // Emit comprehensive feedback result
+        socket.emit("feedback", {
           messageId: item.id,
-          analysis: analysisResult,
-          analysisDuration,
+          feedback: feedbackResult,
         })
       }
     } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
@@ -247,9 +254,25 @@ io.on("connection", async (socket) => {
       })
     }
 
-    // Send bot responses to the client
-    if (item.role !== "user" && item.formatted.transcript) {
+    // Send bot responses to the client and store them
+    if (item.role !== "user" && item.formatted.transcript && item.status === "completed") {
       console.log(`Assistant transcript: ${item.formatted.transcript}`)
+
+      // Store assistant message
+      await prisma.roleplaySessionMessage.create({
+        data: {
+          sessionId: roleplaySession.id,
+          role: RoleplaySessionMessageRole.ASSISTANT,
+          content: item.formatted.transcript,
+        },
+      })
+
+      socket.emit("conversationUpdate", {
+        id: item.id,
+        text: item.formatted.transcript,
+      })
+    } else if (item.role !== "user" && item.formatted.transcript) {
+      // Still emit partial responses for real-time feedback
       socket.emit("conversationUpdate", {
         id: item.id,
         text: item.formatted.transcript,
@@ -303,7 +326,16 @@ io.on("connection", async (socket) => {
   })
 
   // Handle text messages from the user
-  socket.on("userMessage", (message: string) => {
+  socket.on("userMessage", async (message: string) => {
+    // Store user text message
+    await prisma.roleplaySessionMessage.create({
+      data: {
+        sessionId: roleplaySession.id,
+        role: RoleplaySessionMessageRole.USER,
+        content: message,
+      },
+    })
+
     client.sendUserMessageContent([{ type: "input_text", text: message }])
   })
 
