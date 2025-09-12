@@ -4,7 +4,6 @@ export const roleplaySessionMessageSelect = Prisma.validator<Prisma.RoleplaySess
   id: true,
   role: true,
   content: true,
-  order: true,
   feedback: true,
   createdAt: true,
   updatedAt: true,

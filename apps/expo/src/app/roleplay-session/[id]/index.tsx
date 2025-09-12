@@ -9,7 +9,7 @@ import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
 
-import type { TLanguageAnalysisSchema, TPracticeSchema } from "@acme/validators"
+import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
@@ -19,7 +19,7 @@ interface Message {
   id: string
   role: "user" | "assistant"
   transcript: string
-  analysis?: TLanguageAnalysisSchema
+  feedback?: TFeedbackSchema
 }
 
 const RoleplaySession: FC = () => {
@@ -87,8 +87,8 @@ const RoleplaySession: FC = () => {
       void interruptAudio()
     })
 
-    socketRef.current.on("languageAnalysis", (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
-      addLanguageAnalysisToMessage(data)
+    socketRef.current.on("feedback", (data: { messageId: string; feedback: TFeedbackSchema }) => {
+      addFeedbackToMessage(data)
     })
   }, [id])
 
@@ -223,7 +223,7 @@ const RoleplaySession: FC = () => {
     }, 100)
   }
 
-  const addLanguageAnalysisToMessage = (data: { messageId: string; analysis: TLanguageAnalysisSchema; analysisDuration: number }) => {
+  const addFeedbackToMessage = (data: { messageId: string; feedback: TFeedbackSchema }) => {
     setMessages((prev) => {
       // Find the message by ID
       const messageIndex = prev.findIndex((msg) => msg.id === data.messageId)
@@ -234,14 +234,13 @@ const RoleplaySession: FC = () => {
       if (currentMessage) {
         updatedMessages[messageIndex] = {
           ...currentMessage,
-          analysis: data.analysis,
+          feedback: data.feedback,
         }
       }
 
       return updatedMessages
     })
 
-    console.log(`Language analysis completed in ${data.analysisDuration}ms`)
     scrollToBottom()
   }
 
@@ -425,35 +424,35 @@ const RoleplaySession: FC = () => {
                 <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
               </View>
 
-              {/* Language analysis display */}
-              {message.analysis && (
+              {/* Feedback display */}
+              {message.feedback && (
                 <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
                   {/* Header with quality score */}
                   <View className="mb-3 flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-blue-800">📝 Language Analysis</Text>
+                    <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
                     <View className="rounded-full bg-blue-100 px-2 py-1">
-                      <Text className="text-xs font-bold text-blue-700">{message.analysis.quality}/100</Text>
+                      <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
                     </View>
                   </View>
 
                   {/* Main feedback */}
                   <View className="mb-3">
-                    <Text className="text-sm text-blue-700">{message.analysis.feedback}</Text>
+                    <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
                   </View>
 
                   {/* Corrected phrase */}
-                  {message.analysis.correctedPhrase !== message.transcript && (
+                  {message.feedback.correctedPhrase !== message.transcript && (
                     <View className="mb-3 rounded-lg bg-green-100 p-2">
                       <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
-                      <Text className="text-sm font-medium text-green-800">"{message.analysis.correctedPhrase}"</Text>
+                      <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
                     </View>
                   )}
 
                   {/* Individual corrections */}
-                  {message.analysis.corrections.length > 0 && (
+                  {message.feedback.corrections.length > 0 && (
                     <View className="mb-3">
                       <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
-                      {message.analysis.corrections.map((correction, index) => (
+                      {message.feedback.corrections.map((correction, index) => (
                         <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
                           <View className="mb-1 flex-row">
                             <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
@@ -472,21 +471,21 @@ const RoleplaySession: FC = () => {
                     <View className="space-y-1">
                       <View className="flex-row items-center justify-between">
                         <Text className="text-xs text-gray-600">Accuracy:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.analysis.accuracy.score}/100</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
                       </View>
-                      <Text className="text-xs italic text-gray-500">{message.analysis.accuracy.message}</Text>
+                      <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
 
                       <View className="flex-row items-center justify-between">
                         <Text className="text-xs text-gray-600">Fluency:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.analysis.fluency.score}/100</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
                       </View>
-                      <Text className="text-xs italic text-gray-500">{message.analysis.fluency.message}</Text>
+                      <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
 
                       <View className="flex-row items-center justify-between">
                         <Text className="text-xs text-gray-600">Vocabulary:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.analysis.vocabulary.score}/100</Text>
+                        <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
                       </View>
-                      <Text className="text-xs italic text-gray-500">{message.analysis.vocabulary.message}</Text>
+                      <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
                     </View>
                   </View>
                 </View>

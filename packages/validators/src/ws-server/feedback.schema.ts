@@ -1,6 +1,6 @@
 import { z } from "zod/v4"
 
-export const ZLanguageAnalysisSchema = z.object({
+export const ZFeedbackSchema = z.object({
   quality: z.number().min(1).max(100).describe("Overall correctness score from 1-100"),
   feedback: z
     .string()
@@ -30,4 +30,4 @@ export const ZLanguageAnalysisSchema = z.object({
   }),
 })
 
-export type TLanguageAnalysisSchema = z.infer<typeof ZLanguageAnalysisSchema>
+export type TFeedbackSchema = z.infer<typeof ZFeedbackSchema>

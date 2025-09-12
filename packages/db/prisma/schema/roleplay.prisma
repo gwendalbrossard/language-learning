@@ -38,7 +38,6 @@ model RoleplaySessionMessage {
   id      String                     @id @default(cuid())
   role    RoleplaySessionMessageRole
   content String
-  order   Int
 
   feedback Json?
 
