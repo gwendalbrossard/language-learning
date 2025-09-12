@@ -209,6 +209,15 @@ io.on("connection", async (socket) => {
           },
         })
 
+        const roleplayScenarioMessages = await prisma.roleplaySessionMessage.findMany({
+          where: { sessionId: roleplaySession.id },
+        })
+        const messages = roleplayScenarioMessages
+          .map((message) => {
+            return JSON.stringify({ role: message.role, content: message.content })
+          })
+          .join("\n")
+
         // User language preferences for this socket connection
         // TODO: Get user's actual learning language and user language
         const userLanguagePreferences = {
@@ -220,7 +229,7 @@ io.on("connection", async (socket) => {
           transcript,
           userLanguagePreferences.learningLanguage,
           userLanguagePreferences.userLanguage,
-          undefined, // TODO: Add previous context when available
+          messages,
           "C2", // TODO: Get user's actual difficulty level
         )
 
