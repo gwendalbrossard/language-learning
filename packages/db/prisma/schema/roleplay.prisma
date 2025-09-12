@@ -16,7 +16,8 @@ model RoleplayScenario {
 }
 
 model RoleplaySession {
-  id String @id @default(cuid())
+  id       String @id @default(cuid())
+  duration Int    @default(0)
 
   scenarioId String
   scenario   RoleplayScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
