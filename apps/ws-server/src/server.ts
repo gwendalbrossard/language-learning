@@ -167,6 +167,79 @@ io.on("connection", async (socket) => {
 
   let sessionEnded = false
 
+  // Speaking duration tracking
+  let totalUserSpeakingDuration = 0 // in seconds
+  let totalAiSpeakingDuration = 0 // in seconds
+
+  // Helper function to calculate audio duration from PCM16 audio data
+  const calculateAudioDuration = (audioBuffer: Int16Array, sampleRate = 24000): number => {
+    // PCM16 audio duration = number of samples / sample rate
+    const durationSeconds = audioBuffer.length / sampleRate
+    return durationSeconds
+  }
+
+  // Helper function to parse WAV header and extract PCM data
+  const parseWAVFile = (wavBuffer: ArrayBuffer): { pcmData: Int16Array; sampleRate: number; channels: number; bitsPerSample: number } => {
+    const view = new DataView(wavBuffer)
+
+    // Check RIFF header
+    const riff = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3))
+    if (riff !== "RIFF") {
+      console.error("Invalid WAV file: missing RIFF header")
+      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+    }
+
+    // Check WAVE header
+    const wave = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11))
+    if (wave !== "WAVE") {
+      console.error("Invalid WAV file: missing WAVE header")
+      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+    }
+
+    // Find fmt chunk (usually at offset 12)
+    let offset = 12
+    while (offset < wavBuffer.byteLength - 8) {
+      const chunkId = String.fromCharCode(view.getUint8(offset), view.getUint8(offset + 1), view.getUint8(offset + 2), view.getUint8(offset + 3))
+      const chunkSize = view.getUint32(offset + 4, true) // little endian
+
+      if (chunkId === "fmt ") {
+        // Parse format chunk
+        const _audioFormat = view.getUint16(offset + 8, true)
+        const channels = view.getUint16(offset + 10, true)
+        const sampleRate = view.getUint32(offset + 12, true)
+        const bitsPerSample = view.getUint16(offset + 22, true)
+
+        // Find data chunk
+        let dataOffset = offset + 8 + chunkSize
+        while (dataOffset < wavBuffer.byteLength - 8) {
+          const dataChunkId = String.fromCharCode(
+            view.getUint8(dataOffset),
+            view.getUint8(dataOffset + 1),
+            view.getUint8(dataOffset + 2),
+            view.getUint8(dataOffset + 3),
+          )
+          const dataSize = view.getUint32(dataOffset + 4, true)
+
+          if (dataChunkId === "data") {
+            // Extract PCM data
+            const pcmData = new Int16Array(wavBuffer, dataOffset + 8, dataSize / 2) // divide by 2 for 16-bit samples
+            return { pcmData, sampleRate, channels, bitsPerSample }
+          }
+
+          dataOffset += 8 + dataSize
+        }
+
+        console.error("Data chunk not found in WAV file")
+        return { pcmData: new Int16Array(0), sampleRate, channels, bitsPerSample }
+      }
+
+      offset += 8 + chunkSize
+    }
+
+    console.error("fmt chunk not found in WAV file")
+    return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+  }
+
   const checkSessionTimeout = () => {
     const elapsed = Date.now() - sessionStartTime
     return elapsed >= SESSION_TIMEOUT_MS
@@ -177,11 +250,17 @@ io.on("connection", async (socket) => {
     const currentTime = Date.now()
     const currentDuration = Math.floor((currentTime - sessionStartTime) / 1000) // duration in seconds
 
-    console.log(`Updating session duration: sessionStartTime=${sessionStartTime}, currentTime=${currentTime}, duration=${currentDuration}s`)
+    console.log(
+      `Session: ${currentDuration}s total, user spoke: ${totalUserSpeakingDuration.toFixed(1)}s, AI spoke: ${totalAiSpeakingDuration.toFixed(1)}s`,
+    )
 
     await prisma.roleplaySession.update({
       where: { id: roleplaySession.id },
-      data: { duration: currentDuration },
+      data: {
+        duration: currentDuration,
+        userSpeakingDuration: totalUserSpeakingDuration,
+        aiSpeakingDuration: totalAiSpeakingDuration,
+      },
     })
     return currentDuration
   }
@@ -190,12 +269,10 @@ io.on("connection", async (socket) => {
     if (sessionEnded) return
     sessionEnded = true
 
-    console.log(`Ending session at time: ${Date.now()}, session started at: ${sessionStartTime}`)
-
     // Update final duration before ending
     const finalDuration = await updateSessionDuration()
 
-    console.log(`Session ended for user: ${session.user.id} and sessionId: ${roleplaySession.id} after ${finalDuration} seconds`)
+    console.log(`Session ended after ${finalDuration}s for user: ${session.user.id}`)
     socket.emit("sessionEnded")
     socket.disconnect()
   }
@@ -237,8 +314,6 @@ io.on("connection", async (socket) => {
     const { item, delta } = event
     if (!item) throw new Error("No item found")
     if (!item.formatted) throw new Error("No formatted item found")
-
-    console.log(`Conversation updated - Role: ${item.role}, Status: ${item.status}, Type: ${item.type}`)
 
     // Handle user input (partial or complete transcription)
     if (item.role === "user" && item.formatted.transcript) {
@@ -347,7 +422,15 @@ io.on("connection", async (socket) => {
     // Send audio updates to client
     if (delta?.audio) {
       const audioData = delta.audio.buffer
-      console.log(`Sending audio delta: ${audioData.byteLength} bytes`)
+
+      // Calculate AI speaking duration from audio delta
+      if (audioData.byteLength > 0) {
+        // Convert ArrayBuffer to Int16Array for PCM16 analysis
+        const audioBuffer = new Int16Array(audioData)
+        const audioDuration = calculateAudioDuration(audioBuffer)
+        totalAiSpeakingDuration += audioDuration
+      }
+
       socket.emit("audioStream", audioData, item.id)
     }
   })
@@ -358,11 +441,27 @@ io.on("connection", async (socket) => {
   })
 
   // Handle complete audio data from the client
-  socket.on("completeAudio", (audioBuffer: ArrayBuffer) => {
+  socket.on("completeAudio", (audioBuffer: Buffer) => {
     // Check session timeout before processing
     if (checkSessionTimeout()) {
       void endSession()
       return
+    }
+
+    // Calculate user speaking duration from the actual audio data
+    if (audioBuffer.byteLength > 0) {
+      // Convert Buffer to ArrayBuffer for WAV parsing
+      const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
+
+      // Parse WAV file and extract PCM data with correct parameters
+      const { pcmData, sampleRate } = parseWAVFile(arrayBuffer)
+
+      if (pcmData.length > 0) {
+        // Calculate duration using actual sample rate from WAV file
+        const audioDuration = calculateAudioDuration(pcmData, sampleRate)
+        totalUserSpeakingDuration += audioDuration
+        console.log(`User spoke for ${audioDuration.toFixed(2)}s, total: ${totalUserSpeakingDuration.toFixed(2)}s`)
+      }
     }
 
     // Convert ArrayBuffer to base64 for the WebSocket API
