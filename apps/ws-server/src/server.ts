@@ -6,6 +6,7 @@ import { RealtimeClient } from "@openai/realtime-api-beta"
 import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
+import WebSocket from "ws"
 
 import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { ZFeedbackSchema, ZPracticeSchema } from "@acme/validators"
@@ -126,7 +127,6 @@ io.on("connection", async (socket) => {
     return
   }
 
-  console.log(practice)
   const parsedPractice = ZPracticeSchema.safeParse(JSON.parse(practice))
 
   if (!parsedPractice.success) {
@@ -171,75 +171,6 @@ io.on("connection", async (socket) => {
   let totalUserSpeakingDuration = 0 // in seconds
   let totalAiSpeakingDuration = 0 // in seconds
 
-  // Helper function to calculate audio duration from PCM16 audio data
-  const calculateAudioDuration = (audioBuffer: Int16Array, sampleRate = 24000): number => {
-    // PCM16 audio duration = number of samples / sample rate
-    const durationSeconds = audioBuffer.length / sampleRate
-    return durationSeconds
-  }
-
-  // Helper function to parse WAV header and extract PCM data
-  const parseWAVFile = (wavBuffer: ArrayBuffer): { pcmData: Int16Array; sampleRate: number; channels: number; bitsPerSample: number } => {
-    const view = new DataView(wavBuffer)
-
-    // Check RIFF header
-    const riff = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3))
-    if (riff !== "RIFF") {
-      console.error("Invalid WAV file: missing RIFF header")
-      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
-    }
-
-    // Check WAVE header
-    const wave = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11))
-    if (wave !== "WAVE") {
-      console.error("Invalid WAV file: missing WAVE header")
-      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
-    }
-
-    // Find fmt chunk (usually at offset 12)
-    let offset = 12
-    while (offset < wavBuffer.byteLength - 8) {
-      const chunkId = String.fromCharCode(view.getUint8(offset), view.getUint8(offset + 1), view.getUint8(offset + 2), view.getUint8(offset + 3))
-      const chunkSize = view.getUint32(offset + 4, true) // little endian
-
-      if (chunkId === "fmt ") {
-        // Parse format chunk
-        const _audioFormat = view.getUint16(offset + 8, true)
-        const channels = view.getUint16(offset + 10, true)
-        const sampleRate = view.getUint32(offset + 12, true)
-        const bitsPerSample = view.getUint16(offset + 22, true)
-
-        // Find data chunk
-        let dataOffset = offset + 8 + chunkSize
-        while (dataOffset < wavBuffer.byteLength - 8) {
-          const dataChunkId = String.fromCharCode(
-            view.getUint8(dataOffset),
-            view.getUint8(dataOffset + 1),
-            view.getUint8(dataOffset + 2),
-            view.getUint8(dataOffset + 3),
-          )
-          const dataSize = view.getUint32(dataOffset + 4, true)
-
-          if (dataChunkId === "data") {
-            // Extract PCM data
-            const pcmData = new Int16Array(wavBuffer, dataOffset + 8, dataSize / 2) // divide by 2 for 16-bit samples
-            return { pcmData, sampleRate, channels, bitsPerSample }
-          }
-
-          dataOffset += 8 + dataSize
-        }
-
-        console.error("Data chunk not found in WAV file")
-        return { pcmData: new Int16Array(0), sampleRate, channels, bitsPerSample }
-      }
-
-      offset += 8 + chunkSize
-    }
-
-    console.error("fmt chunk not found in WAV file")
-    return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
-  }
-
   const checkSessionTimeout = () => {
     const elapsed = Date.now() - sessionStartTime
     return elapsed >= SESSION_TIMEOUT_MS
@@ -282,208 +213,105 @@ io.on("connection", async (socket) => {
     void endSession()
   }, SESSION_TIMEOUT_MS)
 
-  const client = new RealtimeClient({ apiKey: env.OPENAI_API_KEY })
-
-  client.updateSession({
-    instructions: "You are a helpful, english speaking assistant.",
-    model: "gpt-4o-mini-realtime-preview",
-    voice: "ballad",
-    turn_detection: null, // Disable server VAD since we're using manual recording
-    input_audio_format: "pcm16", // Set input audio format
-    output_audio_format: "pcm16", // Set output audio format
-    input_audio_transcription: { model: "whisper-1" },
+  const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime"
+  const ws = new WebSocket(url, {
+    headers: {
+      Authorization: "Bearer " + env.OPENAI_API_KEY,
+    },
   })
 
-  client.connect().catch((error) => {
-    console.error("Failed to connect:", error)
-    socket.emit("error", "Failed to connect to OpenAI API.")
-  })
+  ws.on("open", function open() {
+    console.log("Connected to server.")
 
-  client.on("error", (error: Realtime.Error) => {
-    console.error("Realtime API error:", error)
-  })
-
-  // Handle conversation updates for transcription and audio
-  client.on("conversation.updated", async (event: EventHandlerResult) => {
-    // Check session timeout before processing
-    if (checkSessionTimeout()) {
-      void endSession()
-      return
-    }
-
-    const { item, delta } = event
-    if (!item) throw new Error("No item found")
-    if (!item.formatted) throw new Error("No formatted item found")
-
-    // Handle user input (partial or complete transcription)
-    if (item.role === "user" && item.formatted.transcript) {
-      console.log(`User transcript: ${item.formatted.transcript}`)
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
-
-      // Store user message when transcript is complete
-      if (item.status === "completed" && item.formatted.transcript) {
-        const transcript = item.formatted.transcript
-
-        // Store user message
-        const userMessage = await prisma.roleplaySessionMessage.create({
-          data: {
-            sessionId: roleplaySession.id,
-            role: RoleplaySessionMessageRole.USER,
-            content: transcript,
+    // Initialize session
+    ws.send(
+      JSON.stringify({
+        type: "session.update",
+        session: {
+          type: "realtime",
+          model: "gpt-realtime",
+          audio: {
+            input: {
+              format: {
+                type: "audio/pcm",
+                rate: 24000,
+              },
+              turn_detection: null,
+            },
+            output: {
+              format: {
+                type: "audio/pcm",
+                rate: 24000,
+              },
+              voice: "ballad",
+            },
           },
-        })
-
-        const roleplayScenarioMessages = await prisma.roleplaySessionMessage.findMany({
-          where: { sessionId: roleplaySession.id },
-        })
-        const messages = roleplayScenarioMessages
-          .map((message) => {
-            return JSON.stringify({ role: message.role, content: message.content })
-          })
-          .join("\n")
-
-        // User language preferences for this socket connection
-        // TODO: Get user's actual learning language and user language
-        const userLanguagePreferences = {
-          learningLanguage: "FR",
-          userLanguage: "EN",
-        }
-
-        const feedbackResult = await getFeedback(
-          transcript,
-          userLanguagePreferences.learningLanguage,
-          userLanguagePreferences.userLanguage,
-          messages,
-          "C2", // TODO: Get user's actual difficulty level
-        )
-
-        // Update user message with feedback
-        await prisma.roleplaySessionMessage.update({
-          where: { id: userMessage.id },
-          data: {
-            feedback: feedbackResult,
-          },
-        })
-
-        await updateSessionDuration()
-
-        // Emit comprehensive feedback result
-        socket.emit("feedback", {
-          messageId: item.id,
-          feedback: feedbackResult,
-        })
-      }
-    } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
-      // Emit placeholder while waiting for transcript if audio is present
-      console.log("User audio received, awaiting transcript")
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: "(awaiting transcript)",
-      })
-    } else if (item.role === "user" && !item.formatted.transcript) {
-      // Fallback in case neither transcript nor audio is present
-      console.log("User item sent without transcript")
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: "(item sent)",
-      })
-    }
-
-    // Send bot responses to the client and store them
-    if (item.role !== "user" && item.formatted.transcript && item.status === "completed") {
-      console.log(`Assistant transcript: ${item.formatted.transcript}`)
-
-      // Store assistant message
-      await prisma.roleplaySessionMessage.create({
-        data: {
-          sessionId: roleplaySession.id,
-          role: RoleplaySessionMessageRole.ASSISTANT,
-          content: item.formatted.transcript,
+          instructions: "Speak clearly and briefly. Confirm understanding before taking actions.",
         },
-      })
-
-      await updateSessionDuration()
-
-      socket.emit("conversationUpdate", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
-    } else if (item.role !== "user" && item.formatted.transcript) {
-      // Still emit partial responses for real-time feedback
-      socket.emit("conversationUpdate", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
-    }
-
-    // Send audio updates to client
-    if (delta?.audio) {
-      const audioData = delta.audio.buffer
-
-      // Calculate AI speaking duration from audio delta
-      if (audioData.byteLength > 0) {
-        // Convert ArrayBuffer to Int16Array for PCM16 analysis
-        const audioBuffer = new Int16Array(audioData)
-        const audioDuration = calculateAudioDuration(audioBuffer)
-        totalAiSpeakingDuration += audioDuration
-      }
-
-      socket.emit("audioStream", audioData, item.id)
-    }
+      }),
+    )
   })
 
-  // Handle conversation interruption
-  client.on("conversation.interrupted", () => {
-    socket.emit("conversationInterrupted")
+  ws.on("message", function incoming(message) {
+    console.log(JSON.parse(message.toString()))
+    const parsedMessage = JSON.parse(message.toString())
+    const type = parsedMessage.type as string
+
+    switch (type) {
+      case "response.audio.delta":
+        socket.emit("audioStream")
+        break
+      case "response.output_audio.done":
+        socket.emit("audioStreamDone")
+        break
+      default:
+        break
+    }
   })
 
   // Handle complete audio data from the client
-  socket.on("completeAudio", (audioBuffer: Buffer) => {
+  socket.on("completeAudio", (audioBase64: string) => {
     // Check session timeout before processing
     if (checkSessionTimeout()) {
       void endSession()
       return
     }
 
-    // Calculate user speaking duration from the actual audio data
-    if (audioBuffer.byteLength > 0) {
-      // Convert Buffer to ArrayBuffer for WAV parsing
-      const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
-
-      // Parse WAV file and extract PCM data with correct parameters
-      const { pcmData, sampleRate } = parseWAVFile(arrayBuffer)
-
-      if (pcmData.length > 0) {
-        // Calculate duration using actual sample rate from WAV file
-        const audioDuration = calculateAudioDuration(pcmData, sampleRate)
-        totalUserSpeakingDuration += audioDuration
-        console.log(`User spoke for ${audioDuration.toFixed(2)}s, total: ${totalUserSpeakingDuration.toFixed(2)}s`)
-      }
-    }
-
-    // Convert ArrayBuffer to base64 for the WebSocket API
-    const uint8Array = new Uint8Array(audioBuffer)
-    const base64Audio = Buffer.from(uint8Array).toString("base64")
-
-    console.log(`Received complete audio: ${uint8Array.length} bytes`)
-
-    // Use the lower-level WebSocket API to send audio properly
-    // First, clear the input audio buffer
-    client.realtime.send("input_audio_buffer.clear", {})
-
-    // Append the audio data to the buffer
-    client.realtime.send("input_audio_buffer.append", {
-      audio: base64Audio,
-    })
+    ws.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_audio",
+              audio: audioBase64,
+            },
+          ],
+        },
+      }),
+    )
 
     // Commit the audio buffer to create a user message
-    client.realtime.send("input_audio_buffer.commit", {})
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.commit",
+      }),
+    )
 
     // Create a response from the model
-    client.realtime.send("response.create", {})
+    ws.send(
+      JSON.stringify({
+        type: "response.create",
+      }),
+    )
+
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.clear",
+      }),
+    )
   })
 
   // Handle cancel response requests from the client
@@ -512,7 +340,30 @@ io.on("connection", async (socket) => {
       },
     })
 
-    client.sendUserMessageContent([{ type: "input_text", text: message }])
+    ws.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: message,
+            },
+          ],
+        },
+      }),
+    )
+
+    ws.send(
+      JSON.stringify({
+        type: "response.create",
+        response: {
+          output_modalities: ["text"],
+        },
+      }),
+    )
   })
 
   // Handle manual session end from client
@@ -522,7 +373,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", () => {
     clearTimeout(timeoutTimer)
-    client.disconnect()
+    ws.close()
   })
 })
 

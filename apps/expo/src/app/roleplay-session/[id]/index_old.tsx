@@ -76,7 +76,16 @@ const RoleplaySession: FC = () => {
       updateBotMessage(id, text)
     })
 
-    socketRef.current.on("audioStream", async () => {})
+    socketRef.current.on("audioStream", async (arrayBuffer: ArrayBuffer, id: string) => {
+      if (arrayBuffer.byteLength > 0) {
+        try {
+          await playAudioChunk(arrayBuffer, id)
+        } catch (error) {
+          console.error("Error playing audio:", error)
+          setIsPlayingAudio(false)
+        }
+      }
+    })
 
     socketRef.current.on("conversationInterrupted", () => {
       void interruptAudio()
@@ -351,6 +360,29 @@ const RoleplaySession: FC = () => {
     }
   }
 
+  const convertAudioFileToArrayBuffer = async (uri: string): Promise<ArrayBuffer | null> => {
+    try {
+      // Read the file as base64
+      const base64Audio = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      })
+
+      // Convert base64 to ArrayBuffer
+      const binaryString = atob(base64Audio)
+      const bytes = new Uint8Array(binaryString.length)
+
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+
+      console.log(`Converted audio file: ${bytes.byteLength} bytes`)
+      return bytes.buffer
+    } catch (error) {
+      console.error("Error converting audio file:", error)
+      return null
+    }
+  }
+
   const stopRecording = async (): Promise<void> => {
     if (isRecording) {
       setIsRecording(false)
@@ -369,16 +401,14 @@ const RoleplaySession: FC = () => {
           setRecordedAudioUri(uri)
           console.log("Audio recorded at:", uri)
 
-          // Read the audio file as base64
-          const base64Audio = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          })
+          // Read the audio file and convert to ArrayBuffer
+          const audioData = await convertAudioFileToArrayBuffer(uri)
 
-          if (base64Audio && base64Audio.length > 0) {
-            // Send complete audio to server as base64
+          if (audioData && audioData.byteLength > 0) {
+            // Send complete audio to server
             if (socketRef.current) {
-              socketRef.current.emit("completeAudio", base64Audio)
-              console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
+              socketRef.current.emit("completeAudio", audioData)
+              console.log(`Sent complete audio: ${audioData.byteLength} bytes`)
             }
 
             // Update UI to show audio was sent
@@ -392,11 +422,33 @@ const RoleplaySession: FC = () => {
           displayUserMessage(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
         }
 
-        console.log("Stopped recording and sent complete audio as base64")
+        console.log("Stopped recording and sent complete audio")
       } catch (error) {
         console.error("Failed to stop recording:", error)
         displayUserMessage(`error-${Date.now()}`, "❌ Error stopping recording")
       }
+    }
+  }
+
+  const playAudioChunk = async (arrayBuffer: ArrayBuffer, id: string) => {
+    try {
+      // Convert ArrayBuffer to base64 for expo-av
+      const uint8Array = new Uint8Array(arrayBuffer)
+      const base64String = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)))
+      const uri = `data:audio/wav;base64,${base64String}`
+
+      const { sound } = await Audio.Sound.createAsync({ uri })
+      soundRef.current = sound
+
+      if (!isPlayingAudio) {
+        setIsPlayingAudio(true)
+        console.log("Started playing audio response")
+      }
+
+      await sound.playAsync()
+      console.log(`Playing audio chunk with ID: ${id}`)
+    } catch (error) {
+      console.error("Error playing audio chunk:", error)
     }
   }
 
