@@ -258,11 +258,24 @@ io.on("connection", async (socket) => {
     const type = parsedMessage.type as string
 
     switch (type) {
-      case "response.audio.delta":
-        socket.emit("audioStream")
+      case "response.output_audio.delta":
+        // Forward audio chunk to client
+        socket.emit("audioStream", {
+          delta: parsedMessage.delta,
+          response_id: parsedMessage.response_id,
+          item_id: parsedMessage.item_id,
+          output_index: parsedMessage.output_index,
+          content_index: parsedMessage.content_index,
+        })
         break
       case "response.output_audio.done":
-        socket.emit("audioStreamDone")
+        // Signal end of audio stream
+        socket.emit("audioStreamDone", {
+          response_id: parsedMessage.response_id,
+          item_id: parsedMessage.item_id,
+          output_index: parsedMessage.output_index,
+          content_index: parsedMessage.content_index,
+        })
         break
       default:
         break
@@ -315,9 +328,14 @@ io.on("connection", async (socket) => {
   })
 
   // Handle cancel response requests from the client
-  socket.on("cancelResponse", ({ trackId, offset }: { trackId: string; offset: number }) => {
+  socket.on("cancelResponse", () => {
     try {
-      client.cancelResponse(trackId, offset)
+      // Send cancel response to OpenAI WebSocket
+      ws.send(
+        JSON.stringify({
+          type: "response.cancel",
+        }),
+      )
     } catch (error) {
       console.error("Error canceling response:", error)
     }
