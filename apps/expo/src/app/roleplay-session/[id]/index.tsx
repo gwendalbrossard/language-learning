@@ -35,12 +35,12 @@ const RoleplaySession: FC = () => {
   ])
   const [userInput, setUserInput] = useState("")
   const [isRecording, setIsRecording] = useState(false)
-  const [_isPlayingAudio, _setIsPlayingAudio] = useState(false)
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false)
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
-  const [currentTurnId, setCurrentTurnId] = useState<string | null>(null)
+  const audioChunkIndexRef = useRef<{ [responseId: string]: number }>({})
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
@@ -83,36 +83,34 @@ const RoleplaySession: FC = () => {
       (data: { delta: string; response_id?: string; item_id?: string; output_index?: number; content_index?: number }) => {
         console.log(`Received audio chunk: ${data.delta.length} chars, response_id: ${data.response_id}`)
 
-        // Use response_id as turn ID, or create one if not available
-        let activeTurnId = data.response_id ?? currentTurnId
-        if (!activeTurnId) {
-          activeTurnId = `turn_${Date.now()}`
-          setCurrentTurnId(activeTurnId)
-          console.log("Starting new audio stream with turnId:", activeTurnId)
-        } else if (!currentTurnId) {
-          setCurrentTurnId(activeTurnId)
-          console.log("Starting new audio stream with response_id:", activeTurnId)
-        } else {
-          console.log("Continuing audio stream with existing turnId:", activeTurnId)
-        }
+        // Get response ID for tracking chunks
+        const responseId = data.response_id ?? "default"
 
-        if (activeTurnId) {
-          try {
-            // Feed the base64 PCM data directly to the native module
-            /* AudioStreamPlayer.enqueueBase64(data.delta) */
-            console.log("Added audio chunk to native AudioStreamPlayer for turn:", activeTurnId)
-          } catch (error) {
-            console.error("Error processing audio chunk:", error)
+        // Initialize or increment index for this response
+        audioChunkIndexRef.current[responseId] ??= 0
+
+        const chunkIndex = audioChunkIndexRef.current[responseId]++
+
+        try {
+          const audio_evenInfo = {
+            delta: data.delta,
+            index: chunkIndex,
           }
+
+          MyModule.playAudio(audio_evenInfo)
+          console.log(`Successfully added audio chunk ${chunkIndex} to PlayAudioContinuouslyManager for response: ${responseId}`)
+        } catch (error) {
+          console.error("Error processing audio chunk:", error)
         }
       },
     )
 
-    socketRef.current.on("audioStreamDone", () => {
+    socketRef.current.on("audioStreamDone", (data: { response_id?: string }) => {
       console.log("Audio stream completed")
-      if (currentTurnId) {
-        console.log("Audio stream finished for turn:", currentTurnId)
-        setCurrentTurnId(null) // Reset for next response
+      const responseId = data?.response_id ?? "default"
+      if (audioChunkIndexRef.current[responseId]) {
+        console.log(`Audio stream finished for response: ${responseId}, total chunks: ${audioChunkIndexRef.current[responseId]}`)
+        delete audioChunkIndexRef.current[responseId] // Clean up tracking
       }
     })
 
@@ -131,7 +129,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id, currentTurnId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     initializeSocket()
@@ -162,8 +160,7 @@ const RoleplaySession: FC = () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
-      // Clean up native AudioStreamPlayer
-      /* AudioStreamPlayer.stop() */
+      // PlayAudioContinuouslyManager handles cleanup automatically
     }
   }, [initializeSocket])
 
@@ -183,11 +180,13 @@ const RoleplaySession: FC = () => {
         playThroughEarpieceAndroid: false,
       })
 
-      // Initialize native AudioStreamPlayer
-      /* AudioStreamPlayer.initialize() */
+      // Test basic MyModule access
+      console.log("Testing MyModule access...")
+      const testResult = MyModule.test()
+      console.log("MyModule.test() returned:", testResult)
 
       setAudioInitialized(true)
-      console.log("Audio initialized successfully")
+      console.log("Audio initialized successfully - PlayAudioContinuouslyManager auto-initialized")
     } catch (error) {
       console.error("Failed to initialize audio:", error)
       Alert.alert("Error", "Failed to initialize audio. Please check permissions.")
@@ -452,12 +451,10 @@ const RoleplaySession: FC = () => {
         soundRef.current = null
       }
 
-      // Interrupt native AudioStreamPlayer
-      /* AudioStreamPlayer.stop()
-      AudioStreamPlayer.initialize() // Reinitialize for next audio */
+      // Clear native audio queue (PlayAudioContinuouslyManager handles this automatically)
 
-      setCurrentTurnId(null)
-      _setIsPlayingAudio(false)
+      audioChunkIndexRef.current = {} // Clear all chunk indices
+      setIsPlayingAudio(false)
       console.log("Audio playback interrupted")
 
       if (socketRef.current) {
@@ -471,7 +468,6 @@ const RoleplaySession: FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col">
-        <Text>{MyModule.hello()}</Text>
         {/* Timer Header */}
         <View className="border-b border-gray-200 px-4 py-3">
           <View className="flex-row items-center justify-between">
@@ -479,6 +475,7 @@ const RoleplaySession: FC = () => {
               <Text className={`text-lg font-semibold ${timeRemaining < 60 ? "text-red-600" : "text-gray-800"}`}>
                 Time remaining: {formatTime(timeRemaining)}
               </Text>
+              {isPlayingAudio && <Text className="mt-1 text-sm text-blue-600">🔊 AI Speaking...</Text>}
             </View>
             {!sessionEnded && (
               <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">

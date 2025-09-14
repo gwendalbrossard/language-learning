@@ -1,19 +1,17 @@
-import type { StyleProp, ViewStyle } from 'react-native';
+export interface AudioEventInfo {
+  delta: string;
+  index?: number;
+}
 
-export type OnLoadEventPayload = {
-  url: string;
-};
+export interface MyModuleType {
+  /**
+   * Test function to verify module is working
+   */
+  test(): string;
 
-export type MyModuleEvents = {
-  onChange: (params: ChangeEventPayload) => void;
-};
-
-export type ChangeEventPayload = {
-  value: string;
-};
-
-export type MyModuleViewProps = {
-  url: string;
-  onLoad: (event: { nativeEvent: OnLoadEventPayload }) => void;
-  style?: StyleProp<ViewStyle>;
-};
+  /**
+   * Play audio from event info containing base64 delta
+   * @param eventInfo Object containing delta (base64 audio) and optional index
+   */
+  playAudio(eventInfo: AudioEventInfo): void;
+}

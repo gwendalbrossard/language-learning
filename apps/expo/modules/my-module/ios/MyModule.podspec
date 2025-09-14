@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name           = 'MyModule'
   s.version        = '1.0.0'
-  s.summary        = 'A sample project summary'
-  s.description    = 'A sample project description'
+  s.summary        = 'Real-time audio streaming module for Expo'
+  s.description    = 'Native audio streaming module using AVAudioEngine for gapless PCM audio playback'
   s.author         = ''
   s.homepage       = 'https://docs.expo.dev/modules/'
   s.platforms      = {

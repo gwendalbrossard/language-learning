@@ -253,7 +253,6 @@ io.on("connection", async (socket) => {
   })
 
   ws.on("message", function incoming(message) {
-    console.log(JSON.parse(message.toString()))
     const parsedMessage = JSON.parse(message.toString())
     const type = parsedMessage.type as string
 
@@ -400,8 +399,8 @@ io.on("connection", async (socket) => {
   })
 })
 
-console.log("gfhjkd")
 // Start server
+
 const PORT = 3002
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`)
