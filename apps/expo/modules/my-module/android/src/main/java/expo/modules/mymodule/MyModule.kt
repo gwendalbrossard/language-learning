@@ -33,6 +33,14 @@ class MyModule : Module() {
 
     Events("onStateChange", "onError")
 
+    Function("test") {
+      "MyModule Android test successful"
+    }
+
+    Function("playAudio") { eventInfo: Map<String, Any> ->
+      playAudioChunk(eventInfo)
+    }
+
     // Initialize with optional format
     Function("initialize") { formatMap: Map<String, Any>? ->
       initializeAudioTrack(formatMap)
@@ -116,7 +124,7 @@ class MyModule : Module() {
             .setEncoding(audioFormat)
             .build()
         )
-        .setBufferSizeInBytes(bufferSize * 4) // Larger buffer for smoother playback
+        .setBufferSizeInBytes(bufferSize * 6) // Even larger buffer for smoother playback
         .setTransferMode(AudioTrack.MODE_STREAM)
         .build()
 
@@ -129,6 +137,18 @@ class MyModule : Module() {
       Log.d(TAG, "MyModule initialized successfully")
     } catch (e: Exception) {
       sendError("Failed to initialize MyModule: ${e.message}")
+    }
+  }
+
+  private fun playAudioChunk(eventInfo: Map<String, Any>) {
+    // Auto-initialize if not already initialized
+    if (currentState == "stopped") {
+      initializeAudioTrack(null)
+    }
+    
+    val base64String = eventInfo["delta"] as? String ?: ""
+    if (base64String.isNotEmpty()) {
+      enqueueBase64Audio(base64String)
     }
   }
 
@@ -162,11 +182,16 @@ class MyModule : Module() {
           
           // Wait if paused
           while (isPaused && currentState != "stopped") {
-            Thread.sleep(100)
+            Thread.sleep(50) // Reduced sleep time for more responsive pause/resume
           }
           
           if (currentState != "stopped" && currentState != "error") {
-            audioTrack?.write(audioData, 0, audioData.size)
+            val bytesWritten = audioTrack?.write(audioData, 0, audioData.size, AudioTrack.WRITE_NON_BLOCKING) ?: 0
+            
+            // If we couldn't write all data immediately, use blocking write for remainder
+            if (bytesWritten < audioData.size && bytesWritten >= 0) {
+              audioTrack?.write(audioData, bytesWritten, audioData.size - bytesWritten)
+            }
           }
         } catch (e: InterruptedException) {
           Log.d(TAG, "Audio processing interrupted")

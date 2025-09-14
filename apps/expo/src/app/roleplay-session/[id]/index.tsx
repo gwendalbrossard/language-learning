@@ -98,7 +98,8 @@ const RoleplaySession: FC = () => {
           }
 
           MyModule.playAudio(audio_evenInfo)
-          console.log(`Successfully added audio chunk ${chunkIndex} to PlayAudioContinuouslyManager for response: ${responseId}`)
+
+          console.log(`Successfully added audio chunk ${chunkIndex} for response: ${responseId}`)
         } catch (error) {
           console.error("Error processing audio chunk:", error)
         }
@@ -107,7 +108,7 @@ const RoleplaySession: FC = () => {
 
     socketRef.current.on("audioStreamDone", (data: { response_id?: string }) => {
       console.log("Audio stream completed")
-      const responseId = data?.response_id ?? "default"
+      const responseId = data.response_id ?? "default"
       if (audioChunkIndexRef.current[responseId]) {
         console.log(`Audio stream finished for response: ${responseId}, total chunks: ${audioChunkIndexRef.current[responseId]}`)
         delete audioChunkIndexRef.current[responseId] // Clean up tracking
