@@ -92,12 +92,7 @@ const RoleplaySession: FC = () => {
         const chunkIndex = audioChunkIndexRef.current[responseId]++
 
         try {
-          const audio_evenInfo = {
-            delta: data.delta,
-            index: chunkIndex,
-          }
-
-          MyModule.playAudio(audio_evenInfo)
+          MyModule.playAudio({ delta: data.delta })
 
           console.log(`Successfully added audio chunk ${chunkIndex} for response: ${responseId}`)
         } catch (error) {
@@ -180,11 +175,6 @@ const RoleplaySession: FC = () => {
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
       })
-
-      // Test basic MyModule access
-      console.log("Testing MyModule access...")
-      const testResult = MyModule.test()
-      console.log("MyModule.test() returned:", testResult)
 
       setAudioInitialized(true)
       console.log("Audio initialized successfully - PlayAudioContinuouslyManager auto-initialized")
