@@ -14,6 +14,7 @@ import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
+import MyModule from "../../../../modules/my-module"
 
 interface Message {
   id: string
@@ -34,14 +35,12 @@ const RoleplaySession: FC = () => {
   ])
   const [userInput, setUserInput] = useState("")
   const [isRecording, setIsRecording] = useState(false)
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false)
+  const [_isPlayingAudio, _setIsPlayingAudio] = useState(false)
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
-  const [audioChunks, setAudioChunks] = useState<string[]>([])
-  const [currentChunkIndex, setCurrentChunkIndex] = useState(0)
-  const [isStreamComplete, setIsStreamComplete] = useState(false)
+  const [currentTurnId, setCurrentTurnId] = useState<string | null>(null)
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
@@ -50,67 +49,6 @@ const RoleplaySession: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Convert PCM to WAV format for React Native
-  const pcmToWav = (pcmBase64: string, sampleRate = 24000, channels = 1, bitsPerSample = 16): string => {
-    try {
-      // Decode base64 to binary string first, then to Uint8Array
-      const binaryString = atob(pcmBase64)
-      const pcmData = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) {
-        pcmData[i] = binaryString.charCodeAt(i)
-      }
-      
-      const pcmLength = pcmData.length
-      const wavHeaderLength = 44
-      const fileLength = wavHeaderLength + pcmLength
-      
-      // Create WAV header
-      const wavHeader = new ArrayBuffer(44)
-      const view = new DataView(wavHeader)
-      
-      // Helper to write string to ArrayBuffer
-      const writeString = (offset: number, string: string) => {
-        for (let i = 0; i < string.length; i++) {
-          view.setUint8(offset + i, string.charCodeAt(i))
-        }
-      }
-      
-      // RIFF chunk descriptor
-      writeString(0, 'RIFF')
-      view.setUint32(4, fileLength - 8, true) // little endian
-      writeString(8, 'WAVE')
-      
-      // fmt sub-chunk
-      writeString(12, 'fmt ')
-      view.setUint32(16, 16, true) // Subchunk1Size
-      view.setUint16(20, 1, true) // AudioFormat (PCM)
-      view.setUint16(22, channels, true) // NumChannels
-      view.setUint32(24, sampleRate, true) // SampleRate
-      view.setUint32(28, sampleRate * channels * bitsPerSample / 8, true) // ByteRate
-      view.setUint16(32, channels * bitsPerSample / 8, true) // BlockAlign
-      view.setUint16(34, bitsPerSample, true) // BitsPerSample
-      
-      // data sub-chunk
-      writeString(36, 'data')
-      view.setUint32(40, pcmLength, true) // Subchunk2Size
-      
-      // Combine header and PCM data
-      const wavData = new Uint8Array(wavHeaderLength + pcmLength)
-      wavData.set(new Uint8Array(wavHeader), 0)
-      wavData.set(pcmData, wavHeaderLength)
-      
-      // Convert to base64
-      let binary = ''
-      for (let i = 0; i < wavData.length; i++) {
-        binary += String.fromCharCode(wavData[i])
-      }
-      return btoa(binary)
-    } catch (error) {
-      console.error('Error converting PCM to WAV:', error)
-      return pcmBase64 // Return original if conversion fails
-    }
-  }
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -140,26 +78,42 @@ const RoleplaySession: FC = () => {
       updateBotMessage(id, text)
     })
 
-    socketRef.current.on("audioStream", async (data: { delta: string }) => {
-      console.log(`Received audio chunk: ${data.delta.length} chars`)
-      
-      setAudioChunks((prevChunks) => {
-        const newChunks = [...prevChunks, data.delta]
-        console.log(`Added chunk ${newChunks.length}, total chunks: ${newChunks.length}`)
-        
-        // Start playing if this is the first chunk and we're not already playing
-        if (newChunks.length === 1 && !isPlayingAudio) {
-          console.log("Starting playback with first chunk")
-          void playNextChunk(newChunks, 0)
-        }
-        
-        return newChunks
-      })
-    })
+    socketRef.current.on(
+      "audioStream",
+      (data: { delta: string; response_id?: string; item_id?: string; output_index?: number; content_index?: number }) => {
+        console.log(`Received audio chunk: ${data.delta.length} chars, response_id: ${data.response_id}`)
 
-    socketRef.current.on("audioStreamDone", async () => {
+        // Use response_id as turn ID, or create one if not available
+        let activeTurnId = data.response_id ?? currentTurnId
+        if (!activeTurnId) {
+          activeTurnId = `turn_${Date.now()}`
+          setCurrentTurnId(activeTurnId)
+          console.log("Starting new audio stream with turnId:", activeTurnId)
+        } else if (!currentTurnId) {
+          setCurrentTurnId(activeTurnId)
+          console.log("Starting new audio stream with response_id:", activeTurnId)
+        } else {
+          console.log("Continuing audio stream with existing turnId:", activeTurnId)
+        }
+
+        if (activeTurnId) {
+          try {
+            // Feed the base64 PCM data directly to the native module
+            /* AudioStreamPlayer.enqueueBase64(data.delta) */
+            console.log("Added audio chunk to native AudioStreamPlayer for turn:", activeTurnId)
+          } catch (error) {
+            console.error("Error processing audio chunk:", error)
+          }
+        }
+      },
+    )
+
+    socketRef.current.on("audioStreamDone", () => {
       console.log("Audio stream completed")
-      setIsStreamComplete(true)
+      if (currentTurnId) {
+        console.log("Audio stream finished for turn:", currentTurnId)
+        setCurrentTurnId(null) // Reset for next response
+      }
     })
 
     socketRef.current.on("conversationInterrupted", () => {
@@ -177,7 +131,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id])
+  }, [id, currentTurnId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     initializeSocket()
@@ -208,6 +162,8 @@ const RoleplaySession: FC = () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
+      // Clean up native AudioStreamPlayer
+      /* AudioStreamPlayer.stop() */
     }
   }, [initializeSocket])
 
@@ -226,6 +182,10 @@ const RoleplaySession: FC = () => {
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
       })
+
+      // Initialize native AudioStreamPlayer
+      /* AudioStreamPlayer.initialize() */
+
       setAudioInitialized(true)
       console.log("Audio initialized successfully")
     } catch (error) {
@@ -484,97 +444,6 @@ const RoleplaySession: FC = () => {
     }
   }
 
-  const playNextChunk = async (chunks: string[], chunkIndex: number) => {
-    try {
-      // Check if we've played all available chunks
-      if (chunkIndex >= chunks.length) {
-        // If stream is complete, we're done
-        if (isStreamComplete) {
-          console.log("All chunks played, stream complete")
-          setIsPlayingAudio(false)
-          setCurrentChunkIndex(0)
-          setAudioChunks([])
-          setIsStreamComplete(false)
-          return
-        } else {
-          // Wait for more chunks to arrive
-          console.log("Waiting for more chunks...")
-          return
-        }
-      }
-
-      const chunk = chunks[chunkIndex]
-      if (!chunk) {
-        console.log("No chunk at index:", chunkIndex)
-        return
-      }
-
-      console.log(`Playing chunk ${chunkIndex + 1}/${chunks.length}`)
-      setIsPlayingAudio(true)
-      setCurrentChunkIndex(chunkIndex)
-
-      // Convert PCM to WAV format
-      const wavBuffer = pcmToWav(chunk)
-      console.log(`Chunk ${chunkIndex + 1} WAV buffer length:`, wavBuffer.length)
-
-      // Create a temporary file for this chunk
-      const audioUri = `${FileSystem.documentDirectory}chunk_${chunkIndex}.wav`
-      
-      // Write the WAV audio data to a file
-      await FileSystem.writeAsStringAsync(audioUri, wavBuffer, {
-        encoding: FileSystem.EncodingType.Base64,
-      })
-
-      // Create and play the audio
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
-        { shouldPlay: true, volume: 1.0, rate: 1.0, shouldCorrectPitch: true }
-      )
-
-      soundRef.current = sound
-
-      // Set up playback status listener
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          console.log(`Chunk ${chunkIndex + 1} finished playing`)
-          void sound.unloadAsync()
-          soundRef.current = null
-          // Clean up the temporary file
-          void FileSystem.deleteAsync(audioUri, { idempotent: true })
-          
-          // Play next chunk
-          const nextIndex = chunkIndex + 1
-          setCurrentChunkIndex(nextIndex)
-          
-          // Get the latest chunks from state
-          setAudioChunks((latestChunks) => {
-            void playNextChunk(latestChunks, nextIndex)
-            return latestChunks
-          })
-        }
-        if (!status.isLoaded && status.error) {
-          console.error(`Chunk ${chunkIndex + 1} playback error:`, status.error)
-          // Try to continue with next chunk
-          const nextIndex = chunkIndex + 1
-          setAudioChunks((latestChunks) => {
-            void playNextChunk(latestChunks, nextIndex)
-            return latestChunks
-          })
-        }
-      })
-      
-      console.log(`Started playing chunk ${chunkIndex + 1}`)
-    } catch (error) {
-      console.error(`Error playing chunk ${chunkIndex + 1}:`, error)
-      // Try to continue with next chunk
-      const nextIndex = chunkIndex + 1
-      setAudioChunks((latestChunks) => {
-        void playNextChunk(latestChunks, nextIndex)
-        return latestChunks
-      })
-    }
-  }
-
   const interruptAudio = async () => {
     try {
       if (soundRef.current) {
@@ -583,14 +452,16 @@ const RoleplaySession: FC = () => {
         soundRef.current = null
       }
 
-      setIsPlayingAudio(false)
-      setCurrentChunkIndex(0)
-      setAudioChunks([])
-      setIsStreamComplete(false)
+      // Interrupt native AudioStreamPlayer
+      /* AudioStreamPlayer.stop()
+      AudioStreamPlayer.initialize() // Reinitialize for next audio */
+
+      setCurrentTurnId(null)
+      _setIsPlayingAudio(false)
       console.log("Audio playback interrupted")
 
       if (socketRef.current) {
-        socketRef.current.emit("cancelResponse")
+        socketRef.current.emit("cancelResponse", { trackId: "current", offset: 0 })
       }
     } catch (error) {
       console.error("Error interrupting audio:", error)
@@ -600,6 +471,7 @@ const RoleplaySession: FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col">
+        <Text>{MyModule.hello()}</Text>
         {/* Timer Header */}
         <View className="border-b border-gray-200 px-4 py-3">
           <View className="flex-row items-center justify-between">

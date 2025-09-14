@@ -259,6 +259,11 @@ io.on("connection", async (socket) => {
 
     switch (type) {
       case "response.output_audio.delta":
+        // Log audio chunk details for debugging
+        console.log(
+          `Audio delta - response_id: ${parsedMessage.response_id}, item_id: ${parsedMessage.item_id}, delta length: ${parsedMessage.delta?.length || 0}`,
+        )
+
         // Forward audio chunk to client
         socket.emit("audioStream", {
           delta: parsedMessage.delta,
@@ -395,6 +400,7 @@ io.on("connection", async (socket) => {
   })
 })
 
+console.log("gfhjkd")
 // Start server
 const PORT = 3002
 server.listen(PORT, () => {
