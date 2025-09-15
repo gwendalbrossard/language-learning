@@ -272,10 +272,14 @@ io.on("connection", async (socket) => {
       }
       case "conversation.item.added": {
         console.log("conversation.item.added")
-        socket.emit("displayUserMessage", {
-          id: parsedMessage.item.id,
-          delta: "(item sent)",
-        })
+
+        if (parsedMessage.item.type === "message" && parsedMessage.item.role === "user") {
+          socket.emit("displayUserMessage", {
+            id: parsedMessage.item.id,
+            delta: "", // Empty delta to add placeholder while waiting for transcript
+          })
+        }
+
         break
       }
       case "conversation.item.done": {
