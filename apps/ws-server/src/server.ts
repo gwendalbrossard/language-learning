@@ -1,8 +1,8 @@
 // server.js
 
 import http from "http"
+import type { RealtimeServerEvent } from "openai/resources/realtime/realtime.js"
 import { azure } from "@ai-sdk/azure"
-import { RealtimeClient } from "@openai/realtime-api-beta"
 import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
@@ -11,7 +11,6 @@ import WebSocket from "ws"
 import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { ZFeedbackSchema, ZPracticeSchema } from "@acme/validators"
 
-import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "~/env.server"
 import { auth } from "./auth"
 
@@ -255,21 +254,22 @@ io.on("connection", async (socket) => {
     )
   })
 
-  ws.on("message", async function incoming(message) {
-    const parsedMessage = JSON.parse(message.toString())
-    const type = parsedMessage.type as string
+  ws.on("message", (message) => {
+    let messageString: string
+    if (Buffer.isBuffer(message)) {
+      messageString = message.toString("utf8")
+    } else if (message instanceof ArrayBuffer) {
+      messageString = Buffer.from(message).toString("utf8")
+    } else {
+      messageString = String(message)
+    }
+    const parsedMessage = JSON.parse(messageString) as RealtimeServerEvent
 
-    switch (type) {
+    switch (parsedMessage.type) {
       case "error":
         console.error("Error", parsedMessage)
         break
-      case "conversation.item.added":
-        console.log("conversation.item.added")
-        socket.emit("displayUserMessage", {
-          id: parsedMessage.item_id,
-          delta: "(item sent)",
-        })
-        break
+
       case "conversation.item.input_audio_transcription.delta":
         console.log("conversation.item.input_audio_transcription.delta")
         socket.emit("displayUserMessage", {
@@ -347,6 +347,10 @@ io.on("connection", async (socket) => {
         break
       case "conversation.item.added":
         console.log("conversation.item.added")
+        socket.emit("displayUserMessage", {
+          id: parsedMessage.item.id,
+          delta: "(item sent)",
+        })
         break
       case "conversation.item.done":
         console.log("conversation.item.done")
@@ -354,8 +358,8 @@ io.on("connection", async (socket) => {
       case "response.created":
         console.log("response.created")
         break
-      case "response.output_item.created":
-        console.log("response.output_item.created")
+      case "response.output_item.added":
+        console.log("response.output_item.added")
         break
       case "response.content_part.added":
         console.log("response.content_part.added")
@@ -409,7 +413,7 @@ io.on("connection", async (socket) => {
         console.log("rate_limits.updated")
         break
       default:
-        console.log(type, " - unhandled event")
+        console.log(parsedMessage.type, " - unhandled event")
         break
     }
   })
