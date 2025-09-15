@@ -252,16 +252,113 @@ io.on("connection", async (socket) => {
     )
   })
 
-  ws.on("message", function incoming(message) {
+  ws.on("message", async function incoming(message) {
     const parsedMessage = JSON.parse(message.toString())
     const type = parsedMessage.type as string
 
     switch (type) {
-      case "response.output_audio.delta":
-        // Log audio chunk details for debugging
-        console.log(
-          `Audio delta - response_id: ${parsedMessage.response_id}, item_id: ${parsedMessage.item_id}, delta length: ${parsedMessage.delta?.length || 0}`,
+      case "error":
+        console.error("Error", parsedMessage)
+        break
+      case "conversation.item.added":
+        console.log("conversation.item.added")
+        socket.emit("displayUserMessage", {
+          id: parsedMessage.item_id,
+          delta: "(item sent)",
+        })
+        break
+      case "conversation.item.input_audio_transcription.delta":
+        console.log("conversation.item.input_audio_transcription.delta")
+        socket.emit("displayUserMessage", {
+          id: parsedMessage.item_id,
+          delta: parsedMessage.delta,
+        })
+        break
+      case "conversation.item.input_audio_transcription.completed":
+        console.log("conversation.item.input_audio_transcription.completed")
+
+        // Store user message
+        const userMessage = await prisma.roleplaySessionMessage.create({
+          data: {
+            sessionId: roleplaySession.id,
+            role: RoleplaySessionMessageRole.USER,
+            content: parsedMessage.transcript,
+          },
+        })
+
+        const roleplayScenarioMessages = await prisma.roleplaySessionMessage.findMany({
+          where: { sessionId: roleplaySession.id },
+        })
+        const messages = roleplayScenarioMessages
+          .map((message) => {
+            return JSON.stringify({ role: message.role, content: message.content })
+          })
+          .join("\n")
+
+        // User language preferences for this socket connection
+        // TODO: Get user's actual learning language and user language
+        const userLanguagePreferences = {
+          learningLanguage: "FR",
+          userLanguage: "EN",
+        }
+
+        const feedbackResult = await getFeedback(
+          parsedMessage.transcript,
+          userLanguagePreferences.learningLanguage,
+          userLanguagePreferences.userLanguage,
+          messages,
+          "C2", // TODO: Get user's actual difficulty level
         )
+
+        // Update user message with feedback
+        await prisma.roleplaySessionMessage.update({
+          where: { id: userMessage.id },
+          data: {
+            feedback: feedbackResult,
+          },
+        })
+
+        await updateSessionDuration()
+
+        // Emit comprehensive feedback result
+        socket.emit("feedback", {
+          messageId: parsedMessage.item_id,
+          feedback: feedbackResult,
+        })
+
+        break
+      case "session.created":
+        console.log("session.created")
+        break
+      case "session.updated":
+        console.log("session.updated")
+        break
+      case "input_audio_buffer.speech_started":
+        console.log("input_audio_buffer.speech_started")
+        break
+      case "input_audio_buffer.speech_stopped":
+        console.log("input_audio_buffer.speech_stopped")
+        break
+      case "input_audio_buffer.committed":
+        console.log("input_audio_buffer.committed")
+        break
+      case "conversation.item.added":
+        console.log("conversation.item.added")
+        break
+      case "conversation.item.done":
+        console.log("conversation.item.done")
+        break
+      case "response.created":
+        console.log("response.created")
+        break
+      case "response.output_item.created":
+        console.log("response.output_item.created")
+        break
+      case "response.content_part.added":
+        console.log("response.content_part.added")
+        break
+      case "response.output_audio.delta":
+        console.log("response.output_audio.delta")
 
         // Forward audio chunk to client
         socket.emit("audioStream", {
@@ -272,7 +369,9 @@ io.on("connection", async (socket) => {
           content_index: parsedMessage.content_index,
         })
         break
+        break
       case "response.output_audio.done":
+        console.log("response.output_audio.done")
         // Signal end of audio stream
         socket.emit("audioStreamDone", {
           response_id: parsedMessage.response_id,
@@ -280,6 +379,32 @@ io.on("connection", async (socket) => {
           output_index: parsedMessage.output_index,
           content_index: parsedMessage.content_index,
         })
+
+        break
+      case "response.output_audio_transcript.delta":
+        console.log("response.output_audio_transcript.delta")
+        break
+      case "response.output_audio_transcript.done":
+        console.log("response.output_audio_transcript.done")
+        break
+
+      case "response.output_text.delta":
+        console.log("response.output_text.delta")
+        break
+      case "response.output_text.done":
+        console.log("response.output_text.done")
+        break
+      case "response.content_part.done":
+        console.log("response.content_part.done")
+        break
+      case "response.output_item.done":
+        console.log("response.output_item.done")
+        break
+      case "response.done":
+        console.log("response.done")
+        break
+      case "rate_limits.updated":
+        console.log("rate_limits.updated")
         break
       default:
         break

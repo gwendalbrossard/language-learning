@@ -70,8 +70,8 @@ const RoleplaySession: FC = () => {
       console.log("Connected to server")
     })
 
-    socketRef.current.on("displayUserMessage", ({ id, text }: { id: string; text: string }) => {
-      displayUserMessage(id, text)
+    socketRef.current.on("displayUserMessage", ({ id, delta }: { id: string; delta: string }) => {
+      displayUserMessage(id, delta)
     })
 
     socketRef.current.on("conversationUpdate", ({ id, text }: { id: string; text: string }) => {
@@ -227,7 +227,7 @@ const RoleplaySession: FC = () => {
     }
   }
 
-  const displayUserMessage = (id: string, transcript: string) => {
+  const displayUserMessage = (id: string, delta: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -239,7 +239,7 @@ const RoleplaySession: FC = () => {
         if (existingMessage) {
           updated[existingIndex] = {
             ...existingMessage,
-            transcript,
+            transcript: existingMessage.transcript + delta,
           }
         }
         return updated
@@ -250,14 +250,14 @@ const RoleplaySession: FC = () => {
           {
             id,
             role: "user",
-            transcript,
+            transcript: delta,
           },
         ]
       }
     })
 
     // Handle typed messages
-    if (sentUserMessageRef.current && transcript === "(item sent)") {
+    if (sentUserMessageRef.current && delta === "(item sent)") {
       const sentMessage = sentUserMessageRef.current
       sentUserMessageRef.current = null
 
