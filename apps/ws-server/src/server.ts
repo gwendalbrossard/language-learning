@@ -407,6 +407,10 @@ io.on("connection", async (socket) => {
       }
       case "response.output_audio_transcript.delta": {
         console.log("response.output_audio_transcript.delta")
+        socket.emit("conversationUpdate", {
+          id: parsedMessage.item_id,
+          delta: parsedMessage.delta,
+        })
         break
       }
       case "response.output_audio_transcript.done": {

@@ -74,8 +74,8 @@ const RoleplaySession: FC = () => {
       displayUserMessage(id, delta)
     })
 
-    socketRef.current.on("conversationUpdate", ({ id, text }: { id: string; text: string }) => {
-      updateBotMessage(id, text)
+    socketRef.current.on("conversationUpdate", ({ id, delta }: { id: string; delta: string }) => {
+      updateBotMessage(id, delta)
     })
 
     socketRef.current.on(
@@ -267,7 +267,7 @@ const RoleplaySession: FC = () => {
     scrollToBottom()
   }
 
-  const updateBotMessage = (id: string, transcript: string) => {
+  const updateBotMessage = (id: string, delta: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -279,7 +279,7 @@ const RoleplaySession: FC = () => {
         if (existingMessage) {
           updated[existingIndex] = {
             ...existingMessage,
-            transcript,
+            transcript: existingMessage.transcript + delta,
           }
         }
         return updated
@@ -290,7 +290,7 @@ const RoleplaySession: FC = () => {
           {
             id,
             role: "assistant",
-            transcript,
+            transcript: delta,
           },
         ]
       }
