@@ -254,7 +254,7 @@ io.on("connection", async (socket) => {
     )
   })
 
-  ws.on("message", (message) => {
+  const handleMessage = async (message: WebSocket.RawData) => {
     let messageString: string
     if (Buffer.isBuffer(message)) {
       messageString = message.toString("utf8")
@@ -266,18 +266,31 @@ io.on("connection", async (socket) => {
     const parsedMessage = JSON.parse(messageString) as RealtimeServerEvent
 
     switch (parsedMessage.type) {
-      case "error":
+      case "error": {
         console.error("Error", parsedMessage)
         break
-
-      case "conversation.item.input_audio_transcription.delta":
+      }
+      case "conversation.item.added": {
+        console.log("conversation.item.added")
+        socket.emit("displayUserMessage", {
+          id: parsedMessage.item.id,
+          delta: "(item sent)",
+        })
+        break
+      }
+      case "conversation.item.done": {
+        console.log("conversation.item.done")
+        break
+      }
+      case "conversation.item.input_audio_transcription.delta": {
         console.log("conversation.item.input_audio_transcription.delta")
         socket.emit("displayUserMessage", {
           id: parsedMessage.item_id,
           delta: parsedMessage.delta,
         })
         break
-      case "conversation.item.input_audio_transcription.completed":
+      }
+      case "conversation.item.input_audio_transcription.completed": {
         console.log("conversation.item.input_audio_transcription.completed")
 
         // Store user message
@@ -330,41 +343,40 @@ io.on("connection", async (socket) => {
         })
 
         break
-      case "session.created":
+      }
+      case "session.created": {
         console.log("session.created")
         break
-      case "session.updated":
+      }
+      case "session.updated": {
         console.log("session.updated")
         break
-      case "input_audio_buffer.speech_started":
+      }
+      case "input_audio_buffer.speech_started": {
         console.log("input_audio_buffer.speech_started")
         break
-      case "input_audio_buffer.speech_stopped":
+      }
+      case "input_audio_buffer.speech_stopped": {
         console.log("input_audio_buffer.speech_stopped")
         break
-      case "input_audio_buffer.committed":
+      }
+      case "input_audio_buffer.committed": {
         console.log("input_audio_buffer.committed")
         break
-      case "conversation.item.added":
-        console.log("conversation.item.added")
-        socket.emit("displayUserMessage", {
-          id: parsedMessage.item.id,
-          delta: "(item sent)",
-        })
-        break
-      case "conversation.item.done":
-        console.log("conversation.item.done")
-        break
-      case "response.created":
+      }
+      case "response.created": {
         console.log("response.created")
         break
-      case "response.output_item.added":
+      }
+      case "response.output_item.added": {
         console.log("response.output_item.added")
         break
-      case "response.content_part.added":
+      }
+      case "response.content_part.added": {
         console.log("response.content_part.added")
         break
-      case "response.output_audio.delta":
+      }
+      case "response.output_audio.delta": {
         console.log("response.output_audio.delta")
 
         // Forward audio chunk to client
@@ -376,7 +388,8 @@ io.on("connection", async (socket) => {
           content_index: parsedMessage.content_index,
         })
         break
-      case "response.output_audio.done":
+      }
+      case "response.output_audio.done": {
         console.log("response.output_audio.done")
         // Signal end of audio stream
         socket.emit("audioStreamDone", {
@@ -387,35 +400,48 @@ io.on("connection", async (socket) => {
         })
 
         break
-      case "response.output_audio_transcript.delta":
+      }
+      case "response.output_audio_transcript.delta": {
         console.log("response.output_audio_transcript.delta")
         break
-      case "response.output_audio_transcript.done":
+      }
+      case "response.output_audio_transcript.done": {
         console.log("response.output_audio_transcript.done")
         break
-
-      case "response.output_text.delta":
+      }
+      case "response.output_text.delta": {
         console.log("response.output_text.delta")
         break
-      case "response.output_text.done":
+      }
+      case "response.output_text.done": {
         console.log("response.output_text.done")
         break
-      case "response.content_part.done":
+      }
+      case "response.content_part.done": {
         console.log("response.content_part.done")
         break
-      case "response.output_item.done":
+      }
+      case "response.output_item.done": {
         console.log("response.output_item.done")
         break
-      case "response.done":
+      }
+      case "response.done": {
         console.log("response.done")
         break
-      case "rate_limits.updated":
+      }
+      case "rate_limits.updated": {
         console.log("rate_limits.updated")
         break
-      default:
+      }
+      default: {
         console.log(parsedMessage.type, " - unhandled event")
         break
+      }
     }
+  }
+
+  ws.on("message", (message) => {
+    void handleMessage(message)
   })
 
   // Handle complete audio data from the client
