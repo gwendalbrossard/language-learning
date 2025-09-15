@@ -236,6 +236,9 @@ io.on("connection", async (socket) => {
                 type: "audio/pcm",
                 rate: 24000,
               },
+              transcription: {
+                model: "whisper-1",
+              },
               turn_detection: null,
             },
             output: {
@@ -369,7 +372,6 @@ io.on("connection", async (socket) => {
           content_index: parsedMessage.content_index,
         })
         break
-        break
       case "response.output_audio.done":
         console.log("response.output_audio.done")
         // Signal end of audio stream
@@ -420,7 +422,7 @@ io.on("connection", async (socket) => {
       return
     }
 
-    ws.send(
+    /*   ws.send(
       JSON.stringify({
         type: "conversation.item.create",
         item: {
@@ -433,6 +435,14 @@ io.on("connection", async (socket) => {
             },
           ],
         },
+      }),
+    ) */
+
+    // Append the audio data to the buffer
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.append",
+        audio: audioBase64,
       }),
     )
 
