@@ -407,6 +407,7 @@ io.on("connection", async (socket) => {
         console.log("rate_limits.updated")
         break
       default:
+        console.log(type, " - unhandled event")
         break
     }
   })
