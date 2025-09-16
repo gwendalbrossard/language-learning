@@ -170,6 +170,75 @@ io.on("connection", async (socket) => {
   let totalUserSpeakingDuration = 0 // in seconds
   let totalAiSpeakingDuration = 0 // in seconds
 
+  // Helper function to calculate audio duration from PCM16 audio data
+  const calculateAudioDuration = (audioBuffer: Int16Array, sampleRate = 24000): number => {
+    // PCM16 audio duration = number of samples / sample rate
+    const durationSeconds = audioBuffer.length / sampleRate
+    return durationSeconds
+  }
+
+  // Helper function to parse WAV header and extract PCM data
+  const parseWAVFile = (wavBuffer: ArrayBuffer): { pcmData: Int16Array; sampleRate: number; channels: number; bitsPerSample: number } => {
+    const view = new DataView(wavBuffer)
+
+    // Check RIFF header
+    const riff = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3))
+    if (riff !== "RIFF") {
+      console.error("Invalid WAV file: missing RIFF header")
+      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+    }
+
+    // Check WAVE header
+    const wave = String.fromCharCode(view.getUint8(8), view.getUint8(9), view.getUint8(10), view.getUint8(11))
+    if (wave !== "WAVE") {
+      console.error("Invalid WAV file: missing WAVE header")
+      return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+    }
+
+    // Find fmt chunk (usually at offset 12)
+    let offset = 12
+    while (offset < wavBuffer.byteLength - 8) {
+      const chunkId = String.fromCharCode(view.getUint8(offset), view.getUint8(offset + 1), view.getUint8(offset + 2), view.getUint8(offset + 3))
+      const chunkSize = view.getUint32(offset + 4, true) // little endian
+
+      if (chunkId === "fmt ") {
+        // Parse format chunk
+        const _audioFormat = view.getUint16(offset + 8, true)
+        const channels = view.getUint16(offset + 10, true)
+        const sampleRate = view.getUint32(offset + 12, true)
+        const bitsPerSample = view.getUint16(offset + 22, true)
+
+        // Find data chunk
+        let dataOffset = offset + 8 + chunkSize
+        while (dataOffset < wavBuffer.byteLength - 8) {
+          const dataChunkId = String.fromCharCode(
+            view.getUint8(dataOffset),
+            view.getUint8(dataOffset + 1),
+            view.getUint8(dataOffset + 2),
+            view.getUint8(dataOffset + 3),
+          )
+          const dataSize = view.getUint32(dataOffset + 4, true)
+
+          if (dataChunkId === "data") {
+            // Extract PCM data
+            const pcmData = new Int16Array(wavBuffer, dataOffset + 8, dataSize / 2) // divide by 2 for 16-bit samples
+            return { pcmData, sampleRate, channels, bitsPerSample }
+          }
+
+          dataOffset += 8 + dataSize
+        }
+
+        console.error("Data chunk not found in WAV file")
+        return { pcmData: new Int16Array(0), sampleRate, channels, bitsPerSample }
+      }
+
+      offset += 8 + chunkSize
+    }
+
+    console.error("fmt chunk not found in WAV file")
+    return { pcmData: new Int16Array(0), sampleRate: 24000, channels: 1, bitsPerSample: 16 }
+  }
+
   const checkSessionTimeout = () => {
     const elapsed = Date.now() - sessionStartTime
     return elapsed >= SESSION_TIMEOUT_MS
@@ -383,6 +452,18 @@ io.on("connection", async (socket) => {
       case "response.output_audio.delta": {
         console.log("response.output_audio.delta")
 
+        // Calculate AI speaking duration from audio delta
+        if (parsedMessage.delta) {
+          // Decode base64 audio to get the raw audio data
+          const audioBuffer = Buffer.from(parsedMessage.delta, "base64")
+          if (audioBuffer.byteLength > 0) {
+            // Convert to Int16Array for PCM16 analysis (OpenAI returns PCM16 at 24kHz)
+            const audioArray = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.byteLength / 2)
+            const audioDuration = calculateAudioDuration(audioArray, 24000)
+            totalAiSpeakingDuration += audioDuration
+          }
+        }
+
         // Forward audio chunk to client
         socket.emit("audioStream", {
           delta: parsedMessage.delta,
@@ -460,21 +541,20 @@ io.on("connection", async (socket) => {
       return
     }
 
-    /*   ws.send(
-      JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_audio",
-              audio: audioBase64,
-            },
-          ],
-        },
-      }),
-    ) */
+    // Calculate user speaking duration from the actual audio data
+    // Convert base64 to Buffer then to ArrayBuffer for WAV parsing
+    const audioBuffer = Buffer.from(audioBase64, "base64")
+    const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
+
+    // Parse WAV file and extract PCM data with correct parameters
+    const { pcmData, sampleRate } = parseWAVFile(arrayBuffer)
+
+    if (pcmData.length > 0) {
+      // Calculate duration using actual sample rate from WAV file
+      const audioDuration = calculateAudioDuration(pcmData, sampleRate)
+      totalUserSpeakingDuration += audioDuration
+      console.log(`User spoke for ${audioDuration.toFixed(2)}s, total: ${totalUserSpeakingDuration.toFixed(2)}s`)
+    }
 
     // Append the audio data to the buffer
     ws.send(
