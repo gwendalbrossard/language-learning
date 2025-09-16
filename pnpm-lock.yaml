@@ -6,12 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@t3-oss/env-core':
-      specifier: ^0.13.8
-      version: 0.13.8
-    '@t3-oss/env-nextjs':
-      specifier: ^0.13.8
-      version: 0.13.8
     '@tanstack/react-query':
       specifier: ^5.85.6
       version: 5.85.6
@@ -27,28 +21,16 @@ catalogs:
     eslint:
       specifier: ^9.32.0
       version: 9.32.0
-    lucide-react:
-      specifier: ^0.539.0
-      version: 0.539.0
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
-    tailwindcss:
-      specifier: ^4.1.11
-      version: 4.1.11
     typescript:
       specifier: ^5.9.2
       version: 5.9.2
-    zod:
-      specifier: ^4.1.5
-      version: 4.1.5
   react19:
     '@types/react':
       specifier: ^19.1.6
       version: 19.1.9
-    '@types/react-dom':
-      specifier: ^19.1.5
-      version: 19.1.7
     react:
       specifier: 19.0.0
       version: 19.0.0
@@ -159,9 +141,9 @@ importers:
       expo-apple-authentication:
         specifier: ~7.2.4
         version: 7.2.4(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))
-      expo-av:
-        specifier: ~15.1.7
-        version: 15.1.7(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+      expo-audio:
+        specifier: ~0.4.9
+        version: 0.4.9(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
       expo-constants:
         specifier: 17.1.7
         version: 17.1.7(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))
@@ -4324,11 +4306,6 @@ packages:
     resolution: {integrity: sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==}
     engines: {node: '>=0.4.0'}
 
-  acorn@8.14.1:
-    resolution: {integrity: sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
     engines: {node: '>=0.4.0'}
@@ -5599,16 +5576,12 @@ packages:
       react: '*'
       react-native: '*'
 
-  expo-av@15.1.7:
-    resolution: {integrity: sha512-NC+JR+65sxXfQN1mOHp3QBaXTL2J+BzNwVO27XgUEc5s9NaoBTdHWElYXrfxvik6xwytZ+a7abrqfNNgsbQzsA==}
+  expo-audio@0.4.9:
+    resolution: {integrity: sha512-J4mMYEt2mqRqqwmSsXFylMGlrNWa+MbCzGl1IZBs+smvPAMJ3Ni8fNplzCQ0I9RnRzygKhRwJNpnAVL+n4MuyA==}
     peerDependencies:
       expo: '*'
       react: '*'
       react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native-web:
-        optional: true
 
   expo-constants@17.1.7:
     resolution: {integrity: sha512-byBjGsJ6T6FrLlhOBxw4EaiMXrZEn/MlUYIj/JAd+FS7ll5X/S4qVRbIimSJtdW47hXMq0zxPfJX6njtA56hHA==}
@@ -10782,7 +10755,7 @@ snapshots:
       terminal-link: 2.1.1
       undici: 6.21.3
       wrap-ansi: 7.0.0
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4)
+      ws: 8.18.3(bufferutil@4.0.9)
     transitivePeerDependencies:
       - bufferutil
       - graphql
@@ -13640,8 +13613,6 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
-  acorn@8.14.1: {}
-
   acorn@8.15.0: {}
 
   agent-base@7.1.3: {}
@@ -14732,7 +14703,7 @@ snapshots:
       '@socket.io/component-emitter': 3.1.2
       debug: 4.3.7
       engine.io-parser: 5.2.3
-      ws: 8.17.1(bufferutil@4.0.9)(utf-8-validate@6.0.4)
+      ws: 8.17.1(bufferutil@4.0.9)
       xmlhttprequest-ssl: 2.1.2
     transitivePeerDependencies:
       - bufferutil
@@ -15203,7 +15174,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-av@15.1.7(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0):
+  expo-audio@0.4.9(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0):
     dependencies:
       expo: 53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
       react: 19.0.0
@@ -18576,7 +18547,7 @@ snapshots:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
       '@types/node': 24.3.0
-      acorn: 8.14.1
+      acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
       create-require: 1.1.1
@@ -18935,10 +18906,18 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.9
 
+  ws@8.17.1(bufferutil@4.0.9):
+    optionalDependencies:
+      bufferutil: 4.0.9
+
   ws@8.17.1(bufferutil@4.0.9)(utf-8-validate@6.0.4):
     optionalDependencies:
       bufferutil: 4.0.9
       utf-8-validate: 6.0.4
+
+  ws@8.18.3(bufferutil@4.0.9):
+    optionalDependencies:
+      bufferutil: 4.0.9
 
   ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4):
     optionalDependencies:

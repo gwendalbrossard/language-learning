@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Audio } from "expo-av"
+import * as Audio from "expo-audio"
 import * as FileSystem from "expo-file-system"
 import { useLocalSearchParams } from "expo-router"
 import { FileTextIcon, Mic, Square, X } from "lucide-react-native"
@@ -44,8 +44,27 @@ const RoleplaySession: FC = () => {
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
 
   const socketRef = useRef<Socket | null>(null)
-  const recordingRef = useRef<Audio.Recording | null>(null)
-  const soundRef = useRef<Audio.Sound | null>(null)
+  const recorder = Audio.useAudioRecorder({
+    extension: ".wav",
+    sampleRate: 24000,
+    numberOfChannels: 1,
+    bitRate: 128000,
+    android: {
+      outputFormat: "default" as const,
+      audioEncoder: "default" as const,
+    },
+    ios: {
+      outputFormat: Audio.IOSOutputFormat.LINEARPCM,
+      audioQuality: Audio.AudioQuality.HIGH,
+      linearPCMBitDepth: 16,
+      linearPCMIsBigEndian: false,
+      linearPCMIsFloat: false,
+    },
+    web: {
+      mimeType: "audio/wav",
+      bitsPerSecond: 128000,
+    },
+  })
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -135,33 +154,30 @@ const RoleplaySession: FC = () => {
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
-      if (recordingRef.current) {
-        void recordingRef.current.stopAndUnloadAsync()
-      }
-      if (soundRef.current) {
-        void soundRef.current.unloadAsync()
+      if (recorder.isRecording) {
+        void recorder.stop()
       }
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
-      // PlayAudioContinuouslyManager handles cleanup automatically
     }
-  }, [initializeSocket])
+  }, [initializeSocket, recorder])
 
   const initializeAudio = async (): Promise<void> => {
     try {
-      const { status } = await Audio.requestPermissionsAsync()
-      if (status !== Audio.PermissionStatus.GRANTED) {
+      const { granted } = await Audio.requestRecordingPermissionsAsync()
+      if (!granted) {
         Alert.alert("Error", "Microphone permission is required for audio recording.")
         return
       }
 
       await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+        allowsRecording: true,
+        playsInSilentMode: true,
+        interruptionMode: "duckOthers",
+        interruptionModeAndroid: "duckOthers",
+        shouldPlayInBackground: false,
+        shouldRouteThroughEarpiece: false,
       })
 
       setAudioInitialized(true)
@@ -304,39 +320,12 @@ const RoleplaySession: FC = () => {
 
         console.log("Requesting microphone access...")
 
-        if (recordingRef.current) {
-          await recordingRef.current.stopAndUnloadAsync()
+        if (recorder.isRecording) {
+          await recorder.stop()
         }
 
-        const recording = new Audio.Recording()
-        await recording.prepareToRecordAsync({
-          android: {
-            extension: ".wav",
-            outputFormat: Audio.AndroidOutputFormat.DEFAULT,
-            audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
-            sampleRate: 24000,
-            numberOfChannels: 1,
-            bitRate: 128000,
-          },
-          ios: {
-            extension: ".wav",
-            outputFormat: Audio.IOSOutputFormat.LINEARPCM,
-            audioQuality: Audio.IOSAudioQuality.HIGH,
-            sampleRate: 24000,
-            numberOfChannels: 1,
-            bitRate: 128000,
-            linearPCMBitDepth: 16,
-            linearPCMIsBigEndian: false,
-            linearPCMIsFloat: false,
-          },
-          web: {
-            mimeType: "audio/wav",
-            bitsPerSecond: 128000,
-          },
-        })
-
-        recordingRef.current = recording
-        await recording.startAsync()
+        await recorder.prepareToRecordAsync()
+        recorder.record()
 
         console.log("Started recording successfully")
       } catch (error) {
@@ -356,14 +345,8 @@ const RoleplaySession: FC = () => {
       setIsRecording(false)
 
       try {
-        let uri: string | null = null
-
-        if (recordingRef.current) {
-          // Stop the recording and get the URI
-          await recordingRef.current.stopAndUnloadAsync()
-          uri = recordingRef.current.getURI()
-          recordingRef.current = null
-        }
+        await recorder.stop()
+        const uri = recorder.uri
 
         if (uri) {
           console.log("Audio recorded at:", uri)
