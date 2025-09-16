@@ -1,16 +1,19 @@
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
 import { useLocalSearchParams } from "expo-router"
-import { Mic, Send, Square, X } from "lucide-react-native"
-import { Alert, ScrollView, TextInput, TouchableOpacity, View } from "react-native"
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
+import { FileTextIcon, Mic, Square, X } from "lucide-react-native"
+import { Alert, Dimensions, NativeEventEmitter, NativeModules, Pressable, ScrollView, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
 
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
+import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
+import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
@@ -33,8 +36,9 @@ const RoleplaySession: FC = () => {
       transcript: "Hello! How can I assist you today?",
     },
   ])
-  const [userInput, setUserInput] = useState("")
   const [isRecording, setIsRecording] = useState(false)
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
+  const [turnState, setTurnState] = useState<"user" | "assistant">("user")
 
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
@@ -43,10 +47,10 @@ const RoleplaySession: FC = () => {
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
   const soundRef = useRef<Audio.Sound | null>(null)
-  const scrollViewRef = useRef<ScrollView>(null)
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const transcriptBottomSheetRef = useRef<BottomSheetModal>(null)
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -79,11 +83,16 @@ const RoleplaySession: FC = () => {
     socketRef.current.on("assistantAudioDelta", (data: { delta: string; itemId: string }) => {
       console.log(`Received assistant audio chunk: ${data.delta.length} chars, itemId: ${data.itemId}`)
 
+      setIsAssistantSpeaking(true)
+      setTurnState("assistant")
       MyModule.playAudio({ delta: data.delta })
     })
 
     socketRef.current.on("assistantAudioDone", (data: { itemId: string }) => {
       console.log(`Assistant audio stream completed for itemId: ${data.itemId}`)
+
+      setIsAssistantSpeaking(false)
+      setTurnState("user")
     })
 
     socketRef.current.on("feedback", (data: { messageId: string; feedback: TFeedbackSchema }) => {
@@ -97,7 +106,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id])
 
   useEffect(() => {
     initializeSocket()
@@ -184,21 +193,6 @@ const RoleplaySession: FC = () => {
     ])
   }
 
-  const sendMessage = async () => {
-    if (sessionEnded) return
-
-    const message = userInput.trim()
-    if (message && socketRef.current) {
-      if (!audioInitialized) {
-        await initializeAudio()
-      }
-
-      sentUserMessageRef.current = message
-      socketRef.current.emit("userMessage", message)
-      setUserInput("")
-    }
-  }
-
   const userTextDelta = (id: string, delta: string) => {
     setMessages((prev) => {
       // Check if message already exists
@@ -235,8 +229,6 @@ const RoleplaySession: FC = () => {
 
       setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, transcript: sentMessage } : msg)))
     }
-
-    scrollToBottom()
   }
 
   const assistantTextDelta = (id: string, delta: string) => {
@@ -267,14 +259,6 @@ const RoleplaySession: FC = () => {
         ]
       }
     })
-
-    scrollToBottom()
-  }
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true })
-    }, 100)
   }
 
   const addFeedbackToMessage = (data: { messageId: string; feedback: TFeedbackSchema }) => {
@@ -294,21 +278,119 @@ const RoleplaySession: FC = () => {
 
       return updatedMessages
     })
-
-    scrollToBottom()
   }
 
+  const TranscriptBottomSheet = forwardRef<BottomSheetModal, object>((_, ref) => {
+    return (
+      <BottomSheetModal
+        ref={ref}
+        snapPoints={["80%"]}
+        maxDynamicContentSize={Dimensions.get("window").height * 0.8}
+        backdropComponent={BottomSheetBackdrop}
+        enablePanDownToClose
+        stackBehavior="push"
+      >
+        <BottomSheetView className="flex-1 px-4 pb-10 pt-2">
+          <View className="mb-4">
+            <Text className="text-center text-lg font-semibold text-gray-800">Conversation Transcript</Text>
+          </View>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            {messages.map((message) => (
+              <View key={message.id} className="mb-3">
+                <View
+                  className={`rounded-lg p-3 ${message.role === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"}`}
+                >
+                  <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
+                </View>
+
+                {/* Feedback display */}
+                {message.feedback && (
+                  <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    {/* Header with quality score */}
+                    <View className="mb-3 flex-row items-center justify-between">
+                      <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
+                      <View className="rounded-full bg-blue-100 px-2 py-1">
+                        <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
+                      </View>
+                    </View>
+
+                    {/* Main feedback */}
+                    <View className="mb-3">
+                      <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
+                    </View>
+
+                    {/* Corrected phrase */}
+                    {message.feedback.correctedPhrase !== message.transcript && (
+                      <View className="mb-3 rounded-lg bg-green-100 p-2">
+                        <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
+                        <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
+                      </View>
+                    )}
+
+                    {/* Individual corrections */}
+                    {message.feedback.corrections.length > 0 && (
+                      <View className="mb-3">
+                        <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
+                        {message.feedback.corrections.map((correction, index) => (
+                          <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
+                            <View className="mb-1 flex-row">
+                              <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
+                              <Text className="mx-1 text-xs text-gray-500">→</Text>
+                              <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
+                            </View>
+                            <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Scoring breakdown */}
+                    <View className="mb-3">
+                      <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
+                      <View className="space-y-1">
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Accuracy:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
+
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Fluency:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
+
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Vocabulary:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        </BottomSheetView>
+      </BottomSheetModal>
+    )
+  })
+
   const startRecording = async (): Promise<void> => {
-    if (sessionEnded) return
+    console.log("startRecording called - sessionEnded:", sessionEnded, "turnState:", turnState, "isRecording:", isRecording)
+
+    if (sessionEnded || turnState !== "user") {
+      console.log("Recording blocked - sessionEnded:", sessionEnded, "turnState:", turnState)
+      return
+    }
 
     if (!isRecording) {
       try {
+        console.log("Starting recording...")
         await initializeAudio()
 
         setIsRecording(true)
-
-        // Add visual feedback for recording
-        userTextDelta(`recording-${Date.now()}`, "🎤 Recording...")
 
         console.log("Requesting microphone access...")
 
@@ -357,7 +439,10 @@ const RoleplaySession: FC = () => {
   }
 
   const stopRecording = async (): Promise<void> => {
+    console.log("stopRecording called - isRecording:", isRecording)
+
     if (isRecording) {
+      console.log("Stopping recording...")
       setIsRecording(false)
 
       try {
@@ -384,9 +469,6 @@ const RoleplaySession: FC = () => {
               socketRef.current.emit("completeAudio", base64Audio)
               console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
             }
-
-            // Update UI to show audio was sent
-            userTextDelta(`sent-${Date.now()}`, "🎵 Audio sent, waiting for response...")
           } else {
             console.warn("No audio data in recorded file")
             userTextDelta(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
@@ -415,132 +497,85 @@ const RoleplaySession: FC = () => {
                 Time remaining: {formatTime(timeRemaining)}
               </Text>
             </View>
-            {!sessionEnded && (
-              <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity onPress={() => transcriptBottomSheetRef.current?.present()} className="rounded-lg bg-blue-500 px-3 py-2">
                 <View className="flex-row items-center gap-1">
-                  <X size={16} color="white" />
-                  <Text className="text-sm font-medium text-white">End</Text>
+                  <FileTextIcon size={16} color="white" />
+                  <Text className="text-sm font-medium text-white">Transcript</Text>
                 </View>
               </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        <ScrollView ref={scrollViewRef} className="flex-1 px-4 py-2" showsVerticalScrollIndicator={false}>
-          {messages.map((message) => (
-            <View key={message.id} className="mb-3">
-              <View
-                className={`rounded-lg p-3 ${message.role === "user" ? "max-w-[80%] self-end bg-blue-100" : "max-w-[80%] self-start bg-gray-100"}`}
-              >
-                <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
-              </View>
-
-              {/* Feedback display */}
-              {message.feedback && (
-                <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
-                  {/* Header with quality score */}
-                  <View className="mb-3 flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
-                    <View className="rounded-full bg-blue-100 px-2 py-1">
-                      <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
-                    </View>
+              {!sessionEnded && (
+                <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">
+                  <View className="flex-row items-center gap-1">
+                    <X size={16} color="white" />
+                    <Text className="text-sm font-medium text-white">End</Text>
                   </View>
-
-                  {/* Main feedback */}
-                  <View className="mb-3">
-                    <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
-                  </View>
-
-                  {/* Corrected phrase */}
-                  {message.feedback.correctedPhrase !== message.transcript && (
-                    <View className="mb-3 rounded-lg bg-green-100 p-2">
-                      <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
-                      <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
-                    </View>
-                  )}
-
-                  {/* Individual corrections */}
-                  {message.feedback.corrections.length > 0 && (
-                    <View className="mb-3">
-                      <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
-                      {message.feedback.corrections.map((correction, index) => (
-                        <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
-                          <View className="mb-1 flex-row">
-                            <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
-                            <Text className="mx-1 text-xs text-gray-500">→</Text>
-                            <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
-                          </View>
-                          <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Scoring breakdown */}
-                  <View className="mb-3">
-                    <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
-                    <View className="space-y-1">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Accuracy:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
-
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Fluency:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
-
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Vocabulary:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
-                    </View>
-                  </View>
-                </View>
+                </TouchableOpacity>
               )}
             </View>
-          ))}
-        </ScrollView>
-
-        <View className="border-t border-gray-200 px-4 py-3">
-          <View className="flex-row items-center gap-2">
-            <TextInput
-              value={userInput}
-              onChangeText={setUserInput}
-              placeholder={sessionEnded ? "Session ended" : "Type your message..."}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-base"
-              onSubmitEditing={sendMessage}
-              returnKeyType="send"
-              editable={!isRecording && !sessionEnded}
-            />
-
-            <TouchableOpacity
-              onPress={sendMessage}
-              className={`rounded-lg p-2 ${sessionEnded ? "bg-gray-300" : "bg-blue-500"}`}
-              disabled={!userInput.trim() || isRecording || sessionEnded}
-            >
-              <Send size={20} color={sessionEnded ? "gray" : "white"} />
-            </TouchableOpacity>
-
-            {!isRecording ? (
-              <TouchableOpacity
-                onPress={() => void startRecording()}
-                className={`rounded-lg p-2 ${sessionEnded ? "bg-gray-300" : "bg-green-500"}`}
-                disabled={!audioInitialized || sessionEnded}
-              >
-                <Mic size={20} color={sessionEnded ? "gray" : "white"} />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={() => void stopRecording()} className="rounded-lg bg-red-500 p-2">
-                <Square size={20} color="white" />
-              </TouchableOpacity>
-            )}
           </View>
         </View>
+
+        {/* Main content area - Turn-based UI */}
+        <View className="flex-1 items-center justify-center px-4">
+          {turnState === "user" && !isRecording && (
+            <View className="items-center">
+              <Text className="mb-6 text-center text-lg text-gray-600">Your turn to speak</Text>
+              <Pressable
+                onPressIn={() => void startRecording()}
+                onPressOut={() => void stopRecording()}
+                className="h-32 w-32 items-center justify-center rounded-full bg-blue-500 shadow-lg"
+                disabled={!audioInitialized || sessionEnded}
+              >
+                <Mic size={48} color="white" />
+              </Pressable>
+              <Text className="mt-4 text-center text-sm text-gray-500">Hold to speak</Text>
+            </View>
+          )}
+
+          {isRecording && (
+            <View className="items-center">
+              <Text className="mb-6 text-center text-lg text-red-600">Recording...</Text>
+              <Pressable onPressOut={() => void stopRecording()} className="h-32 w-32 items-center justify-center rounded-full bg-red-500 shadow-lg">
+                <Square size={48} color="white" fill="white" />
+              </Pressable>
+              <Text className="mt-4 text-center text-sm text-gray-500">Release to send</Text>
+            </View>
+          )}
+
+          {turnState === "assistant" && isAssistantSpeaking && (
+            <View className="items-center">
+              <Text className="mb-6 text-center text-lg text-blue-600">Assistant is speaking...</Text>
+              <View className="h-32 w-32 items-center justify-center rounded-lg bg-blue-500 shadow-lg">
+                <Square size={48} color="white" fill="white" />
+              </View>
+              <Text className="mt-4 text-center text-sm text-gray-500">Please wait</Text>
+            </View>
+          )}
+
+          {turnState === "assistant" && !isAssistantSpeaking && (
+            <View className="items-center">
+              <Text className="mb-6 text-center text-lg text-gray-600">Processing your message...</Text>
+              <View className="h-32 w-32 items-center justify-center rounded-full bg-gray-300 shadow-lg">
+                <Mic size={48} color="gray" />
+              </View>
+              <Text className="mt-4 text-center text-sm text-gray-500">Please wait</Text>
+            </View>
+          )}
+
+          {sessionEnded && (
+            <View className="items-center">
+              <Text className="mb-6 text-center text-lg text-gray-600">Session ended</Text>
+              <View className="h-32 w-32 items-center justify-center rounded-full bg-gray-300 shadow-lg">
+                <X size={48} color="gray" />
+              </View>
+              <Text className="mt-4 text-center text-sm text-gray-500">Thank you for practicing!</Text>
+            </View>
+          )}
+        </View>
       </View>
+
+      <TranscriptBottomSheet ref={transcriptBottomSheetRef} />
     </SafeAreaView>
   )
 }
