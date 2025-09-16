@@ -1,5 +1,5 @@
 import React, { forwardRef, useState } from "react"
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
+import { BottomSheetModal } from "@gorhom/bottom-sheet"
 import { CheckCircle, Circle, X, XCircle, Zap } from "lucide-react-native"
 import { ActivityIndicator, Dimensions, ScrollView, TouchableOpacity, View } from "react-native"
 
@@ -82,7 +82,7 @@ type Props = {
   messages: Message[]
 }
 
-export const TranscriptBottomSheet = forwardRef<BottomSheetModal, Props>(({ messages }, ref) => {
+export const BottomSheetTranscript = forwardRef<BottomSheetModal, Props>(({ messages }, ref) => {
   const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null)
   return (
     <BottomSheetModal
@@ -92,118 +92,124 @@ export const TranscriptBottomSheet = forwardRef<BottomSheetModal, Props>(({ mess
       backdropComponent={BottomSheetBackdrop}
       enablePanDownToClose
       stackBehavior="push"
+      enableDynamicSizing={false}
     >
-      <BottomSheetView className="flex-1 px-4 pb-10 pt-2">
-        <View className="mb-4">
-          <Text className="text-center text-lg font-semibold text-gray-800">Conversation Transcript</Text>
+      <View className="flex-1">
+        {/* Fixed Header */}
+        <View className="border-b border-neutral-200 px-4 pb-4 pt-1">
+          <Text className="text-center text-lg font-bold">Conversation Transcript</Text>
         </View>
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {messages.map((message) => (
-            <View key={message.id} className="mb-3">
-              <View className={`flex-row items-start gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                {/* Feedback icon for user messages - positioned on the left */}
-                {message.role === "user" && (
-                  <View className="mt-1">
-                    <FeedbackIcon
-                      message={message}
-                      onPress={() => {
-                        if (message.feedback) {
-                          setExpandedFeedback(expandedFeedback === message.id ? null : message.id)
-                        }
-                      }}
-                    />
+
+        {/* Scrollable Content*/}
+        <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+          <View className="flex flex-col gap-3 pb-10">
+            {messages.map((message) => (
+              <View key={message.id}>
+                <View className={`flex-row items-start gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {/* Feedback icon for user messages - positioned on the left */}
+                  {message.role === "user" && (
+                    <View className="mt-1">
+                      <FeedbackIcon
+                        message={message}
+                        onPress={() => {
+                          if (message.feedback) {
+                            setExpandedFeedback(expandedFeedback === message.id ? null : message.id)
+                          }
+                        }}
+                      />
+                    </View>
+                  )}
+
+                  <View className={`rounded-lg p-3 ${message.role === "user" ? "max-w-[70%] bg-blue-100" : "max-w-[80%] bg-gray-100"}`}>
+                    <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
+                  </View>
+                </View>
+
+                {/* Feedback display - only show when expanded */}
+                {message.feedback && expandedFeedback === message.id && (
+                  <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    {/* Header with quality score and close button */}
+                    <View className="mb-3 flex-row items-center justify-between">
+                      <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
+                      <View className="flex-row items-center gap-2">
+                        <View className="rounded-full bg-blue-100 px-2 py-1">
+                          <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setExpandedFeedback(null)
+                          }}
+                          className="h-6 w-6 items-center justify-center rounded-full bg-blue-200"
+                        >
+                          <X size={12} color="#1E40AF" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Main feedback */}
+                    <View className="mb-3">
+                      <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
+                    </View>
+
+                    {/* Corrected phrase */}
+                    {message.feedback.correctedPhrase !== message.transcript && (
+                      <View className="mb-3 rounded-lg bg-green-100 p-2">
+                        <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
+                        <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
+                      </View>
+                    )}
+
+                    {/* Individual corrections */}
+                    {message.feedback.corrections.length > 0 && (
+                      <View className="mb-3">
+                        <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
+                        {message.feedback.corrections.map((correction, index) => (
+                          <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
+                            <View className="mb-1 flex-row">
+                              <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
+                              <Text className="mx-1 text-xs text-gray-500">→</Text>
+                              <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
+                            </View>
+                            <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Scoring breakdown */}
+                    <View className="mb-3">
+                      <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
+                      <View className="space-y-1">
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Accuracy:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
+
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Fluency:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
+
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-xs text-gray-600">Vocabulary:</Text>
+                          <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
+                        </View>
+                        <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
+                      </View>
+                    </View>
                   </View>
                 )}
-
-                <View className={`rounded-lg p-3 ${message.role === "user" ? "max-w-[70%] bg-blue-100" : "max-w-[80%] bg-gray-100"}`}>
-                  <Text className={`${message.role === "user" ? "text-blue-800" : "text-gray-800"}`}>{message.transcript}</Text>
-                </View>
               </View>
-
-              {/* Feedback display - only show when expanded */}
-              {message.feedback && expandedFeedback === message.id && (
-                <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
-                  {/* Header with quality score and close button */}
-                  <View className="mb-3 flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
-                    <View className="flex-row items-center gap-2">
-                      <View className="rounded-full bg-blue-100 px-2 py-1">
-                        <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setExpandedFeedback(null)
-                        }}
-                        className="h-6 w-6 items-center justify-center rounded-full bg-blue-200"
-                      >
-                        <X size={12} color="#1E40AF" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  {/* Main feedback */}
-                  <View className="mb-3">
-                    <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
-                  </View>
-
-                  {/* Corrected phrase */}
-                  {message.feedback.correctedPhrase !== message.transcript && (
-                    <View className="mb-3 rounded-lg bg-green-100 p-2">
-                      <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
-                      <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
-                    </View>
-                  )}
-
-                  {/* Individual corrections */}
-                  {message.feedback.corrections.length > 0 && (
-                    <View className="mb-3">
-                      <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
-                      {message.feedback.corrections.map((correction, index) => (
-                        <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
-                          <View className="mb-1 flex-row">
-                            <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
-                            <Text className="mx-1 text-xs text-gray-500">→</Text>
-                            <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
-                          </View>
-                          <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Scoring breakdown */}
-                  <View className="mb-3">
-                    <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
-                    <View className="space-y-1">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Accuracy:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
-
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Fluency:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
-
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600">Vocabulary:</Text>
-                        <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
-                      </View>
-                      <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
-                    </View>
-                  </View>
-                </View>
-              )}
-            </View>
-          ))}
+            ))}
+          </View>
         </ScrollView>
-      </BottomSheetView>
+      </View>
     </BottomSheetModal>
   )
 })
 
-TranscriptBottomSheet.displayName = "TranscriptBottomSheet"
+BottomSheetTranscript.displayName = "TranscriptBottomSheet"

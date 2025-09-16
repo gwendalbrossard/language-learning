@@ -1,10 +1,10 @@
+import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
 import { useLocalSearchParams } from "expo-router"
-import { BottomSheetModal } from "@gorhom/bottom-sheet"
 import { FileTextIcon, Mic, Square, X } from "lucide-react-native"
 import { Alert, Pressable, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -12,7 +12,7 @@ import { io } from "socket.io-client"
 
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
-import { TranscriptBottomSheet } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
+import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
@@ -485,10 +485,7 @@ const RoleplaySession: FC = () => {
         </View>
       </View>
 
-      <TranscriptBottomSheet
-        ref={transcriptBottomSheetRef}
-        messages={messages}
-      />
+      <BottomSheetTranscript ref={transcriptBottomSheetRef} messages={messages} />
     </SafeAreaView>
   )
 }
