@@ -101,13 +101,13 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
 
       {/* Feedback display - only show when expanded */}
       {message.feedback && expandedFeedback && (
-        <View className="mt-2 max-w-[90%] self-end rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <View className="mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-5 shadow-lg">
           {/* Header with quality score and close button */}
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-sm font-semibold text-blue-800">📝 Feedback</Text>
-            <View className="flex-row items-center gap-2">
-              <View className="rounded-full bg-blue-100 px-2 py-1">
-                <Text className="text-xs font-bold text-blue-700">{message.feedback.quality}/100</Text>
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-base font-bold">Feedback</Text>
+            <View className="flex-row items-center gap-3">
+              <View className="rounded-xl bg-primary-600 px-3 py-1.5">
+                <Text className="text-sm font-bold text-white">{message.feedback.quality}/100</Text>
               </View>
               <TouchableOpacity
                 onPress={(e) => {
@@ -115,64 +115,92 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
                   e.stopPropagation()
                   setExpandedFeedback(false)
                 }}
-                className="h-6 w-6 items-center justify-center rounded-full bg-blue-200"
+                className="h-8 w-8 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200"
               >
-                <X size={12} color="#1E40AF" />
+                <X size={16} color="#6B7280" />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Main feedback */}
-          <View className="mb-3">
-            <Text className="text-sm text-blue-700">{message.feedback.feedback}</Text>
+          <View className="mb-5 rounded-xl bg-gray-50 p-4">
+            <Text className="text-sm leading-relaxed text-gray-800">{message.feedback.feedback}</Text>
           </View>
 
           {/* Corrected phrase */}
           {message.feedback.correctedPhrase !== message.transcript && (
-            <View className="mb-3 rounded-lg bg-green-100 p-2">
-              <Text className="mb-1 text-xs font-semibold text-green-700">✨ Corrected:</Text>
-              <Text className="text-sm font-medium text-green-800">"{message.feedback.correctedPhrase}"</Text>
+            <View className="mb-5 rounded-xl border border-green-200 bg-green-50 p-4">
+              <View className="mb-2 flex-row items-center gap-2">
+                <View className="h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                  <Text className="text-xs">✨</Text>
+                </View>
+                <Text className="text-sm font-semibold text-green-800">Corrected Version</Text>
+              </View>
+              <Text className="text-sm font-medium text-green-900">"{message.feedback.correctedPhrase}"</Text>
             </View>
           )}
 
           {/* Individual corrections */}
           {message.feedback.corrections.length > 0 && (
-            <View className="mb-3">
-              <Text className="mb-2 text-xs font-semibold text-blue-700">🔍 Specific Corrections:</Text>
+            <View className="mb-5">
+              <View className="mb-3 flex-row items-center gap-2">
+                <View className="h-6 w-6 items-center justify-center rounded-full bg-amber-100">
+                  <Text className="text-xs">🔍</Text>
+                </View>
+                <Text className="text-sm font-semibold text-gray-800">Specific Corrections</Text>
+              </View>
               {message.feedback.corrections.map((correction, index) => (
-                <View key={index} className="mb-2 rounded-lg bg-yellow-50 p-2">
-                  <View className="mb-1 flex-row">
-                    <Text className="text-xs text-red-600 line-through">"{correction.wrong}"</Text>
-                    <Text className="mx-1 text-xs text-gray-500">→</Text>
-                    <Text className="text-xs font-medium text-green-600">"{correction.correct}"</Text>
+                <View key={index} className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <View className="mb-2 flex-row flex-wrap items-center">
+                    <View className="rounded-lg bg-red-100 px-2 py-1">
+                      <Text className="text-sm text-red-700 line-through">"{correction.wrong}"</Text>
+                    </View>
+                    <Text className="mx-2 text-sm text-gray-400">→</Text>
+                    <View className="rounded-lg bg-green-100 px-2 py-1">
+                      <Text className="text-sm font-medium text-green-700">"{correction.correct}"</Text>
+                    </View>
                   </View>
-                  <Text className="text-xs italic text-gray-600">{correction.explanation}</Text>
+                  <Text className="text-sm text-gray-600">{correction.explanation}</Text>
                 </View>
               ))}
             </View>
           )}
 
           {/* Scoring breakdown */}
-          <View className="mb-3">
-            <Text className="mb-2 text-xs font-semibold text-blue-700">📊 Detailed Scores:</Text>
-            <View className="space-y-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs text-gray-600">Accuracy:</Text>
-                <Text className="text-xs font-medium text-blue-600">{message.feedback.accuracy.score}/100</Text>
+          <View>
+            <View className="mb-4 flex-row items-center gap-2">
+              <View className="h-6 w-6 items-center justify-center rounded-full bg-blue-100">
+                <Text className="text-xs">📊</Text>
               </View>
-              <Text className="text-xs italic text-gray-500">{message.feedback.accuracy.message}</Text>
+              <Text className="text-sm font-semibold text-gray-800">Performance Breakdown</Text>
+            </View>
+            <View className="flex flex-col gap-4">
+              {/* Accuracy Score */}
+              <View className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <View className="mb-2 flex-row items-center justify-between">
+                  <Text className="text-sm font-medium text-blue-900">Accuracy</Text>
+                  <Text className="text-sm font-bold text-blue-700">{message.feedback.accuracy.score}/100</Text>
+                </View>
+                <Text className="text-xs text-blue-700">{message.feedback.accuracy.message}</Text>
+              </View>
 
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs text-gray-600">Fluency:</Text>
-                <Text className="text-xs font-medium text-blue-600">{message.feedback.fluency.score}/100</Text>
+              {/* Fluency Score */}
+              <View className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+                <View className="mb-2 flex-row items-center justify-between">
+                  <Text className="text-sm font-medium text-purple-900">Fluency</Text>
+                  <Text className="text-sm font-bold text-purple-700">{message.feedback.fluency.score}/100</Text>
+                </View>
+                <Text className="text-xs text-purple-700">{message.feedback.fluency.message}</Text>
               </View>
-              <Text className="text-xs italic text-gray-500">{message.feedback.fluency.message}</Text>
 
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs text-gray-600">Vocabulary:</Text>
-                <Text className="text-xs font-medium text-blue-600">{message.feedback.vocabulary.score}/100</Text>
+              {/* Vocabulary Score */}
+              <View className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <View className="mb-2 flex-row items-center justify-between">
+                  <Text className="text-sm font-medium text-emerald-900">Vocabulary</Text>
+                  <Text className="text-sm font-bold text-emerald-700">{message.feedback.vocabulary.score}/100</Text>
+                </View>
+                <Text className="text-xs text-emerald-700">{message.feedback.vocabulary.message}</Text>
               </View>
-              <Text className="text-xs italic text-gray-500">{message.feedback.vocabulary.message}</Text>
             </View>
           </View>
         </View>
