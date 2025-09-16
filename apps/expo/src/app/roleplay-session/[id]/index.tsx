@@ -35,12 +35,10 @@ const RoleplaySession: FC = () => {
   ])
   const [userInput, setUserInput] = useState("")
   const [isRecording, setIsRecording] = useState(false)
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false)
+
   const [audioInitialized, setAudioInitialized] = useState(false)
-  const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
-  const audioChunkIndexRef = useRef<{ [responseId: string]: number }>({})
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
@@ -70,48 +68,22 @@ const RoleplaySession: FC = () => {
       console.log("Connected to server")
     })
 
-    socketRef.current.on("displayUserMessage", ({ id, delta }: { id: string; delta: string }) => {
-      displayUserMessage(id, delta)
+    socketRef.current.on("userTextDelta", ({ id, delta }: { id: string; delta: string }) => {
+      userTextDelta(id, delta)
     })
 
-    socketRef.current.on("conversationUpdate", ({ id, delta }: { id: string; delta: string }) => {
-      updateBotMessage(id, delta)
+    socketRef.current.on("assistantTextDelta", ({ id, delta }: { id: string; delta: string }) => {
+      assistantTextDelta(id, delta)
     })
 
-    socketRef.current.on(
-      "audioStream",
-      (data: { delta: string; response_id?: string; item_id?: string; output_index?: number; content_index?: number }) => {
-        console.log(`Received audio chunk: ${data.delta.length} chars, response_id: ${data.response_id}`)
+    socketRef.current.on("assistantAudioDelta", (data: { delta: string; itemId: string }) => {
+      console.log(`Received assistant audio chunk: ${data.delta.length} chars, itemId: ${data.itemId}`)
 
-        // Get response ID for tracking chunks
-        const responseId = data.response_id ?? "default"
-
-        // Initialize or increment index for this response
-        audioChunkIndexRef.current[responseId] ??= 0
-
-        const chunkIndex = audioChunkIndexRef.current[responseId]++
-
-        try {
-          MyModule.playAudio({ delta: data.delta })
-
-          console.log(`Successfully added audio chunk ${chunkIndex} for response: ${responseId}`)
-        } catch (error) {
-          console.error("Error processing audio chunk:", error)
-        }
-      },
-    )
-
-    socketRef.current.on("audioStreamDone", (data: { response_id?: string }) => {
-      console.log("Audio stream completed")
-      const responseId = data.response_id ?? "default"
-      if (audioChunkIndexRef.current[responseId]) {
-        console.log(`Audio stream finished for response: ${responseId}, total chunks: ${audioChunkIndexRef.current[responseId]}`)
-        delete audioChunkIndexRef.current[responseId] // Clean up tracking
-      }
+      MyModule.playAudio({ delta: data.delta })
     })
 
-    socketRef.current.on("conversationInterrupted", () => {
-      void interruptAudio()
+    socketRef.current.on("assistantAudioDone", (data: { itemId: string }) => {
+      console.log(`Assistant audio stream completed for itemId: ${data.itemId}`)
     })
 
     socketRef.current.on("feedback", (data: { messageId: string; feedback: TFeedbackSchema }) => {
@@ -227,7 +199,7 @@ const RoleplaySession: FC = () => {
     }
   }
 
-  const displayUserMessage = (id: string, delta: string) => {
+  const userTextDelta = (id: string, delta: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -267,7 +239,7 @@ const RoleplaySession: FC = () => {
     scrollToBottom()
   }
 
-  const updateBotMessage = (id: string, delta: string) => {
+  const assistantTextDelta = (id: string, delta: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -334,10 +306,9 @@ const RoleplaySession: FC = () => {
         await initializeAudio()
 
         setIsRecording(true)
-        setRecordedAudioUri(null)
 
         // Add visual feedback for recording
-        displayUserMessage(`recording-${Date.now()}`, "🎤 Recording...")
+        userTextDelta(`recording-${Date.now()}`, "🎤 Recording...")
 
         console.log("Requesting microphone access...")
 
@@ -379,7 +350,7 @@ const RoleplaySession: FC = () => {
       } catch (error) {
         console.error("Error starting recording:", error)
         setIsRecording(false)
-        displayUserMessage(`error-${Date.now()}`, "❌ Failed to start recording. Please check microphone permissions.")
+        userTextDelta(`error-${Date.now()}`, "❌ Failed to start recording. Please check microphone permissions.")
         Alert.alert("Error", "Failed to start recording. Please check microphone permissions.")
       }
     }
@@ -400,7 +371,6 @@ const RoleplaySession: FC = () => {
         }
 
         if (uri) {
-          setRecordedAudioUri(uri)
           console.log("Audio recorded at:", uri)
 
           // Read the audio file as base64
@@ -416,43 +386,21 @@ const RoleplaySession: FC = () => {
             }
 
             // Update UI to show audio was sent
-            displayUserMessage(`sent-${Date.now()}`, "🎵 Audio sent, waiting for response...")
+            userTextDelta(`sent-${Date.now()}`, "🎵 Audio sent, waiting for response...")
           } else {
             console.warn("No audio data in recorded file")
-            displayUserMessage(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
+            userTextDelta(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
           }
         } else {
           console.warn("No audio file was created")
-          displayUserMessage(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
+          userTextDelta(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
         }
 
         console.log("Stopped recording and sent complete audio as base64")
       } catch (error) {
         console.error("Failed to stop recording:", error)
-        displayUserMessage(`error-${Date.now()}`, "❌ Error stopping recording")
+        userTextDelta(`error-${Date.now()}`, "❌ Error stopping recording")
       }
-    }
-  }
-
-  const interruptAudio = async () => {
-    try {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync()
-        await soundRef.current.unloadAsync()
-        soundRef.current = null
-      }
-
-      // Clear native audio queue (PlayAudioContinuouslyManager handles this automatically)
-
-      audioChunkIndexRef.current = {} // Clear all chunk indices
-      setIsPlayingAudio(false)
-      console.log("Audio playback interrupted")
-
-      if (socketRef.current) {
-        socketRef.current.emit("cancelResponse", { trackId: "current", offset: 0 })
-      }
-    } catch (error) {
-      console.error("Error interrupting audio:", error)
     }
   }
 
@@ -466,7 +414,6 @@ const RoleplaySession: FC = () => {
               <Text className={`text-lg font-semibold ${timeRemaining < 60 ? "text-red-600" : "text-gray-800"}`}>
                 Time remaining: {formatTime(timeRemaining)}
               </Text>
-              {isPlayingAudio && <Text className="mt-1 text-sm text-blue-600">🔊 AI Speaking...</Text>}
             </View>
             {!sessionEnded && (
               <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">

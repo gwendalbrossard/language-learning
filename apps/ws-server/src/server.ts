@@ -343,7 +343,7 @@ io.on("connection", async (socket) => {
         console.log("conversation.item.added")
 
         if (parsedMessage.item.type === "message" && parsedMessage.item.role === "user") {
-          socket.emit("displayUserMessage", {
+          socket.emit("userTextDelta", {
             id: parsedMessage.item.id,
             delta: "", // Empty delta to add placeholder while waiting for transcript
           })
@@ -357,7 +357,7 @@ io.on("connection", async (socket) => {
       }
       case "conversation.item.input_audio_transcription.delta": {
         console.log("conversation.item.input_audio_transcription.delta")
-        socket.emit("displayUserMessage", {
+        socket.emit("userTextDelta", {
           id: parsedMessage.item_id,
           delta: parsedMessage.delta,
         })
@@ -465,30 +465,24 @@ io.on("connection", async (socket) => {
         }
 
         // Forward audio chunk to client
-        socket.emit("audioStream", {
+        socket.emit("assistantAudioDelta", {
+          id: parsedMessage.item_id,
           delta: parsedMessage.delta,
-          response_id: parsedMessage.response_id,
-          item_id: parsedMessage.item_id,
-          output_index: parsedMessage.output_index,
-          content_index: parsedMessage.content_index,
         })
         break
       }
       case "response.output_audio.done": {
         console.log("response.output_audio.done")
         // Signal end of audio stream
-        socket.emit("audioStreamDone", {
-          response_id: parsedMessage.response_id,
-          item_id: parsedMessage.item_id,
-          output_index: parsedMessage.output_index,
-          content_index: parsedMessage.content_index,
+        socket.emit("assistantAudioDone", {
+          id: parsedMessage.item_id,
         })
 
         break
       }
       case "response.output_audio_transcript.delta": {
         console.log("response.output_audio_transcript.delta")
-        socket.emit("conversationUpdate", {
+        socket.emit("assistantTextDelta", {
           id: parsedMessage.item_id,
           delta: parsedMessage.delta,
         })
@@ -600,14 +594,18 @@ io.on("connection", async (socket) => {
   })
 
   // Handle text messages from the user
-  socket.on("userMessage", async (message: string) => {
+  socket.on("userMessage", (_message: string) => {
     // Check session timeout before processing
     if (checkSessionTimeout()) {
       void endSession()
       return
     }
 
-    // Store user text message
+    // TODO: Handle user text message
+
+    return
+
+    /*  // Store user text message
     await prisma.roleplaySessionMessage.create({
       data: {
         sessionId: roleplaySession.id,
@@ -639,7 +637,7 @@ io.on("connection", async (socket) => {
           output_modalities: ["text"],
         },
       }),
-    )
+    ) */
   })
 
   // Handle manual session end from client
