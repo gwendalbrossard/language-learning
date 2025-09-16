@@ -5,8 +5,16 @@
     public func definition() -> ModuleDefinition {
       Name("MyModule")
 
-      Function("playAudio") { (eventInfo: [String: Any]) in
-        PlayAudioContinuouslyManager.shared.playAudio(eventInfo: eventInfo)
+      Events("onAudioPlaybackComplete")
+
+      Function("processAudioChunk") { (eventInfo: [String: Any]) in
+        PlayAudioContinuouslyManager.shared.processAudioChunk(eventInfo: eventInfo)
+      }
+
+      Function("lastAudioChunkReceived") { [weak self] in
+        PlayAudioContinuouslyManager.shared.lastAudioChunkReceived { [weak self] in
+          self?.sendEvent("onAudioPlaybackComplete", [:])
+        }
       }
     }
   }
@@ -22,6 +30,10 @@
       private var isPauseAudio = false
       private var audioQueue = DispatchQueue(label: "audioProcessing", qos: .userInteractive)
       private var isPlaying = false
+      private var scheduledBuffersCount = 0
+      private var completedBuffersCount = 0
+      private var allChunksReceived = false
+      private var completionCallback: (() -> Void)?
 
       private override init() {
           super.init()
@@ -47,11 +59,28 @@
           }
       }
 
-      func playAudio(eventInfo: [String: Any]) {
+      func processAudioChunk(eventInfo: [String: Any]) {
           guard let base64String = eventInfo["delta"] as? String else { return }
+
+          // Reset state on first chunk
+          if scheduledBuffersCount == 0 && completedBuffersCount == 0 {
+              allChunksReceived = false
+          }
 
           audioQueue.async { [weak self] in
               self?.processAudioData(base64String)
+          }
+      }
+
+      func lastAudioChunkReceived(completion: @escaping () -> Void) {
+          completionCallback = completion
+          allChunksReceived = true
+
+          // If all buffers are already complete, call completion immediately
+          if scheduledBuffersCount == completedBuffersCount {
+              DispatchQueue.main.async { [weak self] in
+                  self?.callCompletion()
+              }
           }
       }
 
@@ -92,9 +121,32 @@
           DispatchQueue.main.async { [weak self] in
               guard let self = self, self.isPlaying else { return }
 
-              self.playerNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { _ in
-                  // Buffer completed
+              self.scheduledBuffersCount += 1
+
+              self.playerNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] _ in
+                  self?.onBufferCompleted()
               }
           }
+      }
+
+      private func onBufferCompleted() {
+          DispatchQueue.main.async { [weak self] in
+              guard let self = self else { return }
+
+              self.completedBuffersCount += 1
+
+              // If all chunks received and all buffers are complete, call completion
+              if self.allChunksReceived && self.completedBuffersCount >= self.scheduledBuffersCount {
+                  self.callCompletion()
+              }
+          }
+      }
+
+      private func callCompletion() {
+          completionCallback?()
+          completionCallback = nil
+          // Reset for next session
+          scheduledBuffersCount = 0
+          completedBuffersCount = 0
       }
   }

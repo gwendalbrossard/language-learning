@@ -85,14 +85,12 @@ const RoleplaySession: FC = () => {
 
       setIsAssistantSpeaking(true)
       setTurnState("assistant")
-      MyModule.playAudio({ delta: data.delta })
+      MyModule.processAudioChunk({ delta: data.delta })
     })
 
     socketRef.current.on("assistantAudioDone", (data: { itemId: string }) => {
       console.log(`Assistant audio stream completed for itemId: ${data.itemId}`)
-
-      setIsAssistantSpeaking(false)
-      setTurnState("user")
+      MyModule.lastAudioChunkReceived()
     })
 
     socketRef.current.on("feedback", (data: { messageId: string; feedback: TFeedbackSchema }) => {
@@ -112,6 +110,15 @@ const RoleplaySession: FC = () => {
     initializeSocket()
     void initializeAudio()
 
+    // Add listener for audio playback completion
+    const handleAudioPlaybackComplete = () => {
+      console.log("Audio playback completed - switching to user turn")
+      setIsAssistantSpeaking(false)
+      setTurnState("user")
+    }
+
+    const subscription = MyModule.addListener("onAudioPlaybackComplete", handleAudioPlaybackComplete)
+
     // Start the session timer
     sessionStartTimeRef.current = Date.now()
     timerIntervalRef.current = setInterval(() => {
@@ -125,6 +132,7 @@ const RoleplaySession: FC = () => {
     }, 1000)
 
     return () => {
+      subscription.remove()
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
