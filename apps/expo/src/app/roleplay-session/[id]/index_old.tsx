@@ -14,7 +14,6 @@ import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
-import MyModule from "../../../../modules/my-module"
 
 interface Message {
   id: string
@@ -40,7 +39,6 @@ const RoleplaySession: FC = () => {
   const [_recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
-  const audioChunkIndexRef = useRef<{ [responseId: string]: number }>({})
 
   const socketRef = useRef<Socket | null>(null)
   const recordingRef = useRef<Audio.Recording | null>(null)
@@ -70,43 +68,22 @@ const RoleplaySession: FC = () => {
       console.log("Connected to server")
     })
 
-    socketRef.current.on("displayUserMessage", ({ id, delta }: { id: string; delta: string }) => {
-      displayUserMessage(id, delta)
+    socketRef.current.on("displayUserMessage", ({ id, text }: { id: string; text: string }) => {
+      displayUserMessage(id, text)
     })
 
-    socketRef.current.on("conversationUpdate", ({ id, delta }: { id: string; delta: string }) => {
-      updateBotMessage(id, delta)
+    socketRef.current.on("conversationUpdate", ({ id, text }: { id: string; text: string }) => {
+      updateBotMessage(id, text)
     })
 
-    socketRef.current.on(
-      "audioStream",
-      (data: { delta: string; response_id?: string; item_id?: string; output_index?: number; content_index?: number }) => {
-        console.log(`Received audio chunk: ${data.delta.length} chars, response_id: ${data.response_id}`)
-
-        // Get response ID for tracking chunks
-        const responseId = data.response_id ?? "default"
-
-        // Initialize or increment index for this response
-        audioChunkIndexRef.current[responseId] ??= 0
-
-        const chunkIndex = audioChunkIndexRef.current[responseId]++
-
+    socketRef.current.on("audioStream", async (arrayBuffer: ArrayBuffer, id: string) => {
+      if (arrayBuffer.byteLength > 0) {
         try {
-          MyModule.playAudio({ delta: data.delta })
-
-          console.log(`Successfully added audio chunk ${chunkIndex} for response: ${responseId}`)
+          await playAudioChunk(arrayBuffer, id)
         } catch (error) {
-          console.error("Error processing audio chunk:", error)
+          console.error("Error playing audio:", error)
+          setIsPlayingAudio(false)
         }
-      },
-    )
-
-    socketRef.current.on("audioStreamDone", (data: { response_id?: string }) => {
-      console.log("Audio stream completed")
-      const responseId = data.response_id ?? "default"
-      if (audioChunkIndexRef.current[responseId]) {
-        console.log(`Audio stream finished for response: ${responseId}, total chunks: ${audioChunkIndexRef.current[responseId]}`)
-        delete audioChunkIndexRef.current[responseId] // Clean up tracking
       }
     })
 
@@ -125,7 +102,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id])
 
   useEffect(() => {
     initializeSocket()
@@ -156,7 +133,6 @@ const RoleplaySession: FC = () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
-      // PlayAudioContinuouslyManager handles cleanup automatically
     }
   }, [initializeSocket])
 
@@ -175,9 +151,8 @@ const RoleplaySession: FC = () => {
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
       })
-
       setAudioInitialized(true)
-      console.log("Audio initialized successfully - PlayAudioContinuouslyManager auto-initialized")
+      console.log("Audio initialized successfully")
     } catch (error) {
       console.error("Failed to initialize audio:", error)
       Alert.alert("Error", "Failed to initialize audio. Please check permissions.")
@@ -227,7 +202,7 @@ const RoleplaySession: FC = () => {
     }
   }
 
-  const displayUserMessage = (id: string, delta: string) => {
+  const displayUserMessage = (id: string, transcript: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -239,7 +214,7 @@ const RoleplaySession: FC = () => {
         if (existingMessage) {
           updated[existingIndex] = {
             ...existingMessage,
-            transcript: existingMessage.transcript + delta,
+            transcript,
           }
         }
         return updated
@@ -250,14 +225,14 @@ const RoleplaySession: FC = () => {
           {
             id,
             role: "user",
-            transcript: delta,
+            transcript,
           },
         ]
       }
     })
 
     // Handle typed messages
-    if (sentUserMessageRef.current && delta === "(item sent)") {
+    if (sentUserMessageRef.current && transcript === "(item sent)") {
       const sentMessage = sentUserMessageRef.current
       sentUserMessageRef.current = null
 
@@ -267,7 +242,7 @@ const RoleplaySession: FC = () => {
     scrollToBottom()
   }
 
-  const updateBotMessage = (id: string, delta: string) => {
+  const updateBotMessage = (id: string, transcript: string) => {
     setMessages((prev) => {
       // Check if message already exists
       const existingIndex = prev.findIndex((msg) => msg.id === id)
@@ -279,7 +254,7 @@ const RoleplaySession: FC = () => {
         if (existingMessage) {
           updated[existingIndex] = {
             ...existingMessage,
-            transcript: existingMessage.transcript + delta,
+            transcript,
           }
         }
         return updated
@@ -290,7 +265,7 @@ const RoleplaySession: FC = () => {
           {
             id,
             role: "assistant",
-            transcript: delta,
+            transcript,
           },
         ]
       }
@@ -385,6 +360,29 @@ const RoleplaySession: FC = () => {
     }
   }
 
+  const convertAudioFileToArrayBuffer = async (uri: string): Promise<ArrayBuffer | null> => {
+    try {
+      // Read the file as base64
+      const base64Audio = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      })
+
+      // Convert base64 to ArrayBuffer
+      const binaryString = atob(base64Audio)
+      const bytes = new Uint8Array(binaryString.length)
+
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+
+      console.log(`Converted audio file: ${bytes.byteLength} bytes`)
+      return bytes.buffer
+    } catch (error) {
+      console.error("Error converting audio file:", error)
+      return null
+    }
+  }
+
   const stopRecording = async (): Promise<void> => {
     if (isRecording) {
       setIsRecording(false)
@@ -403,16 +401,14 @@ const RoleplaySession: FC = () => {
           setRecordedAudioUri(uri)
           console.log("Audio recorded at:", uri)
 
-          // Read the audio file as base64
-          const base64Audio = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          })
+          // Read the audio file and convert to ArrayBuffer
+          const audioData = await convertAudioFileToArrayBuffer(uri)
 
-          if (base64Audio && base64Audio.length > 0) {
-            // Send complete audio to server as base64
+          if (audioData && audioData.byteLength > 0) {
+            // Send complete audio to server
             if (socketRef.current) {
-              socketRef.current.emit("completeAudio", base64Audio)
-              console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
+              socketRef.current.emit("completeAudio", audioData)
+              console.log(`Sent complete audio: ${audioData.byteLength} bytes`)
             }
 
             // Update UI to show audio was sent
@@ -426,11 +422,33 @@ const RoleplaySession: FC = () => {
           displayUserMessage(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
         }
 
-        console.log("Stopped recording and sent complete audio as base64")
+        console.log("Stopped recording and sent complete audio")
       } catch (error) {
         console.error("Failed to stop recording:", error)
         displayUserMessage(`error-${Date.now()}`, "❌ Error stopping recording")
       }
+    }
+  }
+
+  const playAudioChunk = async (arrayBuffer: ArrayBuffer, id: string) => {
+    try {
+      // Convert ArrayBuffer to base64 for expo-av
+      const uint8Array = new Uint8Array(arrayBuffer)
+      const base64String = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)))
+      const uri = `data:audio/wav;base64,${base64String}`
+
+      const { sound } = await Audio.Sound.createAsync({ uri })
+      soundRef.current = sound
+
+      if (!isPlayingAudio) {
+        setIsPlayingAudio(true)
+        console.log("Started playing audio response")
+      }
+
+      await sound.playAsync()
+      console.log(`Playing audio chunk with ID: ${id}`)
+    } catch (error) {
+      console.error("Error playing audio chunk:", error)
     }
   }
 
@@ -442,9 +460,6 @@ const RoleplaySession: FC = () => {
         soundRef.current = null
       }
 
-      // Clear native audio queue (PlayAudioContinuouslyManager handles this automatically)
-
-      audioChunkIndexRef.current = {} // Clear all chunk indices
       setIsPlayingAudio(false)
       console.log("Audio playback interrupted")
 
@@ -466,7 +481,6 @@ const RoleplaySession: FC = () => {
               <Text className={`text-lg font-semibold ${timeRemaining < 60 ? "text-red-600" : "text-gray-800"}`}>
                 Time remaining: {formatTime(timeRemaining)}
               </Text>
-              {isPlayingAudio && <Text className="mt-1 text-sm text-blue-600">🔊 AI Speaking...</Text>}
             </View>
             {!sessionEnded && (
               <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">

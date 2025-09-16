@@ -1,16 +1,16 @@
 // server.js
 
 import http from "http"
+import type { RealtimeServerEvent } from "openai/resources/realtime/realtime.js"
 import { azure } from "@ai-sdk/azure"
-import { RealtimeClient } from "@openai/realtime-api-beta"
 import { generateObject } from "ai"
 import express from "express"
 import { Server } from "socket.io"
+import WebSocket from "ws"
 
 import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { ZFeedbackSchema, ZPracticeSchema } from "@acme/validators"
 
-import type { EventHandlerResult, Realtime } from "./types"
 import { env } from "~/env.server"
 import { auth } from "./auth"
 
@@ -126,7 +126,6 @@ io.on("connection", async (socket) => {
     return
   }
 
-  console.log(practice)
   const parsedPractice = ZPracticeSchema.safeParse(JSON.parse(practice))
 
   if (!parsedPractice.success) {
@@ -282,57 +281,97 @@ io.on("connection", async (socket) => {
     void endSession()
   }, SESSION_TIMEOUT_MS)
 
-  const client = new RealtimeClient({ apiKey: env.OPENAI_API_KEY })
-
-  client.updateSession({
-    instructions: "You are a helpful, english speaking assistant.",
-    model: "gpt-4o-mini-realtime-preview",
-    voice: "ballad",
-    turn_detection: null, // Disable server VAD since we're using manual recording
-    input_audio_format: "pcm16", // Set input audio format
-    output_audio_format: "pcm16", // Set output audio format
-    input_audio_transcription: { model: "whisper-1" },
+  const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview"
+  const ws = new WebSocket(url, {
+    headers: {
+      Authorization: "Bearer " + env.OPENAI_API_KEY,
+    },
   })
 
-  client.connect().catch((error) => {
-    console.error("Failed to connect:", error)
-    socket.emit("error", "Failed to connect to OpenAI API.")
+  ws.on("open", function open() {
+    console.log("Connected to server.")
+
+    // Initialize session
+    ws.send(
+      JSON.stringify({
+        type: "session.update",
+        session: {
+          type: "realtime",
+          model: "gpt-4o-mini-realtime-preview",
+          audio: {
+            input: {
+              format: {
+                type: "audio/pcm",
+                rate: 24000,
+              },
+              transcription: {
+                model: "whisper-1",
+              },
+              turn_detection: null,
+            },
+            output: {
+              format: {
+                type: "audio/pcm",
+                rate: 24000,
+              },
+              voice: "ballad",
+            },
+          },
+          instructions: "Speak clearly and briefly. Confirm understanding before taking actions.",
+        },
+      }),
+    )
   })
 
-  client.on("error", (error: Realtime.Error) => {
-    console.error("Realtime API error:", error)
-  })
-
-  // Handle conversation updates for transcription and audio
-  client.on("conversation.updated", async (event: EventHandlerResult) => {
-    // Check session timeout before processing
-    if (checkSessionTimeout()) {
-      void endSession()
-      return
+  const handleMessage = async (message: WebSocket.RawData) => {
+    let messageString: string
+    if (Buffer.isBuffer(message)) {
+      messageString = message.toString("utf8")
+    } else if (message instanceof ArrayBuffer) {
+      messageString = Buffer.from(message).toString("utf8")
+    } else {
+      messageString = String(message)
     }
+    const parsedMessage = JSON.parse(messageString) as RealtimeServerEvent
 
-    const { item, delta } = event
-    if (!item) throw new Error("No item found")
-    if (!item.formatted) throw new Error("No formatted item found")
+    switch (parsedMessage.type) {
+      case "error": {
+        console.error("Error", parsedMessage)
+        break
+      }
+      case "conversation.item.added": {
+        console.log("conversation.item.added")
 
-    // Handle user input (partial or complete transcription)
-    if (item.role === "user" && item.formatted.transcript) {
-      console.log(`User transcript: ${item.formatted.transcript}`)
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
+        if (parsedMessage.item.type === "message" && parsedMessage.item.role === "user") {
+          socket.emit("displayUserMessage", {
+            id: parsedMessage.item.id,
+            delta: "", // Empty delta to add placeholder while waiting for transcript
+          })
+        }
 
-      // Store user message when transcript is complete
-      if (item.status === "completed" && item.formatted.transcript) {
-        const transcript = item.formatted.transcript
+        break
+      }
+      case "conversation.item.done": {
+        console.log("conversation.item.done")
+        break
+      }
+      case "conversation.item.input_audio_transcription.delta": {
+        console.log("conversation.item.input_audio_transcription.delta")
+        socket.emit("displayUserMessage", {
+          id: parsedMessage.item_id,
+          delta: parsedMessage.delta,
+        })
+        break
+      }
+      case "conversation.item.input_audio_transcription.completed": {
+        console.log("conversation.item.input_audio_transcription.completed")
 
         // Store user message
         const userMessage = await prisma.roleplaySessionMessage.create({
           data: {
             sessionId: roleplaySession.id,
             role: RoleplaySessionMessageRole.USER,
-            content: transcript,
+            content: parsedMessage.transcript,
           },
         })
 
@@ -353,7 +392,7 @@ io.on("connection", async (socket) => {
         }
 
         const feedbackResult = await getFeedback(
-          transcript,
+          parsedMessage.transcript,
           userLanguagePreferences.learningLanguage,
           userLanguagePreferences.userLanguage,
           messages,
@@ -372,76 +411,130 @@ io.on("connection", async (socket) => {
 
         // Emit comprehensive feedback result
         socket.emit("feedback", {
-          messageId: item.id,
+          messageId: parsedMessage.item_id,
           feedback: feedbackResult,
         })
+
+        break
       }
-    } else if (item.role === "user" && item.formatted.audio.length && !item.formatted.transcript) {
-      // Emit placeholder while waiting for transcript if audio is present
-      console.log("User audio received, awaiting transcript")
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: "(awaiting transcript)",
-      })
-    } else if (item.role === "user" && !item.formatted.transcript) {
-      // Fallback in case neither transcript nor audio is present
-      console.log("User item sent without transcript")
-      socket.emit("displayUserMessage", {
-        id: item.id,
-        text: "(item sent)",
-      })
-    }
-
-    // Send bot responses to the client and store them
-    if (item.role !== "user" && item.formatted.transcript && item.status === "completed") {
-      console.log(`Assistant transcript: ${item.formatted.transcript}`)
-
-      // Store assistant message
-      await prisma.roleplaySessionMessage.create({
-        data: {
-          sessionId: roleplaySession.id,
-          role: RoleplaySessionMessageRole.ASSISTANT,
-          content: item.formatted.transcript,
-        },
-      })
-
-      await updateSessionDuration()
-
-      socket.emit("conversationUpdate", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
-    } else if (item.role !== "user" && item.formatted.transcript) {
-      // Still emit partial responses for real-time feedback
-      socket.emit("conversationUpdate", {
-        id: item.id,
-        text: item.formatted.transcript,
-      })
-    }
-
-    // Send audio updates to client
-    if (delta?.audio) {
-      const audioData = delta.audio.buffer
-
-      // Calculate AI speaking duration from audio delta
-      if (audioData.byteLength > 0) {
-        // Convert ArrayBuffer to Int16Array for PCM16 analysis
-        const audioBuffer = new Int16Array(audioData)
-        const audioDuration = calculateAudioDuration(audioBuffer)
-        totalAiSpeakingDuration += audioDuration
+      case "session.created": {
+        console.log("session.created")
+        break
       }
+      case "session.updated": {
+        console.log("session.updated")
+        break
+      }
+      case "input_audio_buffer.speech_started": {
+        console.log("input_audio_buffer.speech_started")
+        break
+      }
+      case "input_audio_buffer.speech_stopped": {
+        console.log("input_audio_buffer.speech_stopped")
+        break
+      }
+      case "input_audio_buffer.committed": {
+        console.log("input_audio_buffer.committed")
+        break
+      }
+      case "response.created": {
+        console.log("response.created")
+        break
+      }
+      case "response.output_item.added": {
+        console.log("response.output_item.added")
+        break
+      }
+      case "response.content_part.added": {
+        console.log("response.content_part.added")
+        break
+      }
+      case "response.output_audio.delta": {
+        console.log("response.output_audio.delta")
 
-      socket.emit("audioStream", audioData, item.id)
+        // Calculate AI speaking duration from audio delta
+        if (parsedMessage.delta) {
+          // Decode base64 audio to get the raw audio data
+          const audioBuffer = Buffer.from(parsedMessage.delta, "base64")
+          if (audioBuffer.byteLength > 0) {
+            // Convert to Int16Array for PCM16 analysis (OpenAI returns PCM16 at 24kHz)
+            const audioArray = new Int16Array(audioBuffer.buffer, audioBuffer.byteOffset, audioBuffer.byteLength / 2)
+            const audioDuration = calculateAudioDuration(audioArray, 24000)
+            totalAiSpeakingDuration += audioDuration
+          }
+        }
+
+        // Forward audio chunk to client
+        socket.emit("audioStream", {
+          delta: parsedMessage.delta,
+          response_id: parsedMessage.response_id,
+          item_id: parsedMessage.item_id,
+          output_index: parsedMessage.output_index,
+          content_index: parsedMessage.content_index,
+        })
+        break
+      }
+      case "response.output_audio.done": {
+        console.log("response.output_audio.done")
+        // Signal end of audio stream
+        socket.emit("audioStreamDone", {
+          response_id: parsedMessage.response_id,
+          item_id: parsedMessage.item_id,
+          output_index: parsedMessage.output_index,
+          content_index: parsedMessage.content_index,
+        })
+
+        break
+      }
+      case "response.output_audio_transcript.delta": {
+        console.log("response.output_audio_transcript.delta")
+        socket.emit("conversationUpdate", {
+          id: parsedMessage.item_id,
+          delta: parsedMessage.delta,
+        })
+        break
+      }
+      case "response.output_audio_transcript.done": {
+        console.log("response.output_audio_transcript.done")
+        break
+      }
+      case "response.output_text.delta": {
+        console.log("response.output_text.delta")
+        break
+      }
+      case "response.output_text.done": {
+        console.log("response.output_text.done")
+        break
+      }
+      case "response.content_part.done": {
+        console.log("response.content_part.done")
+        break
+      }
+      case "response.output_item.done": {
+        console.log("response.output_item.done")
+        break
+      }
+      case "response.done": {
+        console.log("response.done")
+        break
+      }
+      case "rate_limits.updated": {
+        console.log("rate_limits.updated")
+        break
+      }
+      default: {
+        console.log(parsedMessage.type, " - unhandled event")
+        break
+      }
     }
-  })
+  }
 
-  // Handle conversation interruption
-  client.on("conversation.interrupted", () => {
-    socket.emit("conversationInterrupted")
+  ws.on("message", (message) => {
+    void handleMessage(message)
   })
 
   // Handle complete audio data from the client
-  socket.on("completeAudio", (audioBuffer: Buffer) => {
+  socket.on("completeAudio", (audioBase64: string) => {
     // Check session timeout before processing
     if (checkSessionTimeout()) {
       void endSession()
@@ -449,47 +542,58 @@ io.on("connection", async (socket) => {
     }
 
     // Calculate user speaking duration from the actual audio data
-    if (audioBuffer.byteLength > 0) {
-      // Convert Buffer to ArrayBuffer for WAV parsing
-      const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
+    // Convert base64 to Buffer then to ArrayBuffer for WAV parsing
+    const audioBuffer = Buffer.from(audioBase64, "base64")
+    const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength)
 
-      // Parse WAV file and extract PCM data with correct parameters
-      const { pcmData, sampleRate } = parseWAVFile(arrayBuffer)
+    // Parse WAV file and extract PCM data with correct parameters
+    const { pcmData, sampleRate } = parseWAVFile(arrayBuffer)
 
-      if (pcmData.length > 0) {
-        // Calculate duration using actual sample rate from WAV file
-        const audioDuration = calculateAudioDuration(pcmData, sampleRate)
-        totalUserSpeakingDuration += audioDuration
-        console.log(`User spoke for ${audioDuration.toFixed(2)}s, total: ${totalUserSpeakingDuration.toFixed(2)}s`)
-      }
+    if (pcmData.length > 0) {
+      // Calculate duration using actual sample rate from WAV file
+      const audioDuration = calculateAudioDuration(pcmData, sampleRate)
+      totalUserSpeakingDuration += audioDuration
+      console.log(`User spoke for ${audioDuration.toFixed(2)}s, total: ${totalUserSpeakingDuration.toFixed(2)}s`)
     }
 
-    // Convert ArrayBuffer to base64 for the WebSocket API
-    const uint8Array = new Uint8Array(audioBuffer)
-    const base64Audio = Buffer.from(uint8Array).toString("base64")
-
-    console.log(`Received complete audio: ${uint8Array.length} bytes`)
-
-    // Use the lower-level WebSocket API to send audio properly
-    // First, clear the input audio buffer
-    client.realtime.send("input_audio_buffer.clear", {})
-
     // Append the audio data to the buffer
-    client.realtime.send("input_audio_buffer.append", {
-      audio: base64Audio,
-    })
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.append",
+        audio: audioBase64,
+      }),
+    )
 
     // Commit the audio buffer to create a user message
-    client.realtime.send("input_audio_buffer.commit", {})
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.commit",
+      }),
+    )
 
     // Create a response from the model
-    client.realtime.send("response.create", {})
+    ws.send(
+      JSON.stringify({
+        type: "response.create",
+      }),
+    )
+
+    ws.send(
+      JSON.stringify({
+        type: "input_audio_buffer.clear",
+      }),
+    )
   })
 
   // Handle cancel response requests from the client
-  socket.on("cancelResponse", ({ trackId, offset }: { trackId: string; offset: number }) => {
+  socket.on("cancelResponse", () => {
     try {
-      client.cancelResponse(trackId, offset)
+      // Send cancel response to OpenAI WebSocket
+      ws.send(
+        JSON.stringify({
+          type: "response.cancel",
+        }),
+      )
     } catch (error) {
       console.error("Error canceling response:", error)
     }
@@ -512,7 +616,30 @@ io.on("connection", async (socket) => {
       },
     })
 
-    client.sendUserMessageContent([{ type: "input_text", text: message }])
+    ws.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: message,
+            },
+          ],
+        },
+      }),
+    )
+
+    ws.send(
+      JSON.stringify({
+        type: "response.create",
+        response: {
+          output_modalities: ["text"],
+        },
+      }),
+    )
   })
 
   // Handle manual session end from client
@@ -522,11 +649,12 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", () => {
     clearTimeout(timeoutTimer)
-    client.disconnect()
+    ws.close()
   })
 })
 
 // Start server
+
 const PORT = 3002
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`)
