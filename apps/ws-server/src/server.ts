@@ -212,7 +212,7 @@ io.on("connection", async (socket) => {
     void endSession()
   }, SESSION_TIMEOUT_MS)
 
-  const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime"
+  const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview"
   const ws = new WebSocket(url, {
     headers: {
       Authorization: "Bearer " + env.OPENAI_API_KEY,
@@ -228,7 +228,7 @@ io.on("connection", async (socket) => {
         type: "session.update",
         session: {
           type: "realtime",
-          model: "gpt-realtime",
+          model: "gpt-4o-mini-realtime-preview",
           audio: {
             input: {
               format: {
