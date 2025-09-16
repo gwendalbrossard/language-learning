@@ -101,12 +101,12 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
 
       {/* Feedback display - only show when expanded */}
       {message.feedback && expandedFeedback && (
-        <View className="mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-5 shadow-lg">
+        <View className="mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           {/* Header with quality score and close button */}
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-base font-bold">Feedback</Text>
+          <View className="mb-6 flex-row items-center justify-between">
+            <Text className="text-lg font-bold">Feedback</Text>
             <View className="flex-row items-center gap-3">
-              <View className="rounded-xl bg-primary-600 px-3 py-1.5">
+              <View className="rounded-xl bg-blue-600 px-4 py-2">
                 <Text className="text-sm font-bold text-white">{message.feedback.quality}/100</Text>
               </View>
               <TouchableOpacity
@@ -115,16 +115,22 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
                   e.stopPropagation()
                   setExpandedFeedback(false)
                 }}
-                className="h-8 w-8 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200"
+                className="h-9 w-9 items-center justify-center rounded-full bg-neutral-100 active:bg-neutral-200"
               >
-                <X size={16} color="#6B7280" />
+                <X size={18} color="#6B7280" />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Main feedback */}
-          <View className="mb-5 rounded-xl bg-gray-50 p-4">
-            <Text className="text-sm leading-relaxed text-gray-800">{message.feedback.feedback}</Text>
+          <View className="mb-5 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+            <View className="mb-2 flex-row items-center gap-2">
+              <View className="h-6 w-6 items-center justify-center rounded-full bg-neutral-200">
+                <Text className="text-xs">💬</Text>
+              </View>
+              <Text className="text-sm font-semibold text-neutral-800">Overall Feedback</Text>
+            </View>
+            <Text className="text-sm leading-relaxed text-neutral-700">{message.feedback.feedback}</Text>
           </View>
 
           {/* Corrected phrase */}
@@ -174,32 +180,38 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
               </View>
               <Text className="text-sm font-semibold text-gray-800">Performance Breakdown</Text>
             </View>
-            <View className="flex flex-col gap-4">
+            <View className="flex flex-col gap-3">
               {/* Accuracy Score */}
               <View className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                <View className="mb-2 flex-row items-center justify-between">
-                  <Text className="text-sm font-medium text-blue-900">Accuracy</Text>
-                  <Text className="text-sm font-bold text-blue-700">{message.feedback.accuracy.score}/100</Text>
+                <View className="mb-3 flex-row items-center justify-between">
+                  <Text className="text-base font-semibold text-blue-900">Accuracy</Text>
+                  <View className="rounded-lg bg-blue-600 px-3 py-1">
+                    <Text className="text-sm font-bold text-white">{message.feedback.accuracy.score}</Text>
+                  </View>
                 </View>
-                <Text className="text-xs text-blue-700">{message.feedback.accuracy.message}</Text>
+                <Text className="text-sm text-blue-800">{message.feedback.accuracy.message}</Text>
               </View>
 
               {/* Fluency Score */}
               <View className="rounded-xl border border-purple-200 bg-purple-50 p-4">
-                <View className="mb-2 flex-row items-center justify-between">
-                  <Text className="text-sm font-medium text-purple-900">Fluency</Text>
-                  <Text className="text-sm font-bold text-purple-700">{message.feedback.fluency.score}/100</Text>
+                <View className="mb-3 flex-row items-center justify-between">
+                  <Text className="text-base font-semibold text-purple-900">Fluency</Text>
+                  <View className="rounded-lg bg-purple-600 px-3 py-1">
+                    <Text className="text-sm font-bold text-white">{message.feedback.fluency.score}</Text>
+                  </View>
                 </View>
-                <Text className="text-xs text-purple-700">{message.feedback.fluency.message}</Text>
+                <Text className="text-sm text-purple-800">{message.feedback.fluency.message}</Text>
               </View>
 
               {/* Vocabulary Score */}
               <View className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                <View className="mb-2 flex-row items-center justify-between">
-                  <Text className="text-sm font-medium text-emerald-900">Vocabulary</Text>
-                  <Text className="text-sm font-bold text-emerald-700">{message.feedback.vocabulary.score}/100</Text>
+                <View className="mb-3 flex-row items-center justify-between">
+                  <Text className="text-base font-semibold text-emerald-900">Vocabulary</Text>
+                  <View className="rounded-lg bg-emerald-600 px-3 py-1">
+                    <Text className="text-sm font-bold text-white">{message.feedback.vocabulary.score}</Text>
+                  </View>
                 </View>
-                <Text className="text-xs text-emerald-700">{message.feedback.vocabulary.message}</Text>
+                <Text className="text-sm text-emerald-800">{message.feedback.vocabulary.message}</Text>
               </View>
             </View>
           </View>
