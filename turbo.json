@@ -6,6 +6,12 @@
       "cache": false,
       "dependsOn": []
     },
+    "@acme/ws-server#dev": {
+      "dependsOn": ["^db:generate"],
+      "cache": false,
+      "persistent": true,
+      "inputs": ["src/**"]
+    },
     "topo": {
       "dependsOn": ["^topo"]
     },
