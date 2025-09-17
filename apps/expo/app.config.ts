@@ -24,6 +24,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     usesAppleSignIn: true,
     icon: "./assets/icon.png",
+    infoPlist: {
+      NSMicrophoneUsageDescription: "Allow $(PRODUCT_NAME) to access your microphone to speak to our AI.",
+    },
   },
   android: {
     package: "com.studyunfold.mobile",
@@ -59,12 +62,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@react-native-google-signin/google-signin",
       {
         iosUrlScheme: "com.googleusercontent.apps.253659385011-etsd109cgtifr93hapbodc00f73td2b7",
-      },
-    ],
-    [
-      "expo-audio",
-      {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone to speak to our AI.",
       },
     ],
   ],
