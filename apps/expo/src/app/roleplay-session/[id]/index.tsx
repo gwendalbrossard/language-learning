@@ -10,6 +10,7 @@ import { io } from "socket.io-client"
 
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
+import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
 import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
 import { Text } from "~/ui/text"
 import { getWsBaseUrl } from "~/utils/base-url"
@@ -40,6 +41,8 @@ const RoleplaySession: FC = () => {
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
+  const [recordingLevel, setRecordingLevel] = useState(0)
+  const [playbackLevel, setPlaybackLevel] = useState(0)
 
   const socketRef = useRef<Socket | null>(null)
   const sentUserMessageRef = useRef<string | null>(null)
@@ -114,6 +117,15 @@ const RoleplaySession: FC = () => {
 
     const subscription = MyModule.addListener("onAudioPlaybackComplete", handleAudioPlaybackComplete)
 
+    // Add level monitoring listeners
+    const recordingLevelSubscription = MyModule.addListener("onRecordingLevelUpdate", (event: LevelUpdateEvent) => {
+      setRecordingLevel(event.level)
+    })
+
+    const playbackLevelSubscription = MyModule.addListener("onPlaybackLevelUpdate", (event: LevelUpdateEvent) => {
+      setPlaybackLevel(event.level)
+    })
+
     // Start the session timer
     sessionStartTimeRef.current = Date.now()
     timerIntervalRef.current = setInterval(() => {
@@ -128,6 +140,8 @@ const RoleplaySession: FC = () => {
 
     return () => {
       subscription.remove()
+      recordingLevelSubscription.remove()
+      playbackLevelSubscription.remove()
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
@@ -279,9 +293,11 @@ const RoleplaySession: FC = () => {
     if (!isRecording) {
       try {
         console.log("Starting recording...")
-        await initializeAudio()
+        setIsRecording(true) // Set immediately for responsive UI
 
-        setIsRecording(true)
+        if (!audioInitialized) {
+          await initializeAudio()
+        }
 
         await MyModule.startRecording()
 
@@ -299,8 +315,10 @@ const RoleplaySession: FC = () => {
     console.log("stopRecording called - isRecording:", isRecording)
 
     if (isRecording) {
-      console.log("Stopping recording...")
       setIsRecording(false)
+
+      // Reset recording level immediately
+      setRecordingLevel(0)
 
       try {
         const base64Audio: string | null = await MyModule.stopRecording()
@@ -313,7 +331,7 @@ const RoleplaySession: FC = () => {
           }
         } else {
           console.warn("No audio data in recorded file")
-          userTextDelta(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
+          userTextDelta(`error-${Date.now()}`, "⚠️ No audio data recorded - try speaking louder")
         }
 
         console.log("Stopped recording and sent complete audio as base64")
@@ -354,40 +372,115 @@ const RoleplaySession: FC = () => {
           </View>
         </View>
 
-        {/* Main content area - Turn-based UI */}
+        {/* Main content area - Push-to-Talk UI */}
         <View className="flex-1 items-center justify-center px-4">
-          {turnState === "user" && !isRecording && (
+          {turnState === "user" && (
             <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-gray-600">Your turn to speak</Text>
-              <Pressable
-                onPressIn={() => void startRecording()}
-                onPressOut={() => void stopRecording()}
-                className="h-32 w-32 items-center justify-center rounded-full bg-blue-500 shadow-lg"
-                disabled={!audioInitialized || sessionEnded}
-              >
-                <Mic size={48} color="white" />
-              </Pressable>
-              <Text className="mt-4 text-center text-sm text-gray-500">Hold to speak</Text>
-            </View>
-          )}
+              <Text className="mb-6 text-center text-lg text-gray-600">{isRecording ? "Recording... Release to send" : "Your turn to speak"}</Text>
+              <View className="relative">
+                <Pressable
+                  onPressIn={() => void startRecording()}
+                  onPressOut={() => void stopRecording()}
+                  className={`h-32 w-32 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-in-out ${
+                    isRecording ? "scale-110 bg-red-500" : "scale-100 bg-blue-500 hover:scale-105"
+                  }`}
+                  style={{
+                    shadowColor: isRecording ? "#ef4444" : "#3b82f6",
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 4 },
+                  }}
+                  disabled={!audioInitialized || sessionEnded}
+                >
+                  {isRecording ? <Square size={48} color="white" fill="white" /> : <Mic size={48} color="white" />}
+                </Pressable>
 
-          {isRecording && (
-            <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-red-600">Recording...</Text>
-              <Pressable onPressOut={() => void stopRecording()} className="h-32 w-32 items-center justify-center rounded-full bg-red-500 shadow-lg">
-                <Square size={48} color="white" fill="white" />
-              </Pressable>
-              <Text className="mt-4 text-center text-sm text-gray-500">Release to send</Text>
+                {/* Recording level visualization */}
+                {isRecording && (
+                  <>
+                    {/* Outer pulsing ring */}
+                    <View
+                      className="absolute -inset-4 rounded-full border-2 border-red-200"
+                      style={{
+                        borderWidth: 2 + recordingLevel * 4,
+                        opacity: recordingLevel * 0.4 + 0.1,
+                        transform: [{ scale: 1 + recordingLevel * 0.3 }],
+                      }}
+                    />
+                    {/* Inner intense ring */}
+                    <View
+                      className="border-3 absolute -inset-2 rounded-full border-red-400"
+                      style={{
+                        borderWidth: 3 + recordingLevel * 6,
+                        opacity: recordingLevel * 0.7 + 0.3,
+                        transform: [{ scale: 1 + recordingLevel * 0.15 }],
+                      }}
+                    />
+                  </>
+                )}
+              </View>
+
+              <Text className="mt-4 text-center text-sm text-gray-500">{isRecording ? "Release to send" : "Hold to speak"}</Text>
+
+              {isRecording && (
+                <>
+                  <Text className="mt-1 text-xs text-gray-400">Level: {(recordingLevel * 100).toFixed(0)}%</Text>
+                  <View className="mt-2 h-3 w-32 overflow-hidden rounded-full bg-gray-200 shadow-inner">
+                    <View
+                      className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600 shadow-sm transition-all duration-150 ease-out"
+                      style={{
+                        width: `${Math.max(recordingLevel * 100, 5)}%`,
+                        opacity: recordingLevel > 0.02 ? 1 : 0.3,
+                      }}
+                    />
+                  </View>
+                </>
+              )}
             </View>
           )}
 
           {turnState === "assistant" && isAssistantSpeaking && (
             <View className="items-center">
               <Text className="mb-6 text-center text-lg text-blue-600">Assistant is speaking...</Text>
-              <View className="h-32 w-32 items-center justify-center rounded-lg bg-blue-500 shadow-lg">
-                <Square size={48} color="white" fill="white" />
+              <View className="relative">
+                <View className="h-32 w-32 items-center justify-center rounded-lg bg-blue-500 shadow-lg">
+                  <Square size={48} color="white" fill="white" />
+                </View>
+                {/* Playback level visualization */}
+                {playbackLevel > 0.05 && (
+                  <>
+                    {/* Outer glow */}
+                    <View
+                      className="absolute -inset-4 rounded-lg border-2 border-blue-200"
+                      style={{
+                        borderWidth: 2 + playbackLevel * 4,
+                        opacity: playbackLevel * 0.4 + 0.1,
+                        transform: [{ scale: 1 + playbackLevel * 0.25 }],
+                      }}
+                    />
+                    {/* Inner pulse */}
+                    <View
+                      className="border-3 absolute -inset-2 rounded-lg border-blue-400"
+                      style={{
+                        borderWidth: 3 + playbackLevel * 6,
+                        opacity: playbackLevel * 0.7 + 0.3,
+                        transform: [{ scale: 1 + playbackLevel * 0.12 }],
+                      }}
+                    />
+                  </>
+                )}
               </View>
               <Text className="mt-4 text-center text-sm text-gray-500">Please wait</Text>
+              <Text className="mt-1 text-xs text-gray-400">Playback: {(playbackLevel * 100).toFixed(0)}%</Text>
+              <View className="mt-2 h-3 w-32 overflow-hidden rounded-full bg-gray-200 shadow-inner">
+                <View
+                  className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 shadow-sm transition-all duration-150 ease-out"
+                  style={{
+                    width: `${Math.max(playbackLevel * 100, 5)}%`,
+                    opacity: playbackLevel > 0.02 ? 1 : 0.3,
+                  }}
+                />
+              </View>
             </View>
           )}
 

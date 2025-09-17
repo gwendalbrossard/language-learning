@@ -4,6 +4,10 @@ export interface AudioEventInfo {
   delta: string
 }
 
+export interface LevelUpdateEvent {
+  level: number
+}
+
 export interface MyModuleType {
   /**
    * Process an audio chunk from event info containing base64 delta
@@ -20,6 +24,16 @@ export interface MyModuleType {
    * Add listener for audio playback completion event
    */
   addListener(eventName: 'onAudioPlaybackComplete', listener: () => void): EmitterSubscription
+
+  /**
+   * Add listener for recording level updates
+   */
+  addListener(eventName: 'onRecordingLevelUpdate', listener: (event: LevelUpdateEvent) => void): EmitterSubscription
+
+  /**
+   * Add listener for playback level updates
+   */
+  addListener(eventName: 'onPlaybackLevelUpdate', listener: (event: LevelUpdateEvent) => void): EmitterSubscription
 
   /**
    * Request recording permissions from the user
