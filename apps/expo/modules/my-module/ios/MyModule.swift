@@ -63,7 +63,7 @@
       private var completionCallback: (() -> Void)?
 
       // Level monitoring
-      private var levelTimer: Timer?
+      private var playbackLevelTimer: Timer?
       var onPlaybackLevelUpdate: ((Float) -> Void)?
 
       private override init() {
@@ -205,16 +205,16 @@
 
       private func startLevelMonitoring() {
           // Don't start if already running
-          guard levelTimer == nil else { return }
+          guard playbackLevelTimer == nil else { return }
 
-          levelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+          playbackLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
               self?.updatePlaybackLevel()
           }
       }
 
       private func stopLevelMonitoring() {
-          levelTimer?.invalidate()
-          levelTimer = nil
+          playbackLevelTimer?.invalidate()
+          playbackLevelTimer = nil
       }
 
       private func updatePlaybackLevel() {
@@ -268,7 +268,7 @@
       private var recordingURL: URL?
 
       // Level monitoring
-      private var levelTimer: Timer?
+      private var recordingLevelTimer: Timer?
       var onRecordingLevelUpdate: ((Float) -> Void)?
 
       private override init() {
@@ -288,6 +288,7 @@
           do {
               let audioSession = AVAudioSession.sharedInstance()
               try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+              try audioSession.overrideOutputAudioPort(.speaker)
               try audioSession.setActive(true)
           } catch {
               print("Failed to configure audio session for recording: \(error)")
@@ -352,7 +353,10 @@
 
       private func startLevelMonitoring() {
           DispatchQueue.main.async { [weak self] in
-              self?.levelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+              // Don't start if already running
+              guard self?.recordingLevelTimer == nil else { return }
+
+              self?.recordingLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                   self?.updateRecordingLevel()
               }
           }
@@ -360,8 +364,8 @@
 
       private func stopLevelMonitoring() {
           DispatchQueue.main.async { [weak self] in
-              self?.levelTimer?.invalidate()
-              self?.levelTimer = nil
+              self?.recordingLevelTimer?.invalidate()
+              self?.recordingLevelTimer = nil
           }
       }
 
@@ -385,7 +389,13 @@
           let minDb: Float = -60.0
           let maxDb: Float = 0.0
 
+          // Handle invalid values
+          guard power.isFinite else { return 0.0 }
+
           let clampedPower = max(minDb, min(power, maxDb))
-          return (clampedPower - minDb) / (maxDb - minDb)
+          let result = (clampedPower - minDb) / (maxDb - minDb)
+
+          // Ensure result is always valid
+          return max(0.0, min(1.0, result))
       }
   }

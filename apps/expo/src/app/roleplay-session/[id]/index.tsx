@@ -283,16 +283,12 @@ const RoleplaySession: FC = () => {
   }
 
   const startRecording = async (): Promise<void> => {
-    console.log("startRecording called - sessionEnded:", sessionEnded, "turnState:", turnState, "isRecording:", isRecording)
-
     if (sessionEnded || turnState !== "user") {
-      console.log("Recording blocked - sessionEnded:", sessionEnded, "turnState:", turnState)
       return
     }
 
     if (!isRecording) {
       try {
-        console.log("Starting recording...")
         setIsRecording(true) // Set immediately for responsive UI
 
         if (!audioInitialized) {
@@ -300,8 +296,6 @@ const RoleplaySession: FC = () => {
         }
 
         await MyModule.startRecording()
-
-        console.log("Started recording successfully")
       } catch (error) {
         console.error("Error starting recording:", error)
         setIsRecording(false)
@@ -312,8 +306,6 @@ const RoleplaySession: FC = () => {
   }
 
   const stopRecording = async (): Promise<void> => {
-    console.log("stopRecording called - isRecording:", isRecording)
-
     if (isRecording) {
       setIsRecording(false)
 
@@ -327,14 +319,10 @@ const RoleplaySession: FC = () => {
           // Send complete audio to server as base64
           if (socketRef.current) {
             socketRef.current.emit("completeAudio", base64Audio)
-            console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
           }
         } else {
-          console.warn("No audio data in recorded file")
           userTextDelta(`error-${Date.now()}`, "⚠️ No audio data recorded - try speaking louder")
         }
-
-        console.log("Stopped recording and sent complete audio as base64")
       } catch (error) {
         console.error("Failed to stop recording:", error)
         userTextDelta(`error-${Date.now()}`, "❌ Error stopping recording")
