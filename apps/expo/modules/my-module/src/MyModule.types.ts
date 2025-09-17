@@ -20,4 +20,21 @@ export interface MyModuleType {
    * Add listener for audio playback completion event
    */
   addListener(eventName: 'onAudioPlaybackComplete', listener: () => void): EmitterSubscription
+
+  /**
+   * Request recording permissions from the user
+   * @returns Promise that resolves to true if granted, false otherwise
+   */
+  requestRecordingPermissions(): Promise<boolean>
+
+  /**
+   * Start audio recording
+   */
+  startRecording(): Promise<void>
+
+  /**
+   * Stop audio recording and return base64 encoded audio data
+   * @returns Promise that resolves to base64 audio string or null if failed
+   */
+  stopRecording(): Promise<string | null>
 }

@@ -2,8 +2,6 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import * as Audio from "expo-audio"
-import * as FileSystem from "expo-file-system"
 import { useLocalSearchParams } from "expo-router"
 import { FileTextIcon, Mic, Square, X } from "lucide-react-native"
 import { Alert, Pressable, TouchableOpacity, View } from "react-native"
@@ -44,27 +42,6 @@ const RoleplaySession: FC = () => {
   const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
 
   const socketRef = useRef<Socket | null>(null)
-  const recorder = Audio.useAudioRecorder({
-    extension: ".wav",
-    sampleRate: 24000,
-    numberOfChannels: 1,
-    bitRate: 128000,
-    android: {
-      outputFormat: "default" as const,
-      audioEncoder: "default" as const,
-    },
-    ios: {
-      outputFormat: Audio.IOSOutputFormat.LINEARPCM,
-      audioQuality: Audio.AudioQuality.HIGH,
-      linearPCMBitDepth: 16,
-      linearPCMIsBigEndian: false,
-      linearPCMIsFloat: false,
-    },
-    web: {
-      mimeType: "audio/wav",
-      bitsPerSecond: 128000,
-    },
-  })
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -154,34 +131,22 @@ const RoleplaySession: FC = () => {
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
-      if (recorder.isRecording) {
-        void recorder.stop()
-      }
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
     }
-  }, [initializeSocket, recorder])
+  }, [initializeSocket])
 
   const initializeAudio = async (): Promise<void> => {
     try {
-      const { granted } = await Audio.requestRecordingPermissionsAsync()
+      const granted = await MyModule.requestRecordingPermissions()
       if (!granted) {
         Alert.alert("Error", "Microphone permission is required for audio recording.")
         return
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-        interruptionMode: "duckOthers",
-        interruptionModeAndroid: "duckOthers",
-        shouldPlayInBackground: false,
-        shouldRouteThroughEarpiece: false,
-      })
-
       setAudioInitialized(true)
-      console.log("Audio initialized successfully - PlayAudioContinuouslyManager auto-initialized")
+      console.log("Audio initialized successfully - Native module ready for recording and playback")
     } catch (error) {
       console.error("Failed to initialize audio:", error)
       Alert.alert("Error", "Failed to initialize audio. Please check permissions.")
@@ -318,14 +283,7 @@ const RoleplaySession: FC = () => {
 
         setIsRecording(true)
 
-        console.log("Requesting microphone access...")
-
-        if (recorder.isRecording) {
-          await recorder.stop()
-        }
-
-        await recorder.prepareToRecordAsync()
-        recorder.record()
+        await MyModule.startRecording()
 
         console.log("Started recording successfully")
       } catch (error) {
@@ -345,30 +303,17 @@ const RoleplaySession: FC = () => {
       setIsRecording(false)
 
       try {
-        await recorder.stop()
-        const uri = recorder.uri
+        const base64Audio: string | null = await MyModule.stopRecording()
 
-        if (uri) {
-          console.log("Audio recorded at:", uri)
-
-          // Read the audio file as base64
-          const base64Audio = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          })
-
-          if (base64Audio && base64Audio.length > 0) {
-            // Send complete audio to server as base64
-            if (socketRef.current) {
-              socketRef.current.emit("completeAudio", base64Audio)
-              console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
-            }
-          } else {
-            console.warn("No audio data in recorded file")
-            userTextDelta(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
+        if (base64Audio && base64Audio.length > 0) {
+          // Send complete audio to server as base64
+          if (socketRef.current) {
+            socketRef.current.emit("completeAudio", base64Audio)
+            console.log(`Sent complete audio as base64: ${base64Audio.length} characters`)
           }
         } else {
-          console.warn("No audio file was created")
-          userTextDelta(`error-${Date.now()}`, "⚠️ No audio recorded - check microphone permissions and try speaking")
+          console.warn("No audio data in recorded file")
+          userTextDelta(`error-${Date.now()}`, "⚠️ No audio data in recorded file")
         }
 
         console.log("Stopped recording and sent complete audio as base64")
