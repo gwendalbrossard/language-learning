@@ -1,6 +1,8 @@
  import ExpoModulesCore
   import AVFoundation
 
+  // TODO: Explore : https://www.npmjs.com/package/@mykin-ai/expo-audio-stream
+  // This is a more advanced module that allows for gapless audio playback and recording
   public class MyModule: Module {
     public func definition() -> ModuleDefinition {
       Name("MyModule")
