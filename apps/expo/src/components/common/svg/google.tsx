@@ -1,5 +1,6 @@
+import type { SvgProps } from "react-native-svg"
 import * as React from "react"
-import Svg, { ClipPath, Defs, G, Path, type SvgProps } from "react-native-svg"
+import Svg, { ClipPath, Defs, G, Path } from "react-native-svg"
 
 const Google = (props: SvgProps) => (
   <Svg viewBox="0 0 24 24" fill="none" {...props}>

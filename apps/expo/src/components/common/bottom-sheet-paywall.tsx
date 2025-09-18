@@ -1,8 +1,8 @@
 import { forwardRef, Fragment, useState } from "react"
-import { ActivityIndicator, View } from "react-native"
-import RevenueCatUI from "react-native-purchases-ui"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { usePostHog } from "posthog-react-native"
+import { ActivityIndicator, View } from "react-native"
+import RevenueCatUI from "react-native-purchases-ui"
 
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
 

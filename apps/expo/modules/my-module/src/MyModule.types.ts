@@ -23,17 +23,17 @@ export interface MyModuleType {
   /**
    * Add listener for audio playback completion event
    */
-  addListener(eventName: 'onAudioPlaybackComplete', listener: () => void): EmitterSubscription
+  addListener(eventName: "onAudioPlaybackComplete", listener: () => void): EmitterSubscription
 
   /**
    * Add listener for recording level updates
    */
-  addListener(eventName: 'onRecordingLevelUpdate', listener: (event: LevelUpdateEvent) => void): EmitterSubscription
+  addListener(eventName: "onRecordingLevelUpdate", listener: (event: LevelUpdateEvent) => void): EmitterSubscription
 
   /**
    * Add listener for playback level updates
    */
-  addListener(eventName: 'onPlaybackLevelUpdate', listener: (event: LevelUpdateEvent) => void): EmitterSubscription
+  addListener(eventName: "onPlaybackLevelUpdate", listener: (event: LevelUpdateEvent) => void): EmitterSubscription
 
   /**
    * Request recording permissions from the user

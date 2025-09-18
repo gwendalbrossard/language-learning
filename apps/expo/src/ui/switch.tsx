@@ -1,7 +1,7 @@
 import * as React from "react"
+import * as SwitchPrimitives from "@rn-primitives/switch"
 import { Platform } from "react-native"
 import Animated, { interpolateColor, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated"
-import * as SwitchPrimitives from "@rn-primitives/switch"
 
 import { cn } from "~/utils/utils"
 

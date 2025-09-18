@@ -82,9 +82,7 @@ export function CreateRoleplaySessionForm() {
 
 export function RoleplaySessionList() {
   const trpc = useTRPC()
-  const { data: roleplaySessions } = useSuspenseQuery(
-    trpc.profile.roleplaySession.getAll.queryOptions({ organizationId: "1" })
-  )
+  const { data: roleplaySessions } = useSuspenseQuery(trpc.profile.roleplaySession.getAll.queryOptions({ organizationId: "1" }))
 
   if (roleplaySessions.length === 0) {
     return (
@@ -110,17 +108,16 @@ export function RoleplaySessionList() {
 }
 
 export function RoleplaySessionCard(props: { roleplaySession: RouterOutputs["profile"]["roleplaySession"]["getAll"][number] }) {
-
   return (
     <div className="bg-muted flex flex-row rounded-lg p-4">
       <div className="grow">
         <h2 className="text-primary text-2xl font-bold">{props.roleplaySession.scenario.title}</h2>
         <p className="mt-2 text-sm">{props.roleplaySession.scenario.description}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Duration: {props.roleplaySession.duration}s</p>
+        <p className="text-muted-foreground mt-1 text-xs">Duration: {props.roleplaySession.duration}s</p>
       </div>
       <div className="flex flex-col gap-2">
-        <span className="text-xs text-muted-foreground">{props.roleplaySession.scenario.emoji}</span>
-        <span className="text-xs text-muted-foreground">Difficulty: {props.roleplaySession.scenario.difficulty}</span>
+        <span className="text-muted-foreground text-xs">{props.roleplaySession.scenario.emoji}</span>
+        <span className="text-muted-foreground text-xs">Difficulty: {props.roleplaySession.scenario.difficulty}</span>
       </div>
     </div>
   )

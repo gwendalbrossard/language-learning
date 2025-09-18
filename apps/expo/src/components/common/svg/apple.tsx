@@ -1,5 +1,6 @@
+import type { SvgProps } from "react-native-svg"
 import * as React from "react"
-import Svg, { Path, type SvgProps } from "react-native-svg"
+import Svg, { Path } from "react-native-svg"
 
 const Apple = (props: SvgProps) => (
   <Svg viewBox="0 0 24 24" fill="none" {...props}>
