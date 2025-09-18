@@ -1,8 +1,9 @@
 import type { FC } from "react"
-import React, { forwardRef } from "react"
-import { BottomSheetModal } from "@gorhom/bottom-sheet"
-import { ChevronRightIcon, Volume2Icon } from "lucide-react-native"
-import { Dimensions, ScrollView, TouchableOpacity, View } from "react-native"
+import type { ICarouselInstance } from "react-native-reanimated-carousel"
+import React, { forwardRef, useRef, useState } from "react"
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
+import { Dimensions, Pressable, View } from "react-native"
+import Carousel from "react-native-reanimated-carousel"
 
 import type { RouterOutputs } from "@acme/api"
 
@@ -49,84 +50,89 @@ type SuggestionCardProps = {
 
 const SuggestionCard: FC<SuggestionCardProps> = ({ suggestion, index }) => {
   return (
-    <TouchableOpacity className="mb-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm active:bg-neutral-50">
-      <View className="mb-4 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <View className="size-8 items-center justify-center rounded-full bg-primary-100">
-            <Text className="text-sm font-bold text-primary-700">{index + 1}</Text>
-          </View>
-          <View className={cn("rounded-lg border px-3 py-1", getDifficultyColor(suggestion.difficulty))}>
-            <Text className="text-xs font-semibold">{getDifficultyLabel(suggestion.difficulty)}</Text>
-          </View>
+    <View className="w-full rounded-2xl bg-white p-5 shadow-sm">
+      {/* Header */}
+      <View className="mb-5 flex-row items-center gap-3">
+        <View className="size-8 items-center justify-center rounded-full bg-primary-100">
+          <Text className="text-sm font-semibold text-primary-700">{index + 1}</Text>
         </View>
-
-        <TouchableOpacity className="size-8 items-center justify-center rounded-full bg-primary-100">
-          <Volume2Icon size={16} className="text-primary-600" />
-        </TouchableOpacity>
+        <View className={cn("rounded-lg px-3 py-1", getDifficultyColor(suggestion.difficulty))}>
+          <Text className="text-xs font-medium">{getDifficultyLabel(suggestion.difficulty)}</Text>
+        </View>
       </View>
 
       {/* Response text */}
-      <View className="mb-4 rounded-xl bg-primary-50 p-4">
+      <View className="mb-5 rounded-xl bg-primary-50 p-4">
         <Text className="text-lg font-medium text-primary-900" selectable>
           {suggestion.text}
         </Text>
       </View>
 
       {/* Translation */}
-      <View className="mb-4 rounded-xl bg-neutral-50 p-4">
-        <View className="mb-2 flex-row items-center gap-2">
-          <Text className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Translation</Text>
-        </View>
+      <View className="rounded-xl bg-neutral-50 p-4">
+        <Text className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">Translation</Text>
         <Text className="text-base text-neutral-700" selectable>
           {suggestion.translation}
         </Text>
       </View>
-
-      {/* Action indicator */}
-      <View className="mt-4 flex-row items-center justify-center">
-        <View className="flex-row items-center gap-2 rounded-full bg-primary-100 px-4 py-2">
-          <Text className="text-sm font-medium text-primary-700">Tap to use this response</Text>
-          <ChevronRightIcon size={16} className="text-primary-600" />
-        </View>
-      </View>
-    </TouchableOpacity>
+    </View>
   )
 }
 
 export const BottomSheetResponseSuggestions = forwardRef<BottomSheetModal, Props>(({ suggestions }, ref) => {
+  const width = Dimensions.get("window").width
+  const carouselWidth = width - 32 // accounting for padding
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const carouselRef = useRef<ICarouselInstance>(null)
+
+  const handleSnapToItem = (index: number) => {
+    setCurrentIndex(index)
+  }
+
   return (
-    <BottomSheetModal
-      ref={ref}
-      snapPoints={["85%"]}
-      maxDynamicContentSize={Dimensions.get("window").height * 0.85}
-      backdropComponent={BottomSheetBackdrop}
-      enablePanDownToClose
-      stackBehavior="push"
-      enableDynamicSizing={false}
-    >
-      <View className="flex-1">
+    <BottomSheetModal ref={ref} backdropComponent={BottomSheetBackdrop} enablePanDownToClose stackBehavior="push">
+      <BottomSheetView className="flex-1">
         {/* Fixed Header */}
         <View className="border-b border-neutral-200 px-4 pb-4 pt-1">
           <Text className="text-center text-lg font-bold">Response Suggestions</Text>
-          <Text className="mt-1 text-center text-sm text-neutral-600">Choose a response to continue the conversation</Text>
+          <Text className="mt-1 text-center text-sm text-neutral-600">Swipe to see different difficulty levels</Text>
         </View>
 
-        {/* Scrollable Content*/}
-        <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
-          {suggestions.length > 0 ? (
-            <View className="pb-10">
-              {suggestions.map((suggestion, index) => (
-                <SuggestionCard key={index} suggestion={suggestion} index={index} />
+        {suggestions.length > 0 ? (
+          <View className="flex-1 px-4 py-6">
+            {/* Carousel */}
+            <View className="flex-1">
+              <Carousel
+                ref={carouselRef}
+                data={suggestions}
+                width={carouselWidth}
+                height={400}
+                loop={true}
+                snapEnabled={true}
+                onSnapToItem={handleSnapToItem}
+                pagingEnabled={true}
+                renderItem={({ item, index }) => <SuggestionCard suggestion={item} index={index} />}
+              />
+            </View>
+
+            {/* Dot indicators */}
+            <View className="mt-6 flex-row items-center justify-center gap-2">
+              {suggestions.map((_, index) => (
+                <Pressable
+                  key={index}
+                  onPress={() => carouselRef.current?.scrollTo({ index, animated: true })}
+                  className={cn("h-2 w-2 rounded-full", index === currentIndex ? "bg-primary-500" : "bg-neutral-300")}
+                />
               ))}
             </View>
-          ) : (
-            <View className="flex-1 items-center justify-center py-12">
-              <Text className="text-center text-lg font-medium text-neutral-500">No suggestions available</Text>
-              <Text className="mt-2 text-center text-sm text-neutral-400">Try having a conversation first to get response suggestions</Text>
-            </View>
-          )}
-        </ScrollView>
-      </View>
+          </View>
+        ) : (
+          <View className="flex-1 items-center justify-center py-12">
+            <Text className="text-center text-lg font-medium text-neutral-500">No suggestions available</Text>
+            <Text className="mt-2 text-center text-sm text-neutral-400">Try having a conversation first to get response suggestions</Text>
+          </View>
+        )}
+      </BottomSheetView>
     </BottomSheetModal>
   )
 })
