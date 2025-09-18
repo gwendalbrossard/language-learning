@@ -438,49 +438,43 @@ const RoleplaySession: FC = () => {
         </View>
 
         {/* Bottom */}
-        <View className="flex flex-row items-end gap-14 bg-red-50 px-4">
+        <View className="flex w-full flex-row items-end justify-center gap-8 px-4">
           {/* Help */}
-          <View className="flex w-full items-end">
-            <View className="flex flex-col items-center gap-3">
-              <TouchableOpacity
-                onPress={() => {
-                  /*  bottomSheetAnswerRef.current?.present() */
-                }}
-                className="size-16 items-center justify-center rounded-full bg-neutral-100"
-              >
-                <LightbulbIcon size={28} className="text-neutral-500" />
-              </TouchableOpacity>
-              <Text className="text-xs font-medium text-neutral-600">Answer</Text>
-            </View>
+          <View className="flex w-[90px] flex-col items-center gap-3">
+            <TouchableOpacity
+              onPress={() => {
+                /*  bottomSheetAnswerRef.current?.present() */
+              }}
+              className="size-16 items-center justify-center rounded-full bg-neutral-100"
+            >
+              <LightbulbIcon size={28} className="text-neutral-500" />
+            </TouchableOpacity>
+            <Text className="text-xs font-medium text-neutral-600">Answer</Text>
           </View>
 
           {/* Record */}
-          <View className="flex w-full">
-            <View className="flex flex-col items-center gap-3">
-              <Pressable
-                onPressIn={() => void startRecording()}
-                onPressOut={() => void stopRecording()}
-                className={cn(`flex size-32 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
-              >
-                {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />}
-              </Pressable>
-              <Text className="text-xs font-medium text-neutral-600">Hold to speak</Text>
-            </View>
+          <View className="flex flex-col items-center gap-3">
+            <Pressable
+              onPressIn={() => void startRecording()}
+              onPressOut={() => void stopRecording()}
+              className={cn(`flex size-32 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
+            >
+              {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />}
+            </Pressable>
+            <Text className="text-xs font-medium text-neutral-600">Hold to speak</Text>
           </View>
 
           {/* Transcript */}
-          <View className="flex w-full items-start">
-            <View className="flex flex-col items-center gap-3">
-              <TouchableOpacity
-                onPress={() => {
-                  bottomSheetTranscriptRef.current?.present()
-                }}
-                className="size-16 items-center justify-center rounded-full bg-neutral-100"
-              >
-                <NotepadTextIcon size={28} className="text-neutral-500" />
-              </TouchableOpacity>
-              <Text className="text-xs font-medium text-neutral-600">Transcript</Text>
-            </View>
+          <View className="flex w-[90px] flex-col items-center gap-3">
+            <TouchableOpacity
+              onPress={() => {
+                bottomSheetTranscriptRef.current?.present()
+              }}
+              className="size-16 items-center justify-center rounded-full bg-neutral-100"
+            >
+              <NotepadTextIcon size={28} className="text-neutral-500" />
+            </TouchableOpacity>
+            <Text className="text-xs font-medium text-neutral-600">Transcript</Text>
           </View>
         </View>
       </View>
