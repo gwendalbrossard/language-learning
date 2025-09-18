@@ -2,10 +2,10 @@ import { Suspense } from "react"
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server"
 import { AuthShowcase } from "./_components/auth-showcase"
-import { CreatePostForm, PostCardSkeleton, PostList } from "./_components/posts"
+import { CreateRoleplaySessionForm, RoleplaySessionCardSkeleton, RoleplaySessionList } from "./_components/roleplay-sessions"
 
 export default function HomePage() {
-  prefetch(trpc.post.all.queryOptions())
+  prefetch(trpc.profile.roleplaySession.getAll.queryOptions({ organizationId: "1" }))
 
   return (
     <HydrateClient>
@@ -16,18 +16,17 @@ export default function HomePage() {
           </h1>
           <AuthShowcase />
 
-          <CreatePostForm />
+          <CreateRoleplaySessionForm />
           <div className="w-full max-w-2xl overflow-y-scroll">
             <Suspense
               fallback={
                 <div className="flex w-full flex-col gap-4">
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
+                  <RoleplaySessionCardSkeleton />
+                  <RoleplaySessionCardSkeleton />
                 </div>
               }
             >
-              <PostList />
+              <RoleplaySessionList />
             </Suspense>
           </div>
         </div>
