@@ -9,6 +9,7 @@ import type { RouterOutputs } from "~/utils/api"
 import Icon from "~/components/common/svg/icon"
 import { trpc } from "~/utils/api"
 import { prefetchMain } from "~/utils/utils"
+import { useUserStore } from "~/utils/zustand/user-store"
 
 const LoadingView: FC = () => (
   <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
@@ -20,10 +21,8 @@ const LoadingView: FC = () => (
 )
 
 export default function Index() {
+  const updateCurrentOrganizationId = useUserStore((state) => state.updateCurrentOrganizationId)
   const queryClient = useQueryClient()
-
-  // TODO : Remove this
-  const postQuery = useQuery(trpc.post.all.queryOptions())
 
   const router = useRouter()
 
@@ -37,6 +36,7 @@ export default function Index() {
   useEffect(() => {
     if (authMe.isLoading || !authMe.data) return
 
+    // User
     if (!authMe.data.user) {
       router.replace("/landing")
       return
@@ -56,13 +56,23 @@ export default function Index() {
       return
     }
 
+    // Organization
+    if (organizationMe.isLoading || !organizationMe.data) return
+
+    // At this point, the user has a profile and has completed onboarding, so they must have an organization.
+    if (!organizationMe.data[0]) {
+      throw new Error("No organization found. Please contact support.")
+    }
+
+    updateCurrentOrganizationId(organizationMe.data[0].id)
+
     // The user has a profile and has completed onboarding
     const redirectToMain = async () => {
       await prefetchMain()
       router.replace("/main")
     }
     void redirectToMain()
-  }, [authMe, router, authMe.data, queryClient])
+  }, [authMe, router, authMe.data, queryClient, organizationMe, organizationMe.data, updateCurrentOrganizationId])
 
   if (!authMe.data || !authMe.data.user || !authMe.data.profile || !profileMe.data || !organizationMe.data || !organizationMe.data[0]) {
     return <LoadingView />
