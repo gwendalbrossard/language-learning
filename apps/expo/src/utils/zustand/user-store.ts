@@ -2,10 +2,14 @@ import { create } from "zustand"
 
 interface UserState {
   hasShownPaywall: boolean
-  setHasShownPaywall: (hasShownPaywall: boolean) => void
+  updateHasShownPaywall: (hasShownPaywall: boolean) => void
+  currentOrganizationId: string | null
+  updateCurrentOrganizationId: (currentOrganizationId: string | null) => void
 }
 
 export const useUserStore = create<UserState>((set) => ({
   hasShownPaywall: false,
-  setHasShownPaywall: (hasShownPaywall: boolean) => set({ hasShownPaywall }),
+  updateHasShownPaywall: (hasShownPaywall: boolean) => set({ hasShownPaywall }),
+  currentOrganizationId: null,
+  updateCurrentOrganizationId: (currentOrganizationId: string | null) => set({ currentOrganizationId }),
 }))
