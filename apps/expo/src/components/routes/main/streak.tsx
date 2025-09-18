@@ -39,10 +39,10 @@ const Streak: FC = () => {
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   if (!profileMe.data) throw new Error("Failed to fetch profile")
 
-  const streakDays = useQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined }))
-  if (!streakDays.data) throw new Error("Streak days not found")
+  const profileStreakDays = useQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined }))
+  if (!profileStreakDays.data) throw new Error("Streak days not found")
 
-  const { daysLabels, weekProgress } = calculateCurrentWeekProgress(streakDays.data, profileMe.data.timezone)
+  const { daysLabels, weekProgress } = calculateCurrentWeekProgress(profileStreakDays.data, profileMe.data.timezone)
 
   return (
     <Table.Root className="w-full">
