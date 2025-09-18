@@ -24,6 +24,9 @@ model RoleplaySession {
   scenarioId String
   scenario   RoleplayScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
@@ -34,6 +37,7 @@ model RoleplaySession {
 
   @@index([profileId])
   @@index([profileId, scenarioId])
+  @@index([organizationId])
   @@map("roleplay_session")
 }
 
