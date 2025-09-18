@@ -4,7 +4,7 @@ import type { Prisma } from "@acme/db"
 import { organizationSelect } from "@acme/db"
 import { ZOrganizationUpdateSchema } from "@acme/validators"
 
-import { env } from "../../env"
+import { env } from "../../env.server"
 import { organizationProcedure } from "../../trpc"
 import { r2Client } from "../../utils/cloudflare"
 

@@ -4,7 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 import { ZOrganizationUploadLogoSchema } from "@acme/validators"
 
-import { env } from "../../env"
+import { env } from "../../env.server"
 import { organizationProcedure } from "../../trpc"
 import { r2Client } from "../../utils/cloudflare"
 
