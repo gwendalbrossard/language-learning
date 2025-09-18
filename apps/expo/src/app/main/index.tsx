@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import { useEffect, useRef } from "react"
-import { router, Stack } from "expo-router"
+import { Stack } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { CalendarIcon, SettingsIcon } from "lucide-react-native"
 import { usePostHog } from "posthog-react-native"
@@ -17,7 +17,6 @@ import BottomSheetSettings from "~/components/routes/main/bottom-sheet-settings"
 import RoleplayScenarios from "~/components/routes/main/roleplay-scenarios"
 import Streak from "~/components/routes/main/streak"
 import { useRevenueCat } from "~/hooks/use-revenuecat"
-import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { publicApiKeys } from "~/utils/revenuecat"
@@ -34,7 +33,7 @@ const Main: FC = () => {
   const profile = profileMe.data
   if (!profile) throw new Error("Profile not found")
 
-  const { hasShownPaywall, setHasShownPaywall } = useUserStore()
+  const { hasShownPaywall, updateHasShownPaywall } = useUserStore()
   const { entitlement } = useRevenueCat()
   const posthog = usePostHog()
 
@@ -62,14 +61,14 @@ const Main: FC = () => {
     const setup = () => {
       if (entitlement.loaded) {
         if (!entitlement.isUnlimited && !hasShownPaywall) {
-          setHasShownPaywall(true)
+          updateHasShownPaywall(true)
           bottomSheetPaywallRef.current?.present()
         }
       }
     }
 
     setup()
-  }, [entitlement, hasShownPaywall, setHasShownPaywall])
+  }, [entitlement, hasShownPaywall, updateHasShownPaywall])
 
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
@@ -105,10 +104,6 @@ const Main: FC = () => {
         <View className="flex flex-col gap-6">
           <Streak />
           <RoleplayScenarios />
-
-          <Button.Root variant="primary" onPress={() => router.push("/record-test")}>
-            <Button.Text>Record</Button.Text>
-          </Button.Root>
         </View>
       </KeyboardAwareScrollView>
 
