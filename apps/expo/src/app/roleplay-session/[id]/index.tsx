@@ -2,8 +2,9 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { useLocalSearchParams } from "expo-router"
-import { FileTextIcon, Mic, Square, X } from "lucide-react-native"
+import { Stack, useLocalSearchParams } from "expo-router"
+import { useQuery } from "@tanstack/react-query"
+import { CircleStopIcon, ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, Square, X } from "lucide-react-native"
 import { Alert, Pressable, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
@@ -12,9 +13,13 @@ import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
 import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
 import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
+import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
+import { trpc } from "~/utils/api"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
+import { cn } from "~/utils/utils"
+import { useUserStore } from "~/utils/zustand/user-store"
 import MyModule from "../../../../modules/my-module"
 
 interface Message {
@@ -27,6 +32,14 @@ interface Message {
 const RoleplaySession: FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>()
 
+  const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
+  if (!currentOrganizationId) throw new Error("Current organization ID not found")
+
+  const profileRoleplaySessionGet = useQuery(
+    trpc.profile.roleplaySession.get.queryOptions({ organizationId: currentOrganizationId, roleplaySessionId: id }),
+  )
+  if (!profileRoleplaySessionGet.data) throw new Error("Roleplay session not found")
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -36,7 +49,6 @@ const RoleplaySession: FC = () => {
   ])
   const [isRecording, setIsRecording] = useState(false)
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
-  const [turnState, setTurnState] = useState<"user" | "assistant">("user")
 
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
@@ -48,7 +60,7 @@ const RoleplaySession: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const transcriptBottomSheetRef = useRef<BottomSheetModal>(null)
+  const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -82,7 +94,6 @@ const RoleplaySession: FC = () => {
       console.log(`Received assistant audio chunk: ${data.delta.length} chars, itemId: ${data.itemId}`)
 
       setIsAssistantSpeaking(true)
-      setTurnState("assistant")
       MyModule.processAudioChunk({ delta: data.delta })
     })
 
@@ -110,9 +121,8 @@ const RoleplaySession: FC = () => {
 
     // Add listener for audio playback completion
     const handleAudioPlaybackComplete = () => {
-      console.log("Audio playback completed - switching to user turn")
+      console.log("Audio playback completed")
       setIsAssistantSpeaking(false)
-      setTurnState("user")
     }
 
     const subscription = MyModule.addListener("onAudioPlaybackComplete", handleAudioPlaybackComplete)
@@ -181,7 +191,7 @@ const RoleplaySession: FC = () => {
   }
 
   const handleEndSession = () => {
-    Alert.alert("End Conversation", "Are you sure you want to end this conversation? This action cannot be undone.", [
+    Alert.alert("End Conversation", "Are you sure you want to end this conversation?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "End Conversation",
@@ -283,7 +293,7 @@ const RoleplaySession: FC = () => {
   }
 
   const startRecording = async (): Promise<void> => {
-    if (sessionEnded || turnState !== "user") {
+    if (sessionEnded || isAssistantSpeaking) {
       return
     }
 
@@ -331,170 +341,150 @@ const RoleplaySession: FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitle: () => <View />,
+          headerLeft: () => (
+            <Button.Root variant="secondary" size="sm" onPress={undefined}>
+              <Button.Icon icon={ClockIcon} />
+              <Button.Text className="w-[30px]">{formatTime(timeRemaining)}</Button.Text>
+            </Button.Root>
+          ),
+          headerRight: () => (
+            <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
+              <Button.Icon icon={CircleStopIcon} />
+              <Button.Text>End</Button.Text>
+            </Button.Root>
+          ),
+        }}
+      />
       <View className="flex flex-1 flex-col">
-        {/* Timer Header */}
-        <View className="border-b border-gray-200 px-4 py-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 items-center">
-              <Text className={`text-lg font-semibold ${timeRemaining < 60 ? "text-red-600" : "text-gray-800"}`}>
-                Time remaining: {formatTime(timeRemaining)}
-              </Text>
+        {/* Main content area */}
+        <View className="flex-1 items-center justify-center px-6">
+          {sessionEnded ? (
+            <View className="items-center">
+              <Text className="mb-8 text-center text-xl font-medium text-neutral-700">Session ended</Text>
+              <View className="h-40 w-40 items-center justify-center rounded-3xl bg-neutral-300 shadow-lg">
+                <X size={56} color="#666E7D" />
+              </View>
+              <Text className="mt-6 text-center text-lg font-medium text-success-600">Thank you for practicing!</Text>
             </View>
-            <View className="flex-row items-center gap-2">
-              <TouchableOpacity onPress={() => transcriptBottomSheetRef.current?.present()} className="rounded-lg bg-blue-500 px-3 py-2">
-                <View className="flex-row items-center gap-1">
-                  <FileTextIcon size={16} color="white" />
-                  <Text className="text-sm font-medium text-white">Transcript</Text>
-                </View>
-              </TouchableOpacity>
-              {!sessionEnded && (
-                <TouchableOpacity onPress={handleEndSession} className="rounded-lg bg-red-500 px-3 py-2">
-                  <View className="flex-row items-center gap-1">
-                    <X size={16} color="white" />
-                    <Text className="text-sm font-medium text-white">End</Text>
+          ) : isAssistantSpeaking ? (
+            <View className="items-center">
+              <Text className="mb-8 text-center text-xl font-medium text-primary-700">Assistant is speaking...</Text>
+
+              {/* ChatGPT-style voice visualization - 6 circles */}
+              <View className="flex-row items-end gap-2">
+                {[0, 1, 2, 3].map((index) => {
+                  const baseHeight = 20
+                  const maxHeight = 60
+                  const animationDelay = index * 0.1
+                  const heightMultiplier = Math.sin((playbackLevel * 10 + animationDelay) * Math.PI) * 0.5 + 0.5
+                  const circleHeight = baseHeight + (maxHeight - baseHeight) * heightMultiplier * (playbackLevel > 0.05 ? 1 : 0.3)
+
+                  return (
+                    <View
+                      key={index}
+                      className="w-3 rounded-full bg-primary-600"
+                      style={{
+                        height: circleHeight,
+                        opacity: playbackLevel > 0.02 ? 0.8 + heightMultiplier * 0.2 : 0.4,
+                      }}
+                    />
+                  )
+                })}
+              </View>
+
+              <Text className="mt-6 text-center text-base font-medium text-neutral-600">Listening...</Text>
+            </View>
+          ) : (
+            <View className="items-center">
+              <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{isRecording ? "Recording..." : "Ready to listen"}</Text>
+
+              {/* Recording level visualization when recording */}
+              {isRecording && (
+                <View className="mb-8 items-center">
+                  <Text className="mb-4 text-sm text-neutral-500">Level: {(recordingLevel * 100).toFixed(0)}%</Text>
+                  <View className="h-4 w-40 overflow-hidden rounded-full bg-neutral-200 shadow-inner">
+                    <View
+                      className="h-full rounded-full bg-error-500 shadow-sm transition-all duration-150 ease-out"
+                      style={{
+                        width: `${Math.max(recordingLevel * 100, 8)}%`,
+                        opacity: recordingLevel > 0.02 ? 1 : 0.4,
+                      }}
+                    />
                   </View>
-                </TouchableOpacity>
+                </View>
               )}
+            </View>
+          )}
+        </View>
+
+        <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.scenario.title}</Text>
+
+        <View className="flex-1 flex-col items-center pt-[15%]">
+          <View
+            className="size-52 items-center justify-center rounded-full bg-primary-600 duration-75"
+            style={{
+              /* opacity: recordingLevel * 0.8 + 0.2, */
+              transform: [{ scale: 1 + recordingLevel * 0.15 }],
+            }}
+          />
+          <Text className="mt-20 max-w-[90%] text-center text-xl font-medium">Your turn to speak</Text>
+        </View>
+
+        {/* Bottom */}
+        <View className="flex flex-row items-end gap-14 bg-red-50 px-4">
+          {/* Help */}
+          <View className="flex w-full items-end">
+            <View className="flex flex-col items-center gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  /*  bottomSheetAnswerRef.current?.present() */
+                }}
+                className="size-16 items-center justify-center rounded-full bg-neutral-100"
+              >
+                <LightbulbIcon size={28} className="text-neutral-500" />
+              </TouchableOpacity>
+              <Text className="text-xs font-medium text-neutral-600">Answer</Text>
+            </View>
+          </View>
+
+          {/* Record */}
+          <View className="flex w-full">
+            <View className="flex flex-col items-center gap-3">
+              <Pressable
+                onPressIn={() => void startRecording()}
+                onPressOut={() => void stopRecording()}
+                className={cn(`flex size-32 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
+              >
+                {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />}
+              </Pressable>
+              <Text className="text-xs font-medium text-neutral-600">Hold to speak</Text>
+            </View>
+          </View>
+
+          {/* Transcript */}
+          <View className="flex w-full items-start">
+            <View className="flex flex-col items-center gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  bottomSheetTranscriptRef.current?.present()
+                }}
+                className="size-16 items-center justify-center rounded-full bg-neutral-100"
+              >
+                <NotepadTextIcon size={28} className="text-neutral-500" />
+              </TouchableOpacity>
+              <Text className="text-xs font-medium text-neutral-600">Transcript</Text>
             </View>
           </View>
         </View>
-
-        {/* Main content area - Push-to-Talk UI */}
-        <View className="flex-1 items-center justify-center px-4">
-          {turnState === "user" && (
-            <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-gray-600">{isRecording ? "Recording... Release to send" : "Your turn to speak"}</Text>
-              <View className="relative">
-                <Pressable
-                  onPressIn={() => void startRecording()}
-                  onPressOut={() => void stopRecording()}
-                  className={`h-32 w-32 items-center justify-center rounded-full shadow-lg transition-all duration-300 ease-in-out ${
-                    isRecording ? "scale-110 bg-red-500" : "scale-100 bg-blue-500 hover:scale-105"
-                  }`}
-                  style={{
-                    shadowColor: isRecording ? "#ef4444" : "#3b82f6",
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    shadowOffset: { width: 0, height: 4 },
-                  }}
-                  disabled={!audioInitialized || sessionEnded}
-                >
-                  {isRecording ? <Square size={48} color="white" fill="white" /> : <Mic size={48} color="white" />}
-                </Pressable>
-
-                {/* Recording level visualization */}
-                {isRecording && (
-                  <>
-                    {/* Outer pulsing ring */}
-                    <View
-                      className="absolute -inset-4 rounded-full border-2 border-red-200"
-                      style={{
-                        borderWidth: 2 + recordingLevel * 4,
-                        opacity: recordingLevel * 0.4 + 0.1,
-                        transform: [{ scale: 1 + recordingLevel * 0.3 }],
-                      }}
-                    />
-                    {/* Inner intense ring */}
-                    <View
-                      className="border-3 absolute -inset-2 rounded-full border-red-400"
-                      style={{
-                        borderWidth: 3 + recordingLevel * 6,
-                        opacity: recordingLevel * 0.7 + 0.3,
-                        transform: [{ scale: 1 + recordingLevel * 0.15 }],
-                      }}
-                    />
-                  </>
-                )}
-              </View>
-
-              <Text className="mt-4 text-center text-sm text-gray-500">{isRecording ? "Release to send" : "Hold to speak"}</Text>
-
-              {isRecording && (
-                <>
-                  <Text className="mt-1 text-xs text-gray-400">Level: {(recordingLevel * 100).toFixed(0)}%</Text>
-                  <View className="mt-2 h-3 w-32 overflow-hidden rounded-full bg-gray-200 shadow-inner">
-                    <View
-                      className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600 shadow-sm transition-all duration-150 ease-out"
-                      style={{
-                        width: `${Math.max(recordingLevel * 100, 5)}%`,
-                        opacity: recordingLevel > 0.02 ? 1 : 0.3,
-                      }}
-                    />
-                  </View>
-                </>
-              )}
-            </View>
-          )}
-
-          {turnState === "assistant" && isAssistantSpeaking && (
-            <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-blue-600">Assistant is speaking...</Text>
-              <View className="relative">
-                <View className="h-32 w-32 items-center justify-center rounded-lg bg-blue-500 shadow-lg">
-                  <Square size={48} color="white" fill="white" />
-                </View>
-                {/* Playback level visualization */}
-                {playbackLevel > 0.05 && (
-                  <>
-                    {/* Outer glow */}
-                    <View
-                      className="absolute -inset-4 rounded-lg border-2 border-blue-200"
-                      style={{
-                        borderWidth: 2 + playbackLevel * 4,
-                        opacity: playbackLevel * 0.4 + 0.1,
-                        transform: [{ scale: 1 + playbackLevel * 0.25 }],
-                      }}
-                    />
-                    {/* Inner pulse */}
-                    <View
-                      className="border-3 absolute -inset-2 rounded-lg border-blue-400"
-                      style={{
-                        borderWidth: 3 + playbackLevel * 6,
-                        opacity: playbackLevel * 0.7 + 0.3,
-                        transform: [{ scale: 1 + playbackLevel * 0.12 }],
-                      }}
-                    />
-                  </>
-                )}
-              </View>
-              <Text className="mt-4 text-center text-sm text-gray-500">Please wait</Text>
-              <Text className="mt-1 text-xs text-gray-400">Playback: {(playbackLevel * 100).toFixed(0)}%</Text>
-              <View className="mt-2 h-3 w-32 overflow-hidden rounded-full bg-gray-200 shadow-inner">
-                <View
-                  className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 shadow-sm transition-all duration-150 ease-out"
-                  style={{
-                    width: `${Math.max(playbackLevel * 100, 5)}%`,
-                    opacity: playbackLevel > 0.02 ? 1 : 0.3,
-                  }}
-                />
-              </View>
-            </View>
-          )}
-
-          {turnState === "assistant" && !isAssistantSpeaking && (
-            <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-gray-600">Processing your message...</Text>
-              <View className="h-32 w-32 items-center justify-center rounded-full bg-gray-300 shadow-lg">
-                <Mic size={48} color="gray" />
-              </View>
-              <Text className="mt-4 text-center text-sm text-gray-500">Please wait</Text>
-            </View>
-          )}
-
-          {sessionEnded && (
-            <View className="items-center">
-              <Text className="mb-6 text-center text-lg text-gray-600">Session ended</Text>
-              <View className="h-32 w-32 items-center justify-center rounded-full bg-gray-300 shadow-lg">
-                <X size={48} color="gray" />
-              </View>
-              <Text className="mt-4 text-center text-sm text-gray-500">Thank you for practicing!</Text>
-            </View>
-          )}
-        </View>
       </View>
 
-      <BottomSheetTranscript ref={transcriptBottomSheetRef} messages={messages} />
+      <BottomSheetTranscript ref={bottomSheetTranscriptRef} messages={messages} />
     </SafeAreaView>
   )
 }
