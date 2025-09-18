@@ -4,7 +4,7 @@ import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Stack, useLocalSearchParams } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
-import { CircleStopIcon, ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, Square, X } from "lucide-react-native"
+import { ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, PhoneOff, Square, X } from "lucide-react-native"
 import { Alert, Pressable, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
@@ -348,21 +348,34 @@ const RoleplaySession: FC = () => {
           headerShadowVisible: false,
           headerTitle: () => <View />,
           headerLeft: () => <View />,
-          headerRight: () => (
+          /*  headerLeft: () => (
+            <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-xs">
+              <Text className="text-sm font-medium text-neutral-700">{formatTime(timeRemaining)}</Text>
+            </View>
+          ), */
+          /* headerRight: () => (
             <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
               <Button.Icon icon={CircleStopIcon} />
               <Button.Text>End</Button.Text>
             </Button.Root>
-          ),
+          ), */
+          /*   headerRight: () => (
+            <View className="flex flex-row items-center gap-2">
+              <Pressable className="flex size-12 flex-row items-center justify-center rounded-full bg-error-600 shadow-xs" onPress={handleEndSession}>
+                <PhoneOff size={16} className="text-white" />
+              </Pressable>
+            </View>
+          ), */
+          headerRight: () => <View />,
         }}
       />
       <View className="flex flex-1 flex-col">
         {/* Main content area */}
         <View className="flex-1 flex-col items-center pt-[15%]">
-          <View className="mb-1 flex flex-row items-center gap-2">
+          {/*  <View className="mb-1 flex flex-row items-center gap-2">
             <ClockIcon size={16} className="text-neutral-400" />
             <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
-          </View>
+          </View> */}
           <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.scenario.title}</Text>
 
           {sessionEnded && (
@@ -435,6 +448,17 @@ const RoleplaySession: FC = () => {
               )}
             </View>
           )}
+
+          <View className="mt-10 flex flex-col items-center gap-2">
+            <View className="flex flex-row items-center gap-2">
+              <ClockIcon size={16} className="text-neutral-400" />
+              <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
+            </View>
+            <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
+              <Button.Icon icon={PhoneOff} />
+              <Button.Text>End Conversation</Button.Text>
+            </Button.Root>
+          </View>
         </View>
 
         {/* Bottom */}
