@@ -40,7 +40,7 @@ export const getResponseSuggestions = organizationProcedure
       throw new TRPCError({ code: "NOT_FOUND", message: "Roleplay session not found" })
     }
 
-    const latestAssistantMessage = roleplaySession.messages.find((message) => message.role === RoleplaySessionMessageRole.ASSISTANT)
+    const latestAssistantMessage = [...roleplaySession.messages].reverse().find((message) => message.role === RoleplaySessionMessageRole.ASSISTANT)
 
     if (!latestAssistantMessage) {
       throw new TRPCError({
@@ -55,11 +55,7 @@ export const getResponseSuggestions = organizationProcedure
       })
       .join("\n")
 
-    const result = await generateObject({
-      model: azure("gpt-4o-mini"),
-      schemaName: "responseSuggestions",
-      schema: responseSuggestionsSchema,
-      prompt: `You are an expert language tutor helping a learner practice ORAL conversational skills in a roleplay scenario.
+    const prompt = `You are an expert language tutor helping a learner practice ORAL conversational skills in a roleplay scenario.
 
 CRITICAL: This is an ORAL conversation, not written communication. All suggestions must sound natural when spoken aloud and flow seamlessly in real-time dialogue.
 
@@ -136,7 +132,13 @@ Sophisticated responses with nuanced language, cultural appropriateness, and nat
 - Include notes about spoken delivery when relevant
 
 = OUTPUT GUIDELINES =
-Generate responses that are practical, educational, and contextually perfect for this ORAL roleplay situation. Each suggestion should include the response text optimized for spoken delivery, its English translation, and difficulty level.`,
+Generate responses that are practical, educational, and contextually perfect for this ORAL roleplay situation. Each suggestion should include the response text optimized for spoken delivery, its English translation, and difficulty level.`
+
+    const result = await generateObject({
+      model: azure("gpt-4o-mini"),
+      schemaName: "responseSuggestions",
+      schema: responseSuggestionsSchema,
+      prompt: prompt,
       temperature: 0.4,
     })
 
