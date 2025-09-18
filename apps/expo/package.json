@@ -70,6 +70,7 @@
     "react-native-purchases": "^9.2.3",
     "react-native-purchases-ui": "^9.2.3",
     "react-native-reanimated": "~3.18.0",
+    "react-native-reanimated-carousel": "^4.0.3",
     "react-native-safe-area-context": "~5.6.1",
     "react-native-screens": "~4.15.4",
     "react-native-svg": "^15.12.1",
