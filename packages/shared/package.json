@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    "./posthog": "./src/posthog/index.ts"
+    "./posthog": "./src/posthog/index.ts",
+    "./db": "./src/db/index.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -16,6 +17,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
+    "@acme/db": "workspace:*",
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",

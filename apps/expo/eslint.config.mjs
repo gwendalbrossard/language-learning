@@ -1,5 +1,5 @@
-import baseConfig from "@acme/eslint-config/base";
-import reactConfig from "@acme/eslint-config/react";
+import baseConfig, { restrictApiAccess, restrictDbAccess, restrictEnvAccess } from "@acme/eslint-config/base"
+import reactConfig from "@acme/eslint-config/react"
 
 /** @type {import('typescript-eslint').Config} */
 export default [
@@ -8,4 +8,7 @@ export default [
   },
   ...baseConfig,
   ...reactConfig,
-];
+  ...restrictApiAccess,
+  ...restrictDbAccess,
+  ...restrictEnvAccess,
+]

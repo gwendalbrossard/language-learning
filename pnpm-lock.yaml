@@ -6,6 +6,12 @@ settings:
 
 catalogs:
   default:
+    '@t3-oss/env-core':
+      specifier: ^0.13.8
+      version: 0.13.8
+    '@t3-oss/env-nextjs':
+      specifier: ^0.13.8
+      version: 0.13.8
     '@tanstack/react-query':
       specifier: ^5.85.6
       version: 5.85.6
@@ -21,16 +27,28 @@ catalogs:
     eslint:
       specifier: ^9.32.0
       version: 9.32.0
+    lucide-react:
+      specifier: ^0.539.0
+      version: 0.539.0
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
+    tailwindcss:
+      specifier: ^4.1.11
+      version: 4.1.11
     typescript:
       specifier: ^5.9.2
       version: 5.9.2
+    zod:
+      specifier: ^4.1.5
+      version: 4.1.5
   react19:
     '@types/react':
       specifier: ^19.1.6
       version: 19.1.9
+    '@types/react-dom':
+      specifier: ^19.1.5
+      version: 19.1.7
     react:
       specifier: 19.0.0
       version: 19.0.0
@@ -225,6 +243,9 @@ importers:
       react-native-reanimated:
         specifier: ~3.18.0
         version: 3.18.0(@babel/core@7.28.3)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+      react-native-reanimated-carousel:
+        specifier: ^4.0.3
+        version: 4.0.3(react-native-gesture-handler@2.28.0(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.18.0(@babel/core@7.28.3)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
       react-native-safe-area-context:
         specifier: ~5.6.1
         version: 5.6.1(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
@@ -471,6 +492,9 @@ importers:
       '@acme/validators':
         specifier: workspace:*
         version: link:../validators
+      '@ai-sdk/azure':
+        specifier: ^2.0.23
+        version: 2.0.23(zod@4.1.5)
       '@aws-sdk/client-s3':
         specifier: ^3.879.0
         version: 3.879.0
@@ -594,6 +618,9 @@ importers:
 
   packages/shared:
     devDependencies:
+      '@acme/db':
+        specifier: workspace:*
+        version: link:../db
       '@acme/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
@@ -682,6 +709,9 @@ importers:
 
   packages/validators:
     dependencies:
+      '@acme/shared':
+        specifier: workspace:*
+        version: link:../shared
       zod:
         specifier: 'catalog:'
         version: 4.1.5
@@ -7796,6 +7826,14 @@ packages:
       react-native-web:
         optional: true
 
+  react-native-reanimated-carousel@4.0.3:
+    resolution: {integrity: sha512-YZXlvZNghR5shFcI9hTA7h7bEhh97pfUSLZvLBAshpbkuYwJDKmQXejO/199T6hqGq0wCRwR0CWf2P4Vs6A4Fw==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-native: '>=0.70.3'
+      react-native-gesture-handler: '>=2.9.0'
+      react-native-reanimated: '>=3.0.0'
+
   react-native-reanimated@3.18.0:
     resolution: {integrity: sha512-eVcNcqeOkMW+BUWAHdtvN3FKgC8J8wiEJkX6bNGGQaLS7m7e4amTfjIcqf/Ta+lerZLurmDaQ0lICI1CKPrb1Q==}
     peerDependencies:
@@ -10745,7 +10783,7 @@ snapshots:
       terminal-link: 2.1.1
       undici: 6.21.3
       wrap-ansi: 7.0.0
-      ws: 8.18.3(bufferutil@4.0.9)
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4)
     transitivePeerDependencies:
       - bufferutil
       - graphql
@@ -14693,7 +14731,7 @@ snapshots:
       '@socket.io/component-emitter': 3.1.2
       debug: 4.3.7
       engine.io-parser: 5.2.3
-      ws: 8.17.1(bufferutil@4.0.9)
+      ws: 8.17.1(bufferutil@4.0.9)(utf-8-validate@6.0.4)
       xmlhttprequest-ssl: 2.1.2
     transitivePeerDependencies:
       - bufferutil
@@ -17616,6 +17654,13 @@ snapshots:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)
 
+  react-native-reanimated-carousel@4.0.3(react-native-gesture-handler@2.28.0(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.18.0(@babel/core@7.28.3)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)
+      react-native-gesture-handler: 2.28.0(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+      react-native-reanimated: 3.18.0(@babel/core@7.28.3)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+
   react-native-reanimated@3.18.0(@babel/core@7.28.3)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0):
     dependencies:
       '@babel/core': 7.28.3
@@ -18890,18 +18935,10 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.9
 
-  ws@8.17.1(bufferutil@4.0.9):
-    optionalDependencies:
-      bufferutil: 4.0.9
-
   ws@8.17.1(bufferutil@4.0.9)(utf-8-validate@6.0.4):
     optionalDependencies:
       bufferutil: 4.0.9
       utf-8-validate: 6.0.4
-
-  ws@8.18.3(bufferutil@4.0.9):
-    optionalDependencies:
-      bufferutil: 4.0.9
 
   ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4):
     optionalDependencies:

@@ -35,6 +35,48 @@ export const restrictEnvAccess = tseslint.config(
   },
 )
 
+/**
+ * Restrict database access to only type imports
+ */
+export const restrictDbAccess = tseslint.config({
+  files: ["**/*.js", "**/*.ts", "**/*.tsx"],
+  rules: {
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["@acme/db"],
+            message: "Only type imports are allowed from @acme/db. Use 'import type { ... } from \"@acme/db\"'",
+            allowTypeImports: true,
+          },
+        ],
+      },
+    ],
+  },
+})
+
+/**
+ * Restrict API access to only type imports
+ */
+export const restrictApiAccess = tseslint.config({
+  files: ["**/*.js", "**/*.ts", "**/*.tsx"],
+  rules: {
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["@acme/api"],
+            message: "Only type imports are allowed from @acme/api. Use 'import type { ... } from \"@acme/api\"'",
+            allowTypeImports: true,
+          },
+        ],
+      },
+    ],
+  },
+})
+
 export default tseslint.config(
   // Ignore files not tracked by VCS and any config files
   includeIgnoreFile(path.join(import.meta.dirname, "../../.gitignore")),
