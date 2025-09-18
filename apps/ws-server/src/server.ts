@@ -8,6 +8,7 @@ import express from "express"
 import { Server } from "socket.io"
 import WebSocket from "ws"
 
+import type { LearningLanguageLevel, RoleplaySessionMessage } from "@acme/db"
 import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { ZFeedbackSchema, ZPracticeSchema } from "@acme/validators"
 
@@ -19,36 +20,46 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
-// OpenAI model configuration for grammar checking
-const azureOpenaiModel = azure("gpt-4o-mini")
+type GetFeedbackProps = {
+  transcript: string
+  learningLanguage: string
+  nativeLanguage: string
+  difficulty: LearningLanguageLevel
+  roleplaySessionMessages: RoleplaySessionMessage[]
+}
 
 // Comprehensive feedback function combining grammar checking and detailed feedback
-async function getFeedback(text: string, learningLanguage: string, userLanguage: string, previousContext?: string, difficulty = "A1") {
+async function getFeedback({ transcript, learningLanguage, nativeLanguage, difficulty, roleplaySessionMessages }: GetFeedbackProps) {
+  const messages = roleplaySessionMessages
+    .map((message) => {
+      return JSON.stringify({ role: message.role, content: message.content })
+    })
+    .join("\n")
   const { object } = await generateObject({
-    model: azureOpenaiModel,
+    model: azure("gpt-4o-mini"),
     schemaName: "feedback",
     schema: ZFeedbackSchema,
-    prompt: `You are an expert language tutor providing comprehensive feedback for someone learning ${learningLanguage} (their native language is ${userLanguage}).
+    prompt: `You are an expert language tutor providing comprehensive feedback for someone learning ${learningLanguage} (their native language is ${nativeLanguage}).
 
-CRITICAL: ALL feedback messages, explanations, and detailed feedback MUST be written in ${userLanguage} (the user's native language).
+CRITICAL: ALL feedback messages, explanations, and detailed feedback MUST be written in ${nativeLanguage} (the user's native language).
 
 IMPORTANT: This text comes from ORAL CONVERSATION, not written text. It's a speech transcript from someone speaking naturally. Adapt your feedback for spoken language patterns, not formal writing standards.
 
 LEARNER PROFILE:
-- Learning language: ${learningLanguage} (ISO code)
-- Native language: ${userLanguage} (ISO code)
-- Difficulty level: ${difficulty} (CEFR)
+- Learning language: ${learningLanguage} (BCP 47 language tag (ISO 639 + ISO 3166)
+- Native language: ${nativeLanguage} (BCP 47 language tag (ISO 639 + ISO 3166)
+- Difficulty level: ${difficulty} (Beginner, Intermediate, Advanced, Proficient, Fluent)
 - Text source: ORAL CONVERSATION TRANSCRIPT (speech-to-text conversion)
 
 CONTEXT:
-${previousContext ? `Previous conversation context: ${previousContext}` : "No previous context available"}
+${messages ? `Previous conversation context: ${messages}` : "No previous context available"}
 
-TEXT TO ANALYZE: "${text}"
+TEXT TO ANALYZE: "${transcript}"
 
 FEEDBACK REQUIREMENTS:
 
 1. OVERALL QUALITY (1-100): Evaluate overall correctness and appropriateness
-2. FEEDBACK: Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${userLanguage})
+2. FEEDBACK: Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${nativeLanguage})
 3. CORRECTED PHRASE: Provide the complete corrected version
 4. CORRECTIONS ARRAY: For each mistake, provide:
    - "wrong": the incorrect part from the original text
@@ -56,7 +67,7 @@ FEEDBACK REQUIREMENTS:
    - "explanation": a clear, concise explanation for the correction
    Example: { "wrong": "Je appelle", "correct": "Je m'appelle" }
 
-5. DETAILED SCORING (all messages in ${userLanguage}):
+5. DETAILED SCORING (all messages in ${nativeLanguage}):
    - ACCURACY (1-100): Grammar, syntax, word choice correctness - provide helpful guidance on specific issues found
    - FLUENCY (1-100): How natural and smooth the expression sounds - offer friendly suggestions for improvement
    - VOCABULARY (1-100): Appropriateness and variety of word choices - suggest alternatives in a supportive way
@@ -78,7 +89,7 @@ IGNORE (COMMON IN ORAL SPEECH):
 ❌ Repetitions or self-corrections during speech
 ❌ Casual contractions and spoken shortcuts
 
-TONE: Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve their SPOKEN language skills through constructive guidance. Remember this is oral communication, not academic writing. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${userLanguage}.`,
+TONE: Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve their SPOKEN language skills through constructive guidance. Remember this is oral communication, not academic writing. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${nativeLanguage}.`,
     temperature: 0.3,
   })
 
@@ -378,26 +389,14 @@ io.on("connection", async (socket) => {
         const roleplayScenarioMessages = await prisma.roleplaySessionMessage.findMany({
           where: { sessionId: roleplaySession.id },
         })
-        const messages = roleplayScenarioMessages
-          .map((message) => {
-            return JSON.stringify({ role: message.role, content: message.content })
-          })
-          .join("\n")
 
-        // User language preferences for this socket connection
-        // TODO: Get user's actual learning language and user language
-        const userLanguagePreferences = {
-          learningLanguage: "FR",
-          userLanguage: "EN",
-        }
-
-        const feedbackResult = await getFeedback(
-          parsedMessage.transcript,
-          userLanguagePreferences.learningLanguage,
-          userLanguagePreferences.userLanguage,
-          messages,
-          "C2", // TODO: Get user's actual difficulty level
-        )
+        const feedbackResult = await getFeedback({
+          transcript: parsedMessage.transcript,
+          learningLanguage: profile.learningLanguage,
+          nativeLanguage: profile.nativeLanguage,
+          difficulty: profile.learningLanguageLevel,
+          roleplaySessionMessages: roleplayScenarioMessages,
+        })
 
         // Update user message with feedback
         await prisma.roleplaySessionMessage.update({
@@ -482,6 +481,7 @@ io.on("connection", async (socket) => {
       }
       case "response.output_audio_transcript.delta": {
         console.log("response.output_audio_transcript.delta")
+
         socket.emit("assistantTextDelta", {
           id: parsedMessage.item_id,
           delta: parsedMessage.delta,
@@ -490,6 +490,14 @@ io.on("connection", async (socket) => {
       }
       case "response.output_audio_transcript.done": {
         console.log("response.output_audio_transcript.done")
+
+        await prisma.roleplaySessionMessage.create({
+          data: {
+            sessionId: roleplaySession.id,
+            role: RoleplaySessionMessageRole.ASSISTANT,
+            content: parsedMessage.transcript,
+          },
+        })
         break
       }
       case "response.output_text.delta": {
