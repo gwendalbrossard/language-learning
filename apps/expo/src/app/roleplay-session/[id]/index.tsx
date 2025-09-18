@@ -3,15 +3,17 @@ import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Stack, useLocalSearchParams } from "expo-router"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, PhoneOff, Square, X } from "lucide-react-native"
-import { Alert, Pressable, TouchableOpacity, View } from "react-native"
+import { ActivityIndicator, Alert, Pressable, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
 
+import type { RouterOutputs } from "@acme/api"
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
 import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
+import { BottomSheetResponseSuggestions } from "~/components/routes/roleplay-session/[id]/bottom-sheet-response-suggestions"
 import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
@@ -28,6 +30,8 @@ interface Message {
   transcript: string
   feedback?: TFeedbackSchema
 }
+
+type Suggestion = RouterOutputs["profile"]["roleplaySession"]["getResponseSuggestions"]["suggestions"][number]
 
 const RoleplaySession: FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -56,11 +60,35 @@ const RoleplaySession: FC = () => {
   const [recordingLevel, setRecordingLevel] = useState(0)
   const [playbackLevel, setPlaybackLevel] = useState(0)
 
+  // Cache for response suggestions to avoid duplicate fetches
+  const [cachedSuggestions, setCachedSuggestions] = useState<Record<string, Suggestion[]>>({})
+
   const socketRef = useRef<Socket | null>(null)
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
+  const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
+
+  const profileGetResponseSuggestionsMutation = useMutation(
+    trpc.profile.roleplaySession.getResponseSuggestions.mutationOptions({
+      onSuccess: (data) => {
+        // Cache the suggestions by the latest assistant message ID
+        const latestAssistantMessage = getLatestAssistantMessage()
+        if (latestAssistantMessage) {
+          setCachedSuggestions((prev) => ({
+            ...prev,
+            [latestAssistantMessage.id]: data.suggestions,
+          }))
+        }
+        bottomSheetResponseSuggestionsRef.current?.present()
+      },
+      onError: (error) => {
+        console.error("Failed to get response suggestions:", error)
+        Alert.alert("Error", "Failed to get response suggestions. Please try again.")
+      },
+    }),
+  )
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -340,6 +368,40 @@ const RoleplaySession: FC = () => {
     }
   }
 
+  const getLatestAssistantMessage = () => {
+    return [...messages].reverse().find((msg) => msg.role === "assistant")
+  }
+
+  const getCurrentSuggestions = (): Suggestion[] => {
+    const latestAssistantMessage = getLatestAssistantMessage()
+    if (latestAssistantMessage) {
+      const cached = cachedSuggestions[latestAssistantMessage.id]
+      if (cached) return cached
+    }
+    return profileGetResponseSuggestionsMutation.data?.suggestions ?? []
+  }
+
+  const handleGetResponseSuggestions = async () => {
+    const latestAssistantMessage = getLatestAssistantMessage()
+
+    if (!latestAssistantMessage) {
+      Alert.alert("Error", "No assistant message found to generate suggestions from.")
+      return
+    }
+
+    // Check if we already have cached suggestions for this message
+    if (cachedSuggestions[latestAssistantMessage.id]) {
+      bottomSheetResponseSuggestionsRef.current?.present()
+      return
+    }
+
+    // Fetch new suggestions
+    await profileGetResponseSuggestionsMutation.mutateAsync({
+      roleplaySessionId: id,
+      organizationId: currentOrganizationId,
+    })
+  }
+
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
       <Stack.Screen
@@ -466,12 +528,18 @@ const RoleplaySession: FC = () => {
           {/* Help */}
           <View className="flex w-[90px] flex-col items-center gap-3">
             <TouchableOpacity
-              onPress={() => {
-                /*  bottomSheetAnswerRef.current?.present() */
-              }}
-              className="size-16 items-center justify-center rounded-full bg-neutral-100"
+              onPress={() => void handleGetResponseSuggestions()}
+              disabled={profileGetResponseSuggestionsMutation.isPending}
+              className={cn(
+                "size-16 items-center justify-center rounded-full",
+                profileGetResponseSuggestionsMutation.isPending ? "bg-neutral-200" : "bg-neutral-100",
+              )}
             >
-              <LightbulbIcon size={28} className="text-neutral-500" />
+              {profileGetResponseSuggestionsMutation.isPending ? (
+                <ActivityIndicator size="small" color="#6B7280" />
+              ) : (
+                <LightbulbIcon size={28} className="text-neutral-500" />
+              )}
             </TouchableOpacity>
             <Text className="text-xs font-medium text-neutral-600">Answer</Text>
           </View>
@@ -504,6 +572,7 @@ const RoleplaySession: FC = () => {
       </View>
 
       <BottomSheetTranscript ref={bottomSheetTranscriptRef} messages={messages} />
+      <BottomSheetResponseSuggestions ref={bottomSheetResponseSuggestionsRef} suggestions={getCurrentSuggestions()} />
     </SafeAreaView>
   )
 }
