@@ -15,8 +15,8 @@ import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario
 import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
 
 const RoleplayScenarios: FC = () => {
-  const roleplayScenarios = useQuery(trpc.roleplayScenario.getAll.queryOptions())
-  if (!roleplayScenarios.data) throw new Error("Roleplay scenarios not found")
+  const roleplayScenarioGetAll = useQuery(trpc.roleplayScenario.getAll.queryOptions())
+  if (!roleplayScenarioGetAll.data) throw new Error("Roleplay scenarios not found")
 
   // Bottom sheet refs
   const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
@@ -31,18 +31,18 @@ const RoleplayScenarios: FC = () => {
 
   // Get unique categories and difficulties for filters
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(roleplayScenarios.data.map((s) => s.category))]
+    const uniqueCategories = [...new Set(roleplayScenarioGetAll.data.map((s) => s.category))]
     return uniqueCategories.sort()
-  }, [roleplayScenarios.data])
+  }, [roleplayScenarioGetAll.data])
 
   // Filter scenarios based on selected filters
   const filteredScenarios = useMemo(() => {
-    return roleplayScenarios.data.filter((scenario) => {
+    return roleplayScenarioGetAll.data.filter((scenario) => {
       const categoryMatch = !selectedCategory || scenario.category === selectedCategory
       const difficultyMatch = !selectedDifficulty || scenario.difficulty === selectedDifficulty
       return categoryMatch && difficultyMatch
     })
-  }, [roleplayScenarios.data, selectedCategory, selectedDifficulty])
+  }, [roleplayScenarioGetAll.data, selectedCategory, selectedDifficulty])
 
   const handleRoleplayScenarioPress = (scenario: RouterOutputs["roleplayScenario"]["getAll"][number]) => {
     setSelectedScenario(scenario)
