@@ -10,7 +10,8 @@ import * as Badge from "~/ui/badge"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text, TextDescription } from "~/ui/text"
-import { trpc } from "~/utils/api"
+import { queryClient, trpc } from "~/utils/api"
+import { useUserStore } from "~/utils/zustand/user-store"
 
 type Props = {
   scenario: RouterOutputs["roleplayScenario"]["getAll"][number] | null
@@ -18,12 +19,18 @@ type Props = {
 }
 
 const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>(({ scenario, onClose }, ref) => {
-  const roleplaySessionCreateMutation = useMutation(
-    trpc.roleplaySession.create.mutationOptions({
-      onSuccess: (session) => {
+  const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
+  if (!currentOrganizationId) throw new Error("Current organization ID not found")
+
+  const profileRoleplaySessionCreateMutation = useMutation(
+    trpc.profile.roleplaySession.create.mutationOptions({
+      onSuccess: async (session) => {
         if (ref && "current" in ref && ref.current) {
           ref.current.dismiss()
         }
+        await queryClient.prefetchQuery(
+          trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: session.id, organizationId: currentOrganizationId }),
+        )
         router.push(`/roleplay-session/${session.id}`)
       },
     }),
@@ -31,7 +38,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
 
   const handleStartScenario = () => {
     if (!scenario) throw new Error("Scenario not found")
-    roleplaySessionCreateMutation.mutate({ scenarioId: scenario.id })
+    profileRoleplaySessionCreateMutation.mutate({ scenarioId: scenario.id, organizationId: currentOrganizationId })
   }
 
   // Helper function to render difficulty stars
@@ -90,7 +97,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
               size="lg"
               variant="primary"
               onPress={handleStartScenario}
-              loading={roleplaySessionCreateMutation.isPending}
+              loading={profileRoleplaySessionCreateMutation.isPending}
             >
               <Button.Icon icon={Play} />
               <Button.Text>Start Scenario</Button.Text>
