@@ -347,12 +347,7 @@ const RoleplaySession: FC = () => {
           headerShown: true,
           headerShadowVisible: false,
           headerTitle: () => <View />,
-          headerLeft: () => (
-            <Button.Root variant="secondary" size="sm" onPress={undefined}>
-              <Button.Icon icon={ClockIcon} />
-              <Button.Text className="w-[30px]">{formatTime(timeRemaining)}</Button.Text>
-            </Button.Root>
-          ),
+          headerLeft: () => <View />,
           headerRight: () => (
             <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
               <Button.Icon icon={CircleStopIcon} />
@@ -363,8 +358,14 @@ const RoleplaySession: FC = () => {
       />
       <View className="flex flex-1 flex-col">
         {/* Main content area */}
-        <View className="flex-1 items-center justify-center px-6">
-          {sessionEnded ? (
+        <View className="flex-1 flex-col items-center pt-[15%]">
+          <View className="mb-1 flex flex-row items-center gap-2">
+            <ClockIcon size={16} className="text-neutral-400" />
+            <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
+          </View>
+          <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.scenario.title}</Text>
+
+          {sessionEnded && (
             <View className="items-center">
               <Text className="mb-8 text-center text-xl font-medium text-neutral-700">Session ended</Text>
               <View className="h-40 w-40 items-center justify-center rounded-3xl bg-neutral-300 shadow-lg">
@@ -372,7 +373,9 @@ const RoleplaySession: FC = () => {
               </View>
               <Text className="mt-6 text-center text-lg font-medium text-success-600">Thank you for practicing!</Text>
             </View>
-          ) : isAssistantSpeaking ? (
+          )}
+
+          {isAssistantSpeaking && (
             <View className="items-center">
               <Text className="mb-8 text-center text-xl font-medium text-primary-700">Assistant is speaking...</Text>
 
@@ -400,9 +403,20 @@ const RoleplaySession: FC = () => {
 
               <Text className="mt-6 text-center text-base font-medium text-neutral-600">Listening...</Text>
             </View>
-          ) : (
+          )}
+
+          {!isAssistantSpeaking && (
             <View className="items-center">
-              <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{isRecording ? "Recording..." : "Ready to listen"}</Text>
+              <View
+                className="size-52 items-center justify-center rounded-full bg-primary-600 duration-75"
+                style={{
+                  /* opacity: recordingLevel * 0.8 + 0.2, */
+                  transform: [{ scale: 1 + recordingLevel * 0.15 }],
+                }}
+              />
+              <Text className="mt-12 max-w-[90%] text-center text-lg font-medium text-neutral-500">
+                {isRecording ? "Recording..." : "Ready to listen"}
+              </Text>
 
               {/* Recording level visualization when recording */}
               {isRecording && (
@@ -421,19 +435,6 @@ const RoleplaySession: FC = () => {
               )}
             </View>
           )}
-        </View>
-
-        <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.scenario.title}</Text>
-
-        <View className="flex-1 flex-col items-center pt-[15%]">
-          <View
-            className="size-52 items-center justify-center rounded-full bg-primary-600 duration-75"
-            style={{
-              /* opacity: recordingLevel * 0.8 + 0.2, */
-              transform: [{ scale: 1 + recordingLevel * 0.15 }],
-            }}
-          />
-          <Text className="mt-20 max-w-[90%] text-center text-xl font-medium">Your turn to speak</Text>
         </View>
 
         {/* Bottom */}
