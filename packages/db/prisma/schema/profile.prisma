@@ -4,7 +4,7 @@ model Profile {
   name                  String
   avatar                String?
   timezone              String /// IANA timezone identifier (e.g., "America/New_York", "Europe/London", "Asia/Tokyo"). All our dates are stored in UTC so we'll need to convert to the user's timezone when needed.
-  nativeLanguage        String /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "en-GB", "fr-CA"
+  nativeLanguage        String                @default("en-US") /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "en-GB", "fr-CA"
   learningLanguage      String /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "es-MX", "ja-JP"
   learningLanguageLevel LearningLanguageLevel
 
