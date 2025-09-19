@@ -4,9 +4,9 @@ model Profile {
   name                  String
   avatar                String?
   timezone              String /// IANA timezone identifier (e.g., "America/New_York", "Europe/London", "Asia/Tokyo"). All our dates are stored in UTC so we'll need to convert to the user's timezone when needed.
-  nativeLanguage        String                @default("en-US") /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "en-GB", "fr-CA"
-  learningLanguage      String /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "es-MX", "ja-JP"
-  learningLanguageLevel LearningLanguageLevel
+  nativeLanguage        String                @default("en-US") /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "en-GB", "fr-CA" // TODO: Remove default value when we have a way to set the native language.
+  learningLanguage      String                @default("fr-FR") /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "es-MX", "ja-JP" // TODO: Remove default value when we have a way to set the learning language.
+  learningLanguageLevel LearningLanguageLevel @default(INTERMEDIATE) /// TODO: Remove default value when we have a way to set the learning language level.
 
   currentStreak       Int     @default(0)
   longestStreak       Int     @default(0)
