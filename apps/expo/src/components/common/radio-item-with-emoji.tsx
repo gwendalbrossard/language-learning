@@ -7,12 +7,13 @@ import { cn } from "~/utils/utils"
 type Props = {
   emoji: string
   label: string
+  description?: string
   value: string
   checked: boolean
   onCheckedChange: (value: string) => void
 }
 
-const RadioItemWithEmoji: FC<Props> = ({ emoji, label, value, checked, onCheckedChange }) => {
+const RadioItemWithEmoji: FC<Props> = ({ emoji, label, description, value, checked, onCheckedChange }) => {
   return (
     <Pressable
       onPress={() => onCheckedChange(value)}
@@ -24,7 +25,10 @@ const RadioItemWithEmoji: FC<Props> = ({ emoji, label, value, checked, onChecked
     >
       <View className="flex flex-1 flex-row items-center gap-3">
         <Text className="text-[28px] leading-9">{emoji}</Text>
-        <Text className="flex-1 flex-wrap text-base font-medium text-neutral-700">{label}</Text>
+        <View className="flex flex-1 flex-col">
+          <Text className="text-base font-medium text-neutral-700">{label}</Text>
+          {description && <Text className="text-sm font-normal leading-5 text-neutral-500">{description}</Text>}
+        </View>
       </View>
 
       <RadioGroupPrimitive.Item
