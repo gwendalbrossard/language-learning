@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  font-size: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    font-size: 16px;
+  }
+}
