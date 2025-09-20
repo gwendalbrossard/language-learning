@@ -36,7 +36,7 @@ const CreateProfile: FC = () => {
   const profileCreate = useMutation(
     trpc.profile.create.mutationOptions({
       onSuccess: async () => {
-        await Promise.all([queryClient.prefetchQuery(trpc.profile.me.queryOptions()), queryClient.prefetchQuery(trpc.organization.me.queryOptions())])
+        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
         router.replace("/onboarding")
       },
     }),

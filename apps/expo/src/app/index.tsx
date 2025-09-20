@@ -31,7 +31,6 @@ export default function Index() {
   const canQuery = authMe.data !== undefined && authMe.data.user !== null && authMe.data.profile !== null
 
   const profileMe = useQuery(trpc.profile.me.queryOptions(undefined, { enabled: canQuery }))
-  const organizationMe = useQuery(trpc.organization.me.queryOptions(undefined, { enabled: canQuery }))
 
   useEffect(() => {
     if (authMe.isLoading || !authMe.data) return
@@ -47,19 +46,9 @@ export default function Index() {
       return
     }
 
-    // Organization
-    if (organizationMe.isLoading || !organizationMe.data) return
-
-    // At this point, the user has a profile, so they must have an organization.
-    if (!organizationMe.data[0]) {
-      throw new Error("No organization found. Please contact support.")
-    }
-
-    updateCurrentOrganizationId(organizationMe.data[0].id)
-
     if (!authMe.data.profile.completedOnboarding) {
       const redirectToOnboarding = async () => {
-        await Promise.all([queryClient.prefetchQuery(trpc.profile.me.queryOptions()), queryClient.prefetchQuery(trpc.organization.me.queryOptions())])
+        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
         router.push("/onboarding")
       }
       void redirectToOnboarding()
@@ -72,13 +61,11 @@ export default function Index() {
       router.replace("/main")
     }
     void redirectToMain()
-  }, [authMe, router, authMe.data, queryClient, organizationMe, organizationMe.data, updateCurrentOrganizationId])
+  }, [authMe, router, authMe.data, queryClient])
 
-  if (!authMe.data || !authMe.data.user || !authMe.data.profile || !profileMe.data || !organizationMe.data || !organizationMe.data[0]) {
+  if (!authMe.data || !authMe.data.user || !authMe.data.profile || !profileMe.data) {
     return <LoadingView />
   }
-
-  const _currentOrganization: RouterOutputs["organization"]["me"][number] = organizationMe.data[0]
 
   return <LoadingView />
 }
