@@ -46,10 +46,9 @@ const Rating: FC<StepProps> = ({ onContinue, onBack, progress }) => {
     <Step.Container>
       <Step.Progress onBack={onBack} progress={progress} />
 
-      {/* Top */}
       <Step.Header>
         <Step.HeaderTitle>Give us a rating</Step.HeaderTitle>
-        <Step.HeaderDescription>We're a small team doing our best to build the best app to help you study!</Step.HeaderDescription>
+        <Step.HeaderDescription>We're a small team doing our best to build the best app to help you learn languages!</Step.HeaderDescription>
       </Step.Header>
 
       <Step.Body>
@@ -59,15 +58,14 @@ const Rating: FC<StepProps> = ({ onContinue, onBack, progress }) => {
           <View className="flex flex-col items-center gap-2">
             <View className="flex flex-row gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
-                <StarIcon size={32} key={star} className="fill-yellow-400 text-yellow-400" />
+                <StarIcon size={32} key={star} fill="#facc15" stroke="#facc15" />
               ))}
             </View>
-            <Text className="text-sm text-neutral-500">Thousands of students love us</Text>
+            <Text className="text-sm text-neutral-500">Thousands of learners love us</Text>
           </View>
         </View>
       </Step.Body>
 
-      {/* Bottom - Stacked Buttons */}
       <Step.Bottom>
         {!reviewCompleted && (
           <Button.Root size="md" variant="ghost" onPress={handleSkip} disabled={isRequestingReview} className="w-full opacity-50">

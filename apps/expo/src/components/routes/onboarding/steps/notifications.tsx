@@ -1,7 +1,7 @@
 import type { FC } from "react"
 import * as ExpoNotifications from "expo-notifications"
 import { usePostHog } from "posthog-react-native"
-import Rive from "rive-react-native"
+import { Text } from "react-native"
 
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
 
@@ -37,12 +37,14 @@ const Notifications: FC<StepProps> = ({ onContinue, onBack, progress }) => {
       <Step.Progress onBack={onBack} progress={progress} />
 
       <Step.Header>
-        <Step.HeaderTitle>Stay on track</Step.HeaderTitle>
-        <Step.HeaderDescription>Get notified about your drinking streaks and never miss a day!</Step.HeaderDescription>
+        <Step.HeaderTitle>Never lose momentum</Step.HeaderTitle>
+        <Step.HeaderDescription>Get gentle reminders for your daily practice sessions. Consistency is the key to fluency.</Step.HeaderDescription>
       </Step.Header>
 
       <Step.Body className="items-center justify-center">
-        <Rive url="https://assets.daybydayapp.com/rives/bell.riv" style={{ width: 250, height: 200 }} />
+        <Text className="text-center text-lg text-muted-foreground">
+          [Bell notification animation]
+        </Text>
       </Step.Body>
 
       <Step.Bottom>

@@ -12,44 +12,40 @@ import { ZProfileOnboardSchema } from "@acme/validators"
 import type { StepProps } from "~/components/common/step"
 import { queryClient } from "~/utils/api"
 import { authClient } from "~/utils/auth"
-import AlcoholEffects from "./steps/alcohol-effects"
-import CreatingCustomPlan from "./steps/creating-custom-plan"
-import DrinkingTriggers from "./steps/drinking-triggers"
-import ExploreHabits from "./steps/explore-habits"
-import FinalCustomPlan from "./steps/final-custom-plan"
-import FinalizingCustomPlan from "./steps/finalizing-custom-plan"
-import FutureResults from "./steps/future-results"
-import GetToKnowYou from "./steps/get-to-know-you"
-import Intentions from "./steps/intentions"
+import BuildMomentum from "./steps/build-momentum"
+import CurrentPracticeStep from "./steps/current-practice"
+import DailyCommitmentStep from "./steps/daily-commitment"
+import DayOne from "./steps/day-one"
+import FourteenDays from "./steps/fourteen-days"
 import LearningLanguage from "./steps/learning-language"
 import LearningLanguageLevel from "./steps/learning-language-level"
+import LearningReasonStep from "./steps/learning-reason"
+import LockRoutine from "./steps/lock-routine"
+import PersonalizingPlan from "./steps/personalizing-plan"
 import Notifications from "./steps/notifications"
+import ProgressGoalStep from "./steps/progress-goal"
 import Rating from "./steps/rating"
-import ReasonsForChange from "./steps/reasons-for-change"
-import RelationshipStatus from "./steps/relationship-status"
-import StruggleToChange from "./steps/struggle-to-change"
-import Testimonials from "./steps/testimonials"
-import VisualizeYourProgress from "./steps/visualize-your-progress"
+import ReadyToStart from "./steps/ready-to-start"
+import SpeakingComfortStep from "./steps/speaking-comfort"
+import SpeakingStrugglesStep from "./steps/speaking-struggles"
 
 export enum OnboardingStep {
-  GET_TO_KNOW_YOU = "GET_TO_KNOW_YOU",
+  DAY_ONE = "DAY_ONE",
   LEARNING_LANGUAGE = "LEARNING_LANGUAGE",
   LEARNING_LANGUAGE_LEVEL = "LEARNING_LANGUAGE_LEVEL",
-  EXPLORE_HABITS = "EXPLORE_HABITS",
-  STRUGGLE_TO_CHANGE = "STRUGGLE_TO_CHANGE",
-  DRINKING_TRIGGERS = "DRINKING_TRIGGERS",
-  TESTIMONIALS = "TESTIMONIALS",
-  ALCOHOL_EFFECTS = "ALCOHOL_EFFECTS",
-  REASONS_FOR_CHANGE = "REASONS_FOR_CHANGE",
-  INTENTIONS = "INTENTIONS",
-  RELATIONSHIP_STATUS = "RELATIONSHIP_STATUS",
+  LEARNING_REASON = "LEARNING_REASON",
+  BUILD_MOMENTUM = "BUILD_MOMENTUM",
+  CURRENT_PRACTICE = "CURRENT_PRACTICE",
+  SPEAKING_STRUGGLES = "SPEAKING_STRUGGLES",
+  SPEAKING_COMFORT = "SPEAKING_COMFORT",
+  LOCK_ROUTINE = "LOCK_ROUTINE",
+  DAILY_COMMITMENT = "DAILY_COMMITMENT",
   NOTIFICATIONS = "NOTIFICATIONS",
-  FUTURE_RESULTS = "FUTURE_RESULTS",
+  PROGRESS_GOAL = "PROGRESS_GOAL",
+  FOURTEEN_DAYS = "FOURTEEN_DAYS",
   RATING = "RATING",
-  CREATING_CUSTOM_PLAN = "CREATING_CUSTOM_PLAN",
-  VISUALIZE_YOUR_PROGRESS = "VISUALIZE_YOUR_PROGRESS",
-  FINALIZING_CUSTOM_PLAN = "FINALIZING_CUSTOM_PLAN",
-  FINAL_CUSTOM_PLAN = "FINAL_CUSTOM_PLAN",
+  PERSONALIZING_PLAN = "PERSONALIZING_PLAN",
+  READY_TO_START = "READY_TO_START",
 }
 
 type StepConfig = {
@@ -58,9 +54,8 @@ type StepConfig = {
 }
 
 const onboardingFlow: Record<OnboardingStep, StepConfig> = {
-  // Who are you?
-  [OnboardingStep.GET_TO_KNOW_YOU]: {
-    component: GetToKnowYou,
+  [OnboardingStep.DAY_ONE]: {
+    component: DayOne,
     nextStep: OnboardingStep.LEARNING_LANGUAGE,
   },
   [OnboardingStep.LEARNING_LANGUAGE]: {
@@ -69,76 +64,64 @@ const onboardingFlow: Record<OnboardingStep, StepConfig> = {
   },
   [OnboardingStep.LEARNING_LANGUAGE_LEVEL]: {
     component: LearningLanguageLevel,
-    nextStep: OnboardingStep.RELATIONSHIP_STATUS,
+    nextStep: OnboardingStep.LEARNING_REASON,
   },
-  [OnboardingStep.RELATIONSHIP_STATUS]: {
-    component: RelationshipStatus,
-    nextStep: OnboardingStep.EXPLORE_HABITS,
+  [OnboardingStep.LEARNING_REASON]: {
+    component: LearningReasonStep,
+    nextStep: OnboardingStep.BUILD_MOMENTUM,
   },
-  // Explore habits
-  [OnboardingStep.EXPLORE_HABITS]: {
-    component: ExploreHabits,
-    nextStep: OnboardingStep.DRINKING_TRIGGERS,
+  [OnboardingStep.BUILD_MOMENTUM]: {
+    component: BuildMomentum,
+    nextStep: OnboardingStep.CURRENT_PRACTICE,
   },
-  [OnboardingStep.DRINKING_TRIGGERS]: {
-    component: DrinkingTriggers,
-    nextStep: OnboardingStep.ALCOHOL_EFFECTS,
+  [OnboardingStep.CURRENT_PRACTICE]: {
+    component: CurrentPracticeStep,
+    nextStep: OnboardingStep.SPEAKING_STRUGGLES,
   },
-  [OnboardingStep.ALCOHOL_EFFECTS]: {
-    component: AlcoholEffects,
-    nextStep: OnboardingStep.CREATING_CUSTOM_PLAN,
+  [OnboardingStep.SPEAKING_STRUGGLES]: {
+    component: SpeakingStrugglesStep,
+    nextStep: OnboardingStep.SPEAKING_COMFORT,
   },
-  [OnboardingStep.CREATING_CUSTOM_PLAN]: {
-    component: CreatingCustomPlan,
-    nextStep: OnboardingStep.INTENTIONS,
+  [OnboardingStep.SPEAKING_COMFORT]: {
+    component: SpeakingComfortStep,
+    nextStep: OnboardingStep.LOCK_ROUTINE,
   },
-  // Intentions
-  [OnboardingStep.INTENTIONS]: {
-    component: Intentions,
-    nextStep: OnboardingStep.REASONS_FOR_CHANGE,
+  [OnboardingStep.LOCK_ROUTINE]: {
+    component: LockRoutine,
+    nextStep: OnboardingStep.DAILY_COMMITMENT,
   },
-  [OnboardingStep.REASONS_FOR_CHANGE]: {
-    component: ReasonsForChange,
-    nextStep: OnboardingStep.VISUALIZE_YOUR_PROGRESS,
+  [OnboardingStep.DAILY_COMMITMENT]: {
+    component: DailyCommitmentStep,
+    nextStep: OnboardingStep.NOTIFICATIONS,
   },
-  // Visualize your progress
-  [OnboardingStep.VISUALIZE_YOUR_PROGRESS]: {
-    component: VisualizeYourProgress,
-    nextStep: OnboardingStep.FUTURE_RESULTS,
-  },
-  [OnboardingStep.FUTURE_RESULTS]: {
-    component: FutureResults,
-    nextStep: OnboardingStep.TESTIMONIALS,
-  },
-  [OnboardingStep.TESTIMONIALS]: {
-    component: Testimonials,
-    nextStep: OnboardingStep.STRUGGLE_TO_CHANGE,
-  },
-  [OnboardingStep.STRUGGLE_TO_CHANGE]: {
-    component: StruggleToChange,
-    nextStep: OnboardingStep.FINALIZING_CUSTOM_PLAN,
-  },
-  [OnboardingStep.FINALIZING_CUSTOM_PLAN]: {
-    component: FinalizingCustomPlan,
-    nextStep: OnboardingStep.FINAL_CUSTOM_PLAN,
-  },
-  [OnboardingStep.FINAL_CUSTOM_PLAN]: {
-    component: FinalCustomPlan,
-    nextStep: null,
-  },
-  // Other
   [OnboardingStep.NOTIFICATIONS]: {
     component: Notifications,
+    nextStep: OnboardingStep.PROGRESS_GOAL,
+  },
+  [OnboardingStep.PROGRESS_GOAL]: {
+    component: ProgressGoalStep,
+    nextStep: OnboardingStep.FOURTEEN_DAYS,
+  },
+  [OnboardingStep.FOURTEEN_DAYS]: {
+    component: FourteenDays,
     nextStep: OnboardingStep.RATING,
   },
   [OnboardingStep.RATING]: {
     component: Rating,
+    nextStep: OnboardingStep.PERSONALIZING_PLAN,
+  },
+  [OnboardingStep.PERSONALIZING_PLAN]: {
+    component: PersonalizingPlan,
+    nextStep: OnboardingStep.READY_TO_START,
+  },
+  [OnboardingStep.READY_TO_START]: {
+    component: ReadyToStart,
     nextStep: null,
   },
 }
 
 const Onboarding: FC = () => {
-  const [step, setStep] = useState<OnboardingStep>(OnboardingStep.GET_TO_KNOW_YOU)
+  const [step, setStep] = useState<OnboardingStep>(OnboardingStep.DAY_ONE)
   const [progress, setProgress] = useState(0)
 
   const router = useRouter()
@@ -162,13 +145,13 @@ const Onboarding: FC = () => {
   }, [step])
 
   const form = useForm<TProfileOnboardSchema>({
-    defaultValues: { reasonsForChange: [], drinkingTriggers: [] },
+    defaultValues: { speakingStruggles: [] },
     mode: "all",
     resolver: zodResolver(ZProfileOnboardSchema),
   })
 
   const handleBack = async () => {
-    if (step === OnboardingStep.GET_TO_KNOW_YOU) {
+    if (step === OnboardingStep.DAY_ONE) {
       posthog.capture(POSTHOG_EVENTS["onboarding abandoned"], {
         step,
       })

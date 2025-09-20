@@ -2,45 +2,69 @@ import { z } from "zod"
 
 import { LearningLanguageLevel } from "@acme/shared/db"
 
-export enum DrinkingTrigger {
-  STRESS = "STRESS",
-  SOCIAL_PRESSURE = "SOCIAL_PRESSURE",
-  TROUBLE_SLEEPING = "TROUBLE_SLEEPING",
-  BOREDOM = "BOREDOM",
-  HABIT = "HABIT",
-  CELEBRATION = "CELEBRATION",
-  SADNESS = "SADNESS",
-  ANGER = "ANGER",
-  RELAXATION = "RELAXATION",
+
+export enum LearningReason {
+  CAREER_GROWTH = "CAREER_GROWTH",
+  TRAVEL = "TRAVEL",
+  STUDY_EXAMS = "STUDY_EXAMS",
+  MOVING_ABROAD = "MOVING_ABROAD",
+  RELATIONSHIPS = "RELATIONSHIPS",
+  CULTURE_MEDIA = "CULTURE_MEDIA",
+  PERSONAL_CHALLENGE = "PERSONAL_CHALLENGE",
 }
 
-export enum Relationship {
-  IN_RELATIONSHIP = "IN_RELATIONSHIP",
-  MARRIED = "MARRIED",
-  SINGLE = "SINGLE",
-  DIVORCED_OR_SEPARATED = "DIVORCED_OR_SEPARATED",
+export enum CurrentPractice {
+  NOT_STARTED = "NOT_STARTED",
+  APPS_FLASHCARDS = "APPS_FLASHCARDS",
+  CLASSES_TUTOR = "CLASSES_TUTOR",
+  PODCASTS_VIDEOS = "PODCASTS_VIDEOS",
+  SPEAKING_FRIENDS = "SPEAKING_FRIENDS",
+  MIXED_APPROACH = "MIXED_APPROACH",
 }
 
-export enum ReasonForChange {
-  SLEEP_BETTER = "SLEEP_BETTER",
-  SAVE_MONEY = "SAVE_MONEY",
-  LOSE_WEIGHT = "LOSE_WEIGHT",
-  MENTAL_CLARITY = "MENTAL_CLARITY",
-  REDUCE_ANXIETY = "REDUCE_ANXIETY",
-  IMPROVE_RELATIONSHIPS = "IMPROVE_RELATIONSHIPS",
-  REGAIN_CONTROL = "REGAIN_CONTROL",
-  MORE_ENERGY = "MORE_ENERGY",
-  PROTECT_HEALTH = "PROTECT_HEALTH",
-  BETTER_ROLE_MODEL = "BETTER_ROLE_MODEL",
+export enum SpeakingStruggle {
+  FINDING_WORDS = "FINDING_WORDS",
+  UNDERSTANDING_SPEED = "UNDERSTANDING_SPEED",
+  BUILDING_SENTENCES = "BUILDING_SENTENCES",
+  PRONUNCIATION = "PRONUNCIATION",
+  REMEMBERING_VOCABULARY = "REMEMBERING_VOCABULARY",
+  CONFIDENCE = "CONFIDENCE",
+  GRAMMAR_ACCURACY = "GRAMMAR_ACCURACY",
+}
+
+export enum SpeakingComfort {
+  VERY_UNCOMFORTABLE = "VERY_UNCOMFORTABLE",
+  SOMEWHAT_UNCOMFORTABLE = "SOMEWHAT_UNCOMFORTABLE",
+  NEUTRAL = "NEUTRAL",
+  SOMEWHAT_COMFORTABLE = "SOMEWHAT_COMFORTABLE",
+  VERY_COMFORTABLE = "VERY_COMFORTABLE",
+}
+
+export enum DailyCommitment {
+  FIVE_MIN = "FIVE_MIN",
+  TEN_MIN = "TEN_MIN",
+  FIFTEEN_MIN = "FIFTEEN_MIN",
+  TWENTY_MIN = "TWENTY_MIN",
+  THIRTY_MIN = "THIRTY_MIN",
+}
+
+
+export enum ProgressGoal {
+  TWO_WEEKS = "TWO_WEEKS",
+  ONE_MONTH = "ONE_MONTH",
+  THREE_MONTHS = "THREE_MONTHS",
+  OWN_PACE = "OWN_PACE",
 }
 
 export const ZProfileOnboardSchema = z.object({
-  // nativeLanguage: z.string(), // TODO: Uncomment this when we have a way to set the native language. Also remove the default value in the schema.
-  learningLanguage: z.string(), // TODO: Add BCP 47 language tag validation
+  learningLanguage: z.string(),
   learningLanguageLevel: z.enum(LearningLanguageLevel),
-  drinkingTriggers: z.array(z.enum(DrinkingTrigger)),
-  relationshipStatus: z.enum(Relationship),
-  reasonsForChange: z.array(z.enum(ReasonForChange)),
+  learningReason: z.enum(LearningReason),
+  currentPractice: z.enum(CurrentPractice),
+  speakingStruggles: z.array(z.enum(SpeakingStruggle)),
+  speakingComfort: z.enum(SpeakingComfort),
+  dailyCommitment: z.enum(DailyCommitment),
+  progressGoal: z.enum(ProgressGoal),
 })
 
 export type TProfileOnboardSchema = z.infer<typeof ZProfileOnboardSchema>

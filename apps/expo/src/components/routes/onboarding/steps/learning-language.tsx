@@ -49,8 +49,8 @@ const LearningLanguage: FC<StepProps> = ({ onContinue, onBack, progress }) => {
       <Step.Progress onBack={onBack} progress={progress} />
 
       <Step.Header>
-        <Step.HeaderTitle>What language would you like to learn?</Step.HeaderTitle>
-        <Step.HeaderDescription>Choose from the most popular languages to start your learning journey.</Step.HeaderDescription>
+        <Step.HeaderTitle>Which language do you want to learn?</Step.HeaderTitle>
+        <Step.HeaderDescription>Choose the language you'd like to focus on.</Step.HeaderDescription>
       </Step.Header>
 
       <Step.Body>

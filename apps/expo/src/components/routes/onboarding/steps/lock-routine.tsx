@@ -1,17 +1,11 @@
 import type { FC } from "react"
-import type { ImageSourcePropType } from "react-native"
-import { useAssets } from "expo-asset"
-import { Image, View } from "react-native"
+import { View, Text } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
-// @ts-expect-error - It's valid
-import ExploreHabitsImage from "~/components/routes/landing/images/onboarding/explore-habits.png"
 import * as Button from "~/ui/button"
 
-const ExploreHabits: FC<StepProps> = ({ onContinue, onBack, progress }) => {
-  const [assets, _error] = useAssets([ExploreHabitsImage])
-
+const LockRoutine: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const handleContinue = () => {
     onContinue()
   }
@@ -22,15 +16,17 @@ const ExploreHabits: FC<StepProps> = ({ onContinue, onBack, progress }) => {
 
       <Step.Header className="flex-1 gap-4">
         <Step.HeaderIllustration>
-          {assets && assets[0] && <Image source={assets[0] as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />}
+          <Text className="text-center text-lg text-muted-foreground">
+            [Illustration showing daily routine and consistency]
+          </Text>
         </Step.HeaderIllustration>
 
         <View>
-          <Step.HeaderTitle className="text-2xl">Let's explore your habits</Step.HeaderTitle>
+          <Step.HeaderTitle className="text-2xl">Lock in a routine that sticks</Step.HeaderTitle>
         </View>
         <View>
           <Step.HeaderDescription className="text-lg">
-            A few more questions to understand your current drinking patterns and see how we can give you the best support.
+            Short daily sessions beat long study plans. Choose a rhythm you can keep—your first conversation is minutes away.
           </Step.HeaderDescription>
         </View>
       </Step.Header>
@@ -44,4 +40,4 @@ const ExploreHabits: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   )
 }
 
-export default ExploreHabits
+export default LockRoutine
