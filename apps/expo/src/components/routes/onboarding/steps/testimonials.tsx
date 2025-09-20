@@ -1,9 +1,8 @@
 import type { Asset } from "expo-asset"
 import type { FC } from "react"
 import type { ImageSourcePropType } from "react-native"
-import { useEffect, useRef, useState } from "react"
 import { useAssets } from "expo-asset"
-import { Animated, Image, Text, View } from "react-native"
+import { Image, Text, View } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
@@ -65,42 +64,8 @@ const testimonials: Testimonial[] = [
 
 const Testimonials: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const [assets, _error] = useAssets([Man1, Woman1, Woman4])
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false)
-  const buttonOpacity = useRef(new Animated.Value(0)).current
-  const animations = useRef<Animated.Value[]>(testimonials.map(() => new Animated.Value(0))).current
-
-  useEffect(() => {
-    const animateIn = (): void => {
-      const animationSequence = testimonials
-        .map((_, index) => {
-          const animation = animations[index]
-          if (!animation) return null
-          return Animated.timing(animation, {
-            toValue: 1,
-            duration: 500,
-            delay: 600 + index * 500,
-            useNativeDriver: true,
-          })
-        })
-        .filter((animation): animation is Animated.CompositeAnimation => animation !== null)
-
-      Animated.sequence([
-        Animated.stagger(500, animationSequence),
-        Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsAnimationComplete(true)
-      })
-    }
-
-    animateIn()
-  }, [animations, buttonOpacity])
 
   const handleContinue = () => {
-    if (!isAnimationComplete) return
     onContinue()
   }
 
@@ -118,25 +83,9 @@ const Testimonials: FC<StepProps> = ({ onContinue, onBack, progress }) => {
 
       <Step.Body>
         <View className="flex flex-col gap-6">
-          {testimonials.map((t, index) => {
-            const animation = animations[index]
-            if (!animation) return null
-
+          {testimonials.map((t) => {
             return (
-              <Animated.View
-                key={t.id}
-                style={{
-                  opacity: animation,
-                  transform: [
-                    {
-                      translateY: animation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0],
-                      }),
-                    },
-                  ],
-                }}
-              >
+              <View key={t.id}>
                 <View className="rounded-3xl border border-neutral-100 p-2">
                   <View className="relative flex flex-col gap-5 rounded-2xl border border-neutral-200 p-5">
                     {/* Used only to create a shadow */}
@@ -159,18 +108,16 @@ const Testimonials: FC<StepProps> = ({ onContinue, onBack, progress }) => {
                     </View>
                   </View>
                 </View>
-              </Animated.View>
+              </View>
             )
           })}
         </View>
       </Step.Body>
 
       <Step.Bottom>
-        <Animated.View style={{ opacity: buttonOpacity }}>
-          <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full">
-            <Button.Text>Start my journey</Button.Text>
-          </Button.Root>
-        </Animated.View>
+        <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full">
+          <Button.Text>Start my journey</Button.Text>
+        </Button.Root>
       </Step.Bottom>
     </Step.Container>
   )

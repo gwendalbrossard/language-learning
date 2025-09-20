@@ -1,6 +1,5 @@
 import type { FC } from "react"
-import { useEffect, useRef, useState } from "react"
-import { Animated, Text, View } from "react-native"
+import { Text, View } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
@@ -38,40 +37,7 @@ const EFFECTS: Effect[] = [
 ]
 
 const AlcoholEffects: FC<StepProps> = ({ onContinue, onBack, progress }) => {
-  const animations = useRef<Animated.Value[]>(EFFECTS.map(() => new Animated.Value(0))).current
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false)
-  const buttonOpacity = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    const animateIn = (): void => {
-      const animationSequence = EFFECTS.map((_, index) => {
-        const animation = animations[index]
-        if (!animation) return null
-        return Animated.timing(animation, {
-          toValue: 1,
-          duration: 500,
-          delay: 600 + index * 500,
-          useNativeDriver: true,
-        })
-      }).filter((animation): animation is Animated.CompositeAnimation => animation !== null)
-
-      Animated.sequence([
-        Animated.stagger(500, animationSequence),
-        Animated.timing(buttonOpacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsAnimationComplete(true)
-      })
-    }
-
-    animateIn()
-  }, [animations, buttonOpacity])
-
   const handleContinue = () => {
-    if (!isAnimationComplete) return
     onContinue()
   }
 
@@ -87,24 +53,8 @@ const AlcoholEffects: FC<StepProps> = ({ onContinue, onBack, progress }) => {
       <Step.Body>
         <View className="flex flex-col gap-4">
           {EFFECTS.map((effect, index) => {
-            const animation = animations[index]
-            if (!animation) return null
-
             return (
-              <Animated.View
-                key={index}
-                style={{
-                  opacity: animation,
-                  transform: [
-                    {
-                      translateY: animation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0],
-                      }),
-                    },
-                  ],
-                }}
-              >
+              <View key={index}>
                 <Table.Root className="w-full">
                   <Table.Header>
                     <Table.RowHeader className="py-2">
@@ -121,18 +71,16 @@ const AlcoholEffects: FC<StepProps> = ({ onContinue, onBack, progress }) => {
                     </Table.RowBody>
                   </Table.Body>
                 </Table.Root>
-              </Animated.View>
+              </View>
             )
           })}
         </View>
       </Step.Body>
 
       <Step.Bottom>
-        <Animated.View style={{ opacity: buttonOpacity }}>
-          <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full">
-            <Button.Text>Get my reduction plan</Button.Text>
-          </Button.Root>
-        </Animated.View>
+        <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full">
+          <Button.Text>Get my reduction plan</Button.Text>
+        </Button.Root>
       </Step.Bottom>
     </Step.Container>
   )

@@ -1,10 +1,9 @@
 import type { FC } from "react"
-import { useEffect, useRef, useState } from "react"
 import { router } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { usePostHog } from "posthog-react-native"
 import { useFormContext } from "react-hook-form"
-import { Animated, Text, View } from "react-native"
+import { Text, View } from "react-native"
 
 import type { TProfileOnboardSchema } from "@acme/validators"
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
@@ -22,72 +21,6 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   if (!profileMe.data) throw new Error("Profile not found")
   const profile = profileMe.data
-
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false)
-
-  // Animations for roadmap features
-  const roadmapAnimations = useRef<Animated.Value[]>(
-    Array(4)
-      .fill(0)
-      .map(() => new Animated.Value(0)),
-  ).current
-
-  // Animations for benefit blocks
-  const benefitAnimations = useRef<Animated.Value[]>(
-    Array(3)
-      .fill(0)
-      .map(() => new Animated.Value(0)),
-  ).current
-
-  const benefitsTitleAnimation = useRef<Animated.Value>(new Animated.Value(0)).current
-  const buttonAnimation = useRef<Animated.Value>(new Animated.Value(0)).current
-
-  useEffect(() => {
-    const animateIn = () => {
-      // Animate roadmap features
-      const roadmapSequence = roadmapAnimations.map((animation, index) =>
-        Animated.timing(animation, {
-          toValue: 1,
-          duration: 800,
-          delay: index * 200,
-          useNativeDriver: true,
-        }),
-      )
-
-      // Animate benefits title
-      const benefitsTitleTiming = Animated.timing(benefitsTitleAnimation, {
-        toValue: 1,
-        duration: 800,
-        delay: 1000,
-        useNativeDriver: true,
-      })
-
-      // Animate benefit blocks with a longer delay after roadmap
-      const benefitSequence = benefitAnimations.map((animation, index) =>
-        Animated.timing(animation, {
-          toValue: 1,
-          duration: 800,
-          delay: 1000 + index * 300,
-          useNativeDriver: true,
-        }),
-      )
-
-      // Animate button after benefits
-      const buttonTiming = Animated.timing(buttonAnimation, {
-        toValue: 1,
-        duration: 300,
-        delay: 2000,
-        useNativeDriver: true,
-      })
-
-      // Start all animations in parallel
-      Animated.parallel([...roadmapSequence, benefitsTitleTiming, ...benefitSequence, buttonTiming]).start(() => {
-        setIsAnimationComplete(true)
-      })
-    }
-
-    animateIn()
-  }, [roadmapAnimations, benefitAnimations, benefitsTitleAnimation, buttonAnimation])
 
   const profileOnboard = useMutation(
     trpc.profile.onboard.mutationOptions({
@@ -112,7 +45,6 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
   }
 
   const handleContinue = () => {
-    if (!isAnimationComplete) return
     void handleSubmit()
   }
 
@@ -185,23 +117,9 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
             <Text className="text-xl font-medium text-neutral-900">Your Success Roadmap</Text>
             <View className="flex flex-col gap-3">
               {roadmapFeatures.map((feature, index) => {
-                const animation = roadmapAnimations[index]
-                if (!animation) return null
-
                 return (
-                  <Animated.View
+                  <View
                     key={index}
-                    style={{
-                      opacity: animation,
-                      transform: [
-                        {
-                          translateY: animation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [20, 0],
-                          }),
-                        },
-                      ],
-                    }}
                     className="flex flex-row items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3"
                   >
                     <Text className="text-2xl">{feature.emoji}</Text>
@@ -209,7 +127,7 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
                       <Text className="font-medium text-neutral-900">{feature.title}</Text>
                       <Text className="text-neutral-600">{feature.description}</Text>
                     </View>
-                  </Animated.View>
+                  </View>
                 )
               })}
             </View>
@@ -217,39 +135,13 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
 
           {/* Benefits Section */}
           <View className="flex flex-col gap-4">
-            <Animated.View
-              style={{
-                opacity: benefitsTitleAnimation,
-                transform: [
-                  {
-                    translateY: benefitsTitleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20, 0],
-                    }),
-                  },
-                ],
-              }}
-            >
+            <View>
               <Text className="text-xl font-medium text-neutral-900">The Life You'll Unlock</Text>
-            </Animated.View>
+            </View>
             {benefits.map((benefit, index) => {
-              const animation = benefitAnimations[index]
-              if (!animation) return null
-
               return (
-                <Animated.View
+                <View
                   key={index}
-                  style={{
-                    opacity: animation,
-                    transform: [
-                      {
-                        translateY: animation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [20, 0],
-                        }),
-                      },
-                    ],
-                  }}
                   className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4"
                 >
                   {/* Title */}
@@ -272,7 +164,7 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
                     <Text className="italic text-neutral-700">"{benefit.testimonial.text}"</Text>
                     <Text className="mt-1 text-right font-medium text-neutral-900">— {benefit.testimonial.author}</Text>
                   </View>
-                </Animated.View>
+                </View>
               )
             })}
           </View>
@@ -280,15 +172,9 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
       </Step.Body>
 
       <Step.Bottom>
-        <Animated.View
-          style={{
-            opacity: buttonAnimation,
-          }}
-        >
-          <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full" loading={profileOnboard.isPending}>
-            <Button.Text>I'm Ready to Change</Button.Text>
-          </Button.Root>
-        </Animated.View>
+        <Button.Root onPress={handleContinue} size="lg" variant="primary" className="w-full" loading={profileOnboard.isPending}>
+          <Button.Text>I'm Ready to Change</Button.Text>
+        </Button.Root>
       </Step.Bottom>
     </Step.Container>
   )
