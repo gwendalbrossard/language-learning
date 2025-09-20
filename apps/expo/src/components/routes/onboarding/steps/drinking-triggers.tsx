@@ -7,9 +7,9 @@ import type { TProfileOnboardSchema } from "@acme/validators"
 import { DrinkingTrigger } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
+import CheckboxWithEmoji from "~/components/common/checkbox-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-import CheckboxWithEmoji from "../../../common/checkbox-with-emoji"
 
 export type Option = {
   trigger: DrinkingTrigger

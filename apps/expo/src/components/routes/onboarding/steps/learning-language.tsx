@@ -5,9 +5,9 @@ import { useFormContext } from "react-hook-form"
 import type { TProfileOnboardSchema } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
+import RadioItemWithEmoji from "~/components/common/radio-item-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-import RadioItemWithEmoji from "../../../common/radio-item-with-emoji"
 
 type LanguageOption = {
   code: string

@@ -6,9 +6,9 @@ import type { TProfileOnboardSchema } from "@acme/validators"
 import { Relationship } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
+import RadioItemWithEmoji from "~/components/common/radio-item-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-import RadioItemWithEmoji from "../../../common/radio-item-with-emoji"
 
 type Option = {
   status: Relationship

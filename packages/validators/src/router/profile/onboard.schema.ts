@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { LearningLanguageLevel } from "@acme/shared/db"
+
 export enum DrinkingTrigger {
   STRESS = "STRESS",
   SOCIAL_PRESSURE = "SOCIAL_PRESSURE",
@@ -33,6 +35,9 @@ export enum ReasonForChange {
 }
 
 export const ZProfileOnboardSchema = z.object({
+  // nativeLanguage: z.string(), // TODO: Uncomment this when we have a way to set the native language. Also remove the default value in the schema.
+  learningLanguage: z.string(), // TODO: Add BCP 47 language tag validation
+  learningLanguageLevel: z.enum(LearningLanguageLevel),
   drinkingTriggers: z.array(z.enum(DrinkingTrigger)),
   relationshipStatus: z.enum(Relationship),
   reasonsForChange: z.array(z.enum(ReasonForChange)),

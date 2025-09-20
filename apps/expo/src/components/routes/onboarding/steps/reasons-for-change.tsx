@@ -1,5 +1,4 @@
 import type { FC } from "react"
-import { MoveRightIcon } from "lucide-react-native"
 import { useFormContext } from "react-hook-form"
 import { View } from "react-native"
 
@@ -7,9 +6,9 @@ import type { TProfileOnboardSchema } from "@acme/validators"
 import { ReasonForChange } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
+import CheckboxWithEmoji from "~/components/common/checkbox-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-import CheckboxWithEmoji from "../../../common/checkbox-with-emoji"
 
 export type Option = {
   reason: ReasonForChange
