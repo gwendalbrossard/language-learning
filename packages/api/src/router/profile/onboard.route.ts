@@ -24,11 +24,12 @@ export const onboardingTransaction = async (props: OnboardingTransactionProps): 
   const { prisma, profile, input } = props
 
   const updatedProfile = await prisma.$transaction(async (tx) => {
-    // Add default stuff here
     const txUpdatedProfile = await tx.profile.update({
       where: { id: profile.id },
       data: {
         completedOnboarding: true,
+        learningLanguage: input.learningLanguage,
+        learningLanguageLevel: input.learningLanguageLevel,
         metadata: {
           onboarding: input,
         },
