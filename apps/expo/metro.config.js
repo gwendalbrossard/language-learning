@@ -9,6 +9,8 @@ const config = withTurborepoManagedCache(
   withNativeWind(getDefaultConfig(__dirname), {
     input: "./src/styles.css",
     configPath: "./tailwind.config.ts",
+    // Make the default em on mobile to be 16px
+    inlineRem: false,
   }),
 )
 module.exports = config
