@@ -47,24 +47,24 @@ export default function Index() {
       return
     }
 
-    if (!authMe.data.profile.completedOnboarding) {
-      const redirectToOnboarding = async () => {
-        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
-        router.push("/onboarding")
-      }
-      void redirectToOnboarding()
-      return
-    }
-
     // Organization
     if (organizationMe.isLoading || !organizationMe.data) return
 
-    // At this point, the user has a profile and has completed onboarding, so they must have an organization.
+    // At this point, the user has a profile, so they must have an organization.
     if (!organizationMe.data[0]) {
       throw new Error("No organization found. Please contact support.")
     }
 
     updateCurrentOrganizationId(organizationMe.data[0].id)
+
+    if (!authMe.data.profile.completedOnboarding) {
+      const redirectToOnboarding = async () => {
+        await Promise.all([queryClient.prefetchQuery(trpc.profile.me.queryOptions()), queryClient.prefetchQuery(trpc.organization.me.queryOptions())])
+        router.push("/onboarding")
+      }
+      void redirectToOnboarding()
+      return
+    }
 
     // The user has a profile and has completed onboarding
     const redirectToMain = async () => {
