@@ -8,6 +8,7 @@ import { cssInterop } from "nativewind"
 import { twMerge } from "tailwind-merge"
 
 import { queryClient, trpc } from "./api"
+import { useUserStore } from "./zustand/user-store"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -38,10 +39,15 @@ export const interopAllLucideIcons = () => {
 }
 
 export const prefetchMain = async () => {
-  await Promise.all([
-    queryClient.prefetchQuery(trpc.profile.me.queryOptions()),
-    queryClient.prefetchQuery(trpc.organization.me.queryOptions()),
-    queryClient.prefetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
-    queryClient.prefetchQuery(trpc.roleplayScenario.getAll.queryOptions()),
+  const updateCurrentOrganizationId = useUserStore.getState().updateCurrentOrganizationId
+
+  const [_profileMe, organizationMe, _streakDays, _roleplayScenarios] = await Promise.all([
+    queryClient.fetchQuery(trpc.profile.me.queryOptions()),
+    queryClient.fetchQuery(trpc.organization.me.queryOptions()),
+    queryClient.fetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
+    queryClient.fetchQuery(trpc.roleplayScenario.getAll.queryOptions()),
   ])
+
+  if (!organizationMe[0]) throw new Error("No organization found")
+  updateCurrentOrganizationId(organizationMe[0].id)
 }
