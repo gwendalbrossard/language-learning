@@ -33,12 +33,10 @@ const CreateProfile: FC = () => {
     resolver: zodResolver(ZProfileCreateSchema),
   })
 
-  console.log(form.formState.errors)
-
   const profileCreate = useMutation(
     trpc.profile.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
+        await Promise.all([queryClient.prefetchQuery(trpc.profile.me.queryOptions()), queryClient.prefetchQuery(trpc.organization.me.queryOptions())])
         router.replace("/onboarding")
       },
     }),
