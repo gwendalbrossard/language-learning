@@ -100,9 +100,11 @@ const FinalCustomPlan: FC<StepProps> = ({ onBack, progress }) => {
   )
 
   const handleSubmit = async () => {
-    const { drinkingTriggers, relationshipStatus, reasonsForChange } = form.getValues()
+    const { drinkingTriggers, relationshipStatus, reasonsForChange, learningLanguage, learningLanguageLevel } = form.getValues()
 
     await profileOnboard.mutateAsync({
+      learningLanguage,
+      learningLanguageLevel,
       drinkingTriggers,
       relationshipStatus,
       reasonsForChange,

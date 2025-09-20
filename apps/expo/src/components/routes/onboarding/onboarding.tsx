@@ -21,6 +21,8 @@ import FinalizingCustomPlan from "./steps/finalizing-custom-plan"
 import FutureResults from "./steps/future-results"
 import GetToKnowYou from "./steps/get-to-know-you"
 import Intentions from "./steps/intentions"
+import LearningLanguage from "./steps/learning-language"
+import LearningLanguageLevel from "./steps/learning-language-level"
 import Notifications from "./steps/notifications"
 import Rating from "./steps/rating"
 import ReasonsForChange from "./steps/reasons-for-change"
@@ -31,6 +33,8 @@ import VisualizeYourProgress from "./steps/visualize-your-progress"
 
 export enum OnboardingStep {
   GET_TO_KNOW_YOU = "GET_TO_KNOW_YOU",
+  LEARNING_LANGUAGE = "LEARNING_LANGUAGE",
+  LEARNING_LANGUAGE_LEVEL = "LEARNING_LANGUAGE_LEVEL",
   EXPLORE_HABITS = "EXPLORE_HABITS",
   STRUGGLE_TO_CHANGE = "STRUGGLE_TO_CHANGE",
   DRINKING_TRIGGERS = "DRINKING_TRIGGERS",
@@ -57,6 +61,14 @@ const onboardingFlow: Record<OnboardingStep, StepConfig> = {
   // Who are you?
   [OnboardingStep.GET_TO_KNOW_YOU]: {
     component: GetToKnowYou,
+    nextStep: OnboardingStep.LEARNING_LANGUAGE,
+  },
+  [OnboardingStep.LEARNING_LANGUAGE]: {
+    component: LearningLanguage,
+    nextStep: OnboardingStep.LEARNING_LANGUAGE_LEVEL,
+  },
+  [OnboardingStep.LEARNING_LANGUAGE_LEVEL]: {
+    component: LearningLanguageLevel,
     nextStep: OnboardingStep.RELATIONSHIP_STATUS,
   },
   [OnboardingStep.RELATIONSHIP_STATUS]: {
@@ -150,10 +162,7 @@ const Onboarding: FC = () => {
   }, [step])
 
   const form = useForm<TProfileOnboardSchema>({
-    defaultValues: {
-      reasonsForChange: [],
-      drinkingTriggers: [],
-    },
+    defaultValues: { reasonsForChange: [], drinkingTriggers: [] },
     mode: "all",
     resolver: zodResolver(ZProfileOnboardSchema),
   })
