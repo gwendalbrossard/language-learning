@@ -1,9 +1,12 @@
 import type { FC } from "react"
-import { View, Text } from "react-native"
+import type { ImageSourcePropType } from "react-native"
+import { Image, View } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
+// @ts-expect-error - It's valid
+import LockRoutineImage from "./images/lock-routine.png"
 
 const LockRoutine: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const handleContinue = () => {
@@ -16,9 +19,7 @@ const LockRoutine: FC<StepProps> = ({ onContinue, onBack, progress }) => {
 
       <Step.Header className="flex-1 gap-4">
         <Step.HeaderIllustration>
-          <Text className="text-center text-lg text-muted-foreground">
-            [Illustration showing daily routine and consistency]
-          </Text>
+          <Image source={LockRoutineImage as unknown as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />
         </Step.HeaderIllustration>
 
         <View>
@@ -26,7 +27,7 @@ const LockRoutine: FC<StepProps> = ({ onContinue, onBack, progress }) => {
         </View>
         <View>
           <Step.HeaderDescription className="text-lg">
-            Short daily sessions beat long study plans. Choose a rhythm you can keep—your first conversation is minutes away.
+            Short daily sessions beat long study plans. Choose a rhythm you can keep so your first conversation is minutes away.
           </Step.HeaderDescription>
         </View>
       </Step.Header>

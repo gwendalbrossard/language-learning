@@ -99,7 +99,7 @@ const Header = React.forwardRef<ViewRef, SlottableViewProps>(({ className, ...pr
 Header.displayName = "Header"
 
 const HeaderIllustration = React.forwardRef<ViewRef, SlottableViewProps>(({ className, ...props }, ref) => {
-  return <View ref={ref} className={cn("relative mb-6 h-[40%] w-full", className)} {...props} />
+  return <View ref={ref} className={cn("relative mb-6 h-[45%] w-full", className)} {...props} />
 })
 HeaderIllustration.displayName = "HeaderIllustration"
 

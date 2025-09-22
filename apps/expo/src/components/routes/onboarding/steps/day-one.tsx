@@ -1,9 +1,12 @@
 import type { FC } from "react"
-import { View, Text } from "react-native"
+import type { ImageSourcePropType } from "react-native"
+import { Image, View } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
+// @ts-expect-error - It's valid
+import DayOneImage from "./images/day-one.png"
 
 const DayOne: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const handleContinue = () => {
@@ -16,13 +19,11 @@ const DayOne: FC<StepProps> = ({ onContinue, onBack, progress }) => {
 
       <Step.Header className="flex-1 gap-4">
         <Step.HeaderIllustration>
-          <Text className="text-center text-lg text-muted-foreground">
-            [Motivational illustration showing person starting their language learning journey]
-          </Text>
+          <Image source={DayOneImage as unknown as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />
         </Step.HeaderIllustration>
 
         <View>
-          <Step.HeaderTitle className="text-2xl">Make today your Day 1</Step.HeaderTitle>
+          <Step.HeaderTitle className="text-2xl">Master a language starting today</Step.HeaderTitle>
         </View>
         <View>
           <Step.HeaderDescription className="text-lg">

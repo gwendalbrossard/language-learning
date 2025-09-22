@@ -1,23 +1,24 @@
 import type { FC } from "react"
+import type { ImageSourcePropType } from "react-native"
 import { useState } from "react"
 import * as StoreReview from "expo-store-review"
-import { HeartIcon, MoveRightIcon, StarIcon } from "lucide-react-native"
 import { usePostHog } from "posthog-react-native"
-import { Text, View } from "react-native"
+import { Image } from "react-native"
 
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
-import Icon from "~/components/common/svg/icon"
 import * as Button from "~/ui/button"
+// @ts-expect-error - It's valid
+import RatingImage from "./images/rating.png"
 
 const Rating: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const [isRequestingReview, setIsRequestingReview] = useState(false)
-  const [reviewCompleted, setReviewCompleted] = useState(false)
   const posthog = usePostHog()
 
   const handleRating = async () => {
+    posthog.capture(POSTHOG_EVENTS["onboarding rating completed"], { result: "requested" })
     setIsRequestingReview(true)
 
     // Trigger the review request
@@ -25,20 +26,15 @@ const Rating: FC<StepProps> = ({ onContinue, onBack, progress }) => {
       await StoreReview.requestReview()
     }
 
-    // Set a 1 second timeout before changing the button text
+    // Set a 2 seconds timeout before changing the button text
     setTimeout(() => {
       setIsRequestingReview(false)
-      setReviewCompleted(true)
-    }, 1000)
+      onContinue()
+    }, 2000)
   }
 
   const handleSkip = () => {
     posthog.capture(POSTHOG_EVENTS["onboarding rating completed"], { result: "skipped" })
-    onContinue()
-  }
-
-  const handleContinue = () => {
-    posthog.capture(POSTHOG_EVENTS["onboarding rating completed"], { result: "requested" })
     onContinue()
   }
 
@@ -51,37 +47,17 @@ const Rating: FC<StepProps> = ({ onContinue, onBack, progress }) => {
         <Step.HeaderDescription>We're a small team doing our best to build the best app to help you learn languages!</Step.HeaderDescription>
       </Step.Header>
 
-      <Step.Body>
-        <View className="flex flex-col items-center gap-6">
-          <Icon width={192} height={192} />
-
-          <View className="flex flex-col items-center gap-2">
-            <View className="flex flex-row gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <StarIcon size={32} key={star} fill="#facc15" stroke="#facc15" />
-              ))}
-            </View>
-            <Text className="text-sm text-neutral-500">Thousands of learners love us</Text>
-          </View>
-        </View>
+      <Step.Body className="items-center justify-center">
+        <Image source={RatingImage as unknown as ImageSourcePropType} className="h-[70%] w-full" resizeMode="contain" />
       </Step.Body>
 
       <Step.Bottom>
-        {!reviewCompleted && (
-          <Button.Root size="md" variant="ghost" onPress={handleSkip} disabled={isRequestingReview} className="w-full opacity-50">
-            <Button.Text>Skip rating</Button.Text>
-          </Button.Root>
-        )}
-        <Button.Root
-          size="lg"
-          variant="primary"
-          onPress={reviewCompleted ? handleContinue : handleRating}
-          loading={isRequestingReview}
-          disabled={isRequestingReview}
-          className="w-full"
-        >
-          <Button.Text>{reviewCompleted ? "Continue" : "Give us a rating"}</Button.Text>
-          {reviewCompleted ? <Button.Icon icon={MoveRightIcon} /> : <HeartIcon className="fill-white text-white" size={24} />}
+        <Button.Root size="md" variant="ghost" onPress={handleSkip} disabled={isRequestingReview} className="w-full opacity-50">
+          <Button.Text>Skip rating</Button.Text>
+        </Button.Root>
+
+        <Button.Root size="lg" variant="primary" onPress={handleRating} loading={isRequestingReview} disabled={isRequestingReview} className="w-full">
+          <Button.Text>Give us a rating</Button.Text>
         </Button.Root>
       </Step.Bottom>
     </Step.Container>

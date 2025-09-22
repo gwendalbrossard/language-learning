@@ -1,9 +1,10 @@
 import type { FC } from "react"
+import type { ImageSourcePropType } from "react-native"
 import { router } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { usePostHog } from "posthog-react-native"
 import { useFormContext } from "react-hook-form"
-import { Text, View } from "react-native"
+import { Image, View } from "react-native"
 
 import type { TProfileOnboardSchema } from "@acme/validators"
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
@@ -13,6 +14,8 @@ import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
 import { trpc } from "~/utils/api"
 import { prefetchMain } from "~/utils/utils"
+// @ts-expect-error - It's valid
+import ReadyToStartImage from "./images/ready-to-start.png"
 
 const ReadyToStart: FC<StepProps> = ({ onBack, progress }) => {
   const form = useFormContext<TProfileOnboardSchema>()
@@ -66,7 +69,7 @@ const ReadyToStart: FC<StepProps> = ({ onBack, progress }) => {
 
       <Step.Header className="flex-1 gap-4">
         <Step.HeaderIllustration>
-          <Text className="text-muted-foreground text-center text-lg">[Success checkmark and conversation bubble illustration]</Text>
+          <Image source={ReadyToStartImage as unknown as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />
         </Step.HeaderIllustration>
 
         <View>

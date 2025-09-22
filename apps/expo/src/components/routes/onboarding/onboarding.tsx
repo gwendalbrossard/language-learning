@@ -12,17 +12,18 @@ import { ZProfileOnboardSchema } from "@acme/validators"
 import type { StepProps } from "~/components/common/step"
 import { queryClient } from "~/utils/api"
 import { authClient } from "~/utils/auth"
-import PracticeDiscovery from "./steps/practice-discovery"
 import CurrentPracticeStep from "./steps/current-practice"
 import DailyCommitmentStep from "./steps/daily-commitment"
 import DayOne from "./steps/day-one"
+import ExpectedResults from "./steps/expected-results"
 import FourteenDays from "./steps/fourteen-days"
 import LearningLanguage from "./steps/learning-language"
 import LearningLanguageLevel from "./steps/learning-language-level"
 import LearningReasonStep from "./steps/learning-reason"
 import LockRoutine from "./steps/lock-routine"
-import PersonalizingPlan from "./steps/personalizing-plan"
 import Notifications from "./steps/notifications"
+import PersonalizingPlan from "./steps/personalizing-plan"
+import PracticeDiscovery from "./steps/practice-discovery"
 import ProgressGoalStep from "./steps/progress-goal"
 import Rating from "./steps/rating"
 import ReadyToStart from "./steps/ready-to-start"
@@ -45,6 +46,7 @@ export enum OnboardingStep {
   FOURTEEN_DAYS = "FOURTEEN_DAYS",
   RATING = "RATING",
   PERSONALIZING_PLAN = "PERSONALIZING_PLAN",
+  EXPECTED_RESULTS = "EXPECTED_RESULTS",
   READY_TO_START = "READY_TO_START",
 }
 
@@ -108,6 +110,10 @@ const onboardingFlow: Record<OnboardingStep, StepConfig> = {
   },
   [OnboardingStep.RATING]: {
     component: Rating,
+    nextStep: OnboardingStep.EXPECTED_RESULTS,
+  },
+  [OnboardingStep.EXPECTED_RESULTS]: {
+    component: ExpectedResults,
     nextStep: OnboardingStep.PERSONALIZING_PLAN,
   },
   [OnboardingStep.PERSONALIZING_PLAN]: {

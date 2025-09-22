@@ -1,13 +1,16 @@
 import type { FC } from "react"
+import type { ImageSourcePropType } from "react-native"
 import * as ExpoNotifications from "expo-notifications"
 import { usePostHog } from "posthog-react-native"
-import { Text } from "react-native"
+import { Image } from "react-native"
 
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
+// @ts-expect-error - It's valid
+import NotificationsImage from "./images/notifications.png"
 
 const Notifications: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const posthog = usePostHog()
@@ -42,9 +45,7 @@ const Notifications: FC<StepProps> = ({ onContinue, onBack, progress }) => {
       </Step.Header>
 
       <Step.Body className="items-center justify-center">
-        <Text className="text-center text-lg text-muted-foreground">
-          [Bell notification animation]
-        </Text>
+        <Image source={NotificationsImage as unknown as ImageSourcePropType} className="h-[70%] w-full" resizeMode="contain" />
       </Step.Body>
 
       <Step.Bottom>
