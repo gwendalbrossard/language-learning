@@ -28,7 +28,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
         if (ref && "current" in ref && ref.current) {
           ref.current.dismiss()
         }
-        await queryClient.prefetchQuery(
+        await queryClient.fetchQuery(
           trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: session.id, organizationId: currentOrganizationId }),
         )
         router.push(`/roleplay-session/${session.id}`)
@@ -66,7 +66,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
       onDismiss={onClose}
     >
       {scenario && (
-        <BottomSheetView className="h-full flex-1 justify-between px-4 pb-10 pt-2">
+        <BottomSheetView className="h-full flex-1 justify-between px-4 pt-2 pb-10">
           {/* Scenario Details */}
           <View className="flex flex-col gap-6">
             {/* Header */}

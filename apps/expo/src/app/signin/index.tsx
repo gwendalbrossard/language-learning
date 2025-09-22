@@ -82,7 +82,7 @@ const handleAuthSuccess = async (userInformation: UserInformation) => {
   if (!authMe.profile) {
     router.push("/create-profile")
   } else if (!authMe.profile.completedOnboarding) {
-    await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
+    await queryClient.fetchQuery(trpc.profile.me.queryOptions())
     router.push("/onboarding")
   } else {
     await prefetchMain()

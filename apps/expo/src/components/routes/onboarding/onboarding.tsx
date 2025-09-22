@@ -161,8 +161,8 @@ const Onboarding: FC = () => {
       posthog.capture(POSTHOG_EVENTS["onboarding abandoned"], {
         step,
       })
-      await queryClient.invalidateQueries()
       await authClient.signOut()
+      await queryClient.invalidateQueries()
       router.replace("/signin")
     } else {
       const currentStepIndex = Object.keys(onboardingFlow).indexOf(step)

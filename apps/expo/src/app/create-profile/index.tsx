@@ -36,7 +36,7 @@ const CreateProfile: FC = () => {
   const profileCreate = useMutation(
     trpc.profile.create.mutationOptions({
       onSuccess: async () => {
-        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
+        await queryClient.fetchQuery(trpc.profile.me.queryOptions())
         router.replace("/onboarding")
       },
     }),
@@ -77,7 +77,7 @@ const CreateProfile: FC = () => {
                 {form.formState.errors.name && <TextError>{form.formState.errors.name.message}</TextError>}
               </View>
 
-              <Text className="text-sm italic text-neutral-500">
+              <Text className="text-sm text-neutral-500 italic">
                 You'll stay completely anonymous — your name won't be visible to others.{"\n"}This helps personalize your experience.
               </Text>
             </View>

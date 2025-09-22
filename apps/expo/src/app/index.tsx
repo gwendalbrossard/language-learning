@@ -5,11 +5,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ActivityIndicator, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
-import type { RouterOutputs } from "~/utils/api"
 import Icon from "~/components/common/svg/icon"
 import { trpc } from "~/utils/api"
 import { prefetchMain } from "~/utils/utils"
-import { useUserStore } from "~/utils/zustand/user-store"
 
 const LoadingView: FC = () => (
   <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
@@ -21,19 +19,15 @@ const LoadingView: FC = () => (
 )
 
 export default function Index() {
-  const updateCurrentOrganizationId = useUserStore((state) => state.updateCurrentOrganizationId)
   const queryClient = useQueryClient()
-
   const router = useRouter()
 
   const authMe = useQuery(trpc.auth.me.queryOptions())
-
   const canQuery = authMe.data !== undefined && authMe.data.user !== null && authMe.data.profile !== null
-
   const profileMe = useQuery(trpc.profile.me.queryOptions(undefined, { enabled: canQuery }))
 
   useEffect(() => {
-    if (authMe.isLoading || !authMe.data) return
+    if (!authMe.data) return
 
     // User
     if (!authMe.data.user) {
@@ -48,8 +42,8 @@ export default function Index() {
 
     if (!authMe.data.profile.completedOnboarding) {
       const redirectToOnboarding = async () => {
-        await queryClient.prefetchQuery(trpc.profile.me.queryOptions())
-        router.push("/onboarding")
+        await queryClient.fetchQuery(trpc.profile.me.queryOptions())
+        router.replace("/onboarding")
       }
       void redirectToOnboarding()
       return
@@ -61,7 +55,7 @@ export default function Index() {
       router.replace("/main")
     }
     void redirectToMain()
-  }, [authMe, router, authMe.data, queryClient])
+  }, [authMe.data, router, queryClient])
 
   if (!authMe.data || !authMe.data.user || !authMe.data.profile || !profileMe.data) {
     return <LoadingView />
