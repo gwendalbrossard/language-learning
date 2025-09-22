@@ -12,7 +12,7 @@ import { ZProfileOnboardSchema } from "@acme/validators"
 import type { StepProps } from "~/components/common/step"
 import { queryClient } from "~/utils/api"
 import { authClient } from "~/utils/auth"
-import BuildMomentum from "./steps/build-momentum"
+import PracticeDiscovery from "./steps/practice-discovery"
 import CurrentPracticeStep from "./steps/current-practice"
 import DailyCommitmentStep from "./steps/daily-commitment"
 import DayOne from "./steps/day-one"
@@ -71,7 +71,7 @@ const onboardingFlow: Record<OnboardingStep, StepConfig> = {
     nextStep: OnboardingStep.BUILD_MOMENTUM,
   },
   [OnboardingStep.BUILD_MOMENTUM]: {
-    component: BuildMomentum,
+    component: PracticeDiscovery,
     nextStep: OnboardingStep.CURRENT_PRACTICE,
   },
   [OnboardingStep.CURRENT_PRACTICE]: {

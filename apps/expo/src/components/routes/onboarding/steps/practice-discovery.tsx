@@ -1,11 +1,14 @@
 import type { FC } from "react"
-import { View, Text } from "react-native"
+import type { ImageSourcePropType } from "react-native"
+import { Image, View } from "react-native"
 
 import type { StepProps } from "~/components/common/step"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
+// @ts-expect-error - It's valid
+import PracticeDiscoveryImage from "./images/practice-discovery.png"
 
-const BuildMomentum: FC<StepProps> = ({ onContinue, onBack, progress }) => {
+const PracticeDiscovery: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const handleContinue = () => {
     onContinue()
   }
@@ -16,17 +19,15 @@ const BuildMomentum: FC<StepProps> = ({ onContinue, onBack, progress }) => {
 
       <Step.Header className="flex-1 gap-4">
         <Step.HeaderIllustration>
-          <Text className="text-center text-lg text-muted-foreground">
-            [Illustration showing learning momentum and progress]
-          </Text>
+          <Image source={PracticeDiscoveryImage as unknown as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />
         </Step.HeaderIllustration>
 
         <View>
-          <Step.HeaderTitle className="text-2xl">Build momentum you can feel</Step.HeaderTitle>
+          <Step.HeaderTitle className="text-2xl">Tell us about your current practice</Step.HeaderTitle>
         </View>
         <View>
           <Step.HeaderDescription className="text-lg">
-            Tell us how you learn and where you get stuck—so your first sessions feel achievable and motivating.
+            Tell us how you learn and where you get stuck so your first sessions feel achievable and motivating.
           </Step.HeaderDescription>
         </View>
       </Step.Header>
@@ -40,4 +41,4 @@ const BuildMomentum: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   )
 }
 
-export default BuildMomentum
+export default PracticeDiscovery
