@@ -48,11 +48,11 @@ const SignIn: FC = () => {
           <Animated.View entering={FadeIn.duration(800).delay(1400)}>
             <Text className="text-center text-xs text-neutral-500">
               By continuing, you agree to our{" "}
-              <Text className="underline" onPress={() => Linking.openURL("https://daybydayapp.com/terms")}>
+              <Text className="underline" onPress={() => Linking.openURL("https://studyunfold.com/terms")}>
                 Terms of use
               </Text>{" "}
               and our{" "}
-              <Text className="underline" onPress={() => Linking.openURL("https://daybydayapp.com/privacy")}>
+              <Text className="underline" onPress={() => Linking.openURL("https://studyunfold.com/privacy")}>
                 Privacy policy
               </Text>
             </Text>

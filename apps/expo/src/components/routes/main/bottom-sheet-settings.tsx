@@ -81,7 +81,7 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
             size="md"
             variant="secondary"
             onPress={async () => {
-              await Linking.openURL("mailto:support@daybydayapp.com")
+              await Linking.openURL("mailto:support@studyunfold.com")
             }}
           >
             <Button.Icon icon={LifeBuoyIcon} />
@@ -119,14 +119,14 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
           <View className="flex flex-row justify-evenly">
             <Pressable
               onPress={async () => {
-                await Linking.openURL("https://daybydayapp.com/privacy")
+                await Linking.openURL("https://studyunfold.com/privacy")
               }}
             >
               <Text className="text-xs font-medium text-neutral-400">Privacy policy</Text>
             </Pressable>
             <Pressable
               onPress={async () => {
-                await Linking.openURL("https://daybydayapp.com/terms")
+                await Linking.openURL("https://studyunfold.com/terms")
               }}
             >
               <Text className="text-xs font-medium text-neutral-400">Terms of service</Text>

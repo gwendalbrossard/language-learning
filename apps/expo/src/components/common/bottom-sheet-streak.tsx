@@ -68,7 +68,7 @@ const BottomSheetStreak = forwardRef<BottomSheetModal, object>((_, ref) => {
           <View className="flex-1 justify-between">
             {/* Body */}
             <View className="items-center justify-center gap-3 pt-12">
-              <Rive url="https://assets.daybydayapp.com/rives/fire.riv" style={{ width: 150, height: 180 }} />
+              <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: 150, height: 180 }} />
 
               {/* Streak Count */}
               <View className="mb-8">
