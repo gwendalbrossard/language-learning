@@ -1,7 +1,7 @@
 import type { FC } from "react"
 import { Stack } from "expo-router"
 
-const SignInLayout: FC = () => {
+const AuthLayout: FC = () => {
   return (
     <Stack
       screenOptions={{
@@ -12,4 +12,4 @@ const SignInLayout: FC = () => {
   )
 }
 
-export default SignInLayout
+export default AuthLayout

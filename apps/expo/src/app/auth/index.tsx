@@ -15,7 +15,7 @@ import { queryClient, trpc } from "~/utils/api"
 import { authClient } from "~/utils/auth"
 import { prefetchMain } from "~/utils/utils"
 
-const SignIn: FC = () => {
+const Auth: FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col gap-8">
@@ -63,7 +63,7 @@ const SignIn: FC = () => {
   )
 }
 
-export default SignIn
+export default Auth
 
 type UserInformation = {
   first_name: string | undefined

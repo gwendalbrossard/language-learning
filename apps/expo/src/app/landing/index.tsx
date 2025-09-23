@@ -1,20 +1,14 @@
 import type { FC } from "react"
-import type { ImageSourcePropType } from "react-native"
 import { useEffect, useRef } from "react"
-import { useAssets } from "expo-asset"
 import { router } from "expo-router"
 import { Animated, Image, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import Logo from "~/components/common/svg/logo"
-// @ts-expect-error - It's valid
-import WelcomeImage from "~/components/routes/landing/images/welcome.png"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 
 const Landing: FC = () => {
-  const [assets, _error] = useAssets([WelcomeImage])
-
   const logoOpacity = useRef(new Animated.Value(0)).current
   const logoScale = useRef(new Animated.Value(0.9)).current
   const titleOpacity = useRef(new Animated.Value(0)).current
@@ -24,7 +18,7 @@ const Landing: FC = () => {
   const buttonOpacity = useRef(new Animated.Value(0)).current
 
   const onReadyToStart = () => {
-    router.push("/signin")
+    router.push("/auth")
   }
 
   useEffect(() => {
@@ -85,7 +79,7 @@ const Landing: FC = () => {
       <View className="flex-1 bg-white">
         {/* Illustrations Section */}
         <View className="relative mb-6 h-[40%] w-full">
-          {assets && assets[0] && <Image source={assets[0] as ImageSourcePropType} className="h-full w-full" resizeMode="contain" />}
+          <Image source={{ uri: "welcome" }} className="h-full w-full" resizeMode="contain" />
         </View>
 
         {/* Content Section */}

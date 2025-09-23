@@ -163,7 +163,7 @@ const Onboarding: FC = () => {
       })
       await authClient.signOut()
       await queryClient.invalidateQueries()
-      router.replace("/signin")
+      router.replace("/auth")
     } else {
       const currentStepIndex = Object.keys(onboardingFlow).indexOf(step)
       const previousStep = Object.keys(onboardingFlow)[currentStepIndex - 1] as OnboardingStep

@@ -28,7 +28,7 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
     trpc.user.delete.mutationOptions({
       onSuccess: async () => {
         Alert.alert("Account deleted", "Your account has been deleted. You will be signed out.")
-        router.replace("/signin")
+        router.replace("/auth")
         await authClient.signOut()
         await queryClient.invalidateQueries()
       },
@@ -107,7 +107,7 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
             size="md"
             variant="secondary"
             onPress={async () => {
-              router.replace("/signin")
+              router.replace("/auth")
               await authClient.signOut()
               await queryClient.invalidateQueries()
             }}
