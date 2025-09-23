@@ -4,7 +4,6 @@ import { CodedError } from "expo-modules-core"
 import { router } from "expo-router"
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 import { Alert, Linking, Platform, Text, View } from "react-native"
-import Animated, { FadeIn, FadeInRight } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import Apple from "~/components/common/svg/apple"
@@ -25,27 +24,23 @@ const Auth: FC = () => {
           <View className="flex flex-col items-center gap-8">
             <Logo width={200} height={48} />
             <View className="flex flex-col items-center gap-3">
-              <Animated.Text entering={FadeInRight.duration(600).delay(200)} className="text-center text-3xl font-medium">
-                Become a better you
-              </Animated.Text>
-              <Animated.Text entering={FadeIn.duration(800).delay(800)} className="text-center text-base text-neutral-600">
-                Join a thriving community of people who are changing their drinking habits.
-              </Animated.Text>
+              <Text className="text-center text-3xl font-medium">Master a new language</Text>
+              <Text className="text-center text-base text-neutral-600">Practice conversations with AI tutors and build confidence naturally.</Text>
             </View>
-          </View>
-
-          {/* Sign in buttons */}
-          <View className="w-full">
-            <Animated.View entering={FadeIn.duration(800).delay(1400)} className="flex w-full flex-col items-center justify-center gap-3">
-              <GoogleSignIn />
-              <AppleSignIn />
-            </Animated.View>
           </View>
         </View>
 
-        {/* Terms and conditions */}
-        <View className="mx-auto w-[75%] items-center">
-          <Animated.View entering={FadeIn.duration(800).delay(1400)}>
+        {/* Bottom */}
+        <View className="flex flex-col items-center justify-center gap-6">
+          {/* Sign in buttons */}
+
+          <View className="flex w-full flex-col items-center justify-center gap-3">
+            <GoogleSignIn />
+            <AppleSignIn />
+          </View>
+
+          {/* Terms and conditions */}
+          <View className="mx-auto w-[75%] items-center">
             <Text className="text-center text-xs text-neutral-500">
               By continuing, you agree to our{" "}
               <Text className="underline" onPress={() => Linking.openURL("https://studyunfold.com/terms")}>
@@ -56,7 +51,7 @@ const Auth: FC = () => {
                 Privacy policy
               </Text>
             </Text>
-          </Animated.View>
+          </View>
         </View>
       </View>
     </SafeAreaView>
