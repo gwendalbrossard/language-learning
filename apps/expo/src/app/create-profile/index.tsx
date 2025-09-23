@@ -54,7 +54,7 @@ const CreateProfile: FC = () => {
             onBack={async () => {
               await queryClient.invalidateQueries(trpc.profile.me.queryFilter())
               await authClient.signOut()
-              router.replace("/landing")
+              router.replace("/auth")
             }}
             progress={0}
           />
@@ -77,7 +77,7 @@ const CreateProfile: FC = () => {
                 {form.formState.errors.name && <TextError>{form.formState.errors.name.message}</TextError>}
               </View>
 
-              <Text className="text-sm text-neutral-500 italic">
+              <Text className="text-sm italic text-neutral-500">
                 You'll stay completely anonymous — your name won't be visible to others.{"\n"}This helps personalize your experience.
               </Text>
             </View>

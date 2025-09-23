@@ -31,7 +31,7 @@ export default function Index() {
 
     // User
     if (!authMe.data.user) {
-      router.replace("/landing")
+      router.replace("/auth")
       return
     }
 
