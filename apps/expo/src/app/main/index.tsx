@@ -3,7 +3,7 @@ import type { FC } from "react"
 import { useEffect, useRef } from "react"
 import { Stack } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
-import { CalendarIcon, SettingsIcon } from "lucide-react-native"
+import { SettingsIcon } from "lucide-react-native"
 import { usePostHog } from "posthog-react-native"
 import { Platform, Pressable, View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
@@ -27,7 +27,6 @@ const Main: FC = () => {
   const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
   const bottomSheetPaywallRef = useRef<BottomSheetModal>(null)
   const bottomSheetStreakRef = useBottomSheetsStore((state) => state.bottomSheetStreakRef)
-  const bottomSheetCalendarRef = useRef<BottomSheetModal>(null)
 
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   const profile = profileMe.data
@@ -85,12 +84,6 @@ const Main: FC = () => {
                 className="flex flex-row items-center gap-2 rounded-md border border-neutral-400 px-2 py-1"
               >
                 <Text className="text-xs font-semibold text-neutral-500">🔥 {profile.currentStreak}</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => bottomSheetCalendarRef.current?.present()}
-                className="flex flex-row items-center gap-2 rounded-md border border-neutral-400 px-2 py-1"
-              >
-                <CalendarIcon size={16} className="text-neutral-500" />
               </Pressable>
               <Pressable onPress={() => bottomSheetSettingsRef.current?.present()} className="relative">
                 <SettingsIcon size={24} className="text-neutral-500" />
