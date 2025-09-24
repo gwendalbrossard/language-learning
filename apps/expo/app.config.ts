@@ -64,5 +64,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         iosUrlScheme: "com.googleusercontent.apps.253659385011-etsd109cgtifr93hapbodc00f73td2b7",
       },
     ],
+    [
+      "expo-notifications",
+      {
+        enableBackgroundRemoteNotifications: false,
+      },
+    ],
   ],
 })
