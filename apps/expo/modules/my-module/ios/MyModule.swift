@@ -207,7 +207,7 @@
           // Don't start if already running
           guard playbackLevelTimer == nil else { return }
 
-          playbackLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+          playbackLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
               self?.updatePlaybackLevel()
           }
       }
@@ -356,7 +356,7 @@
               // Don't start if already running
               guard self?.recordingLevelTimer == nil else { return }
 
-              self?.recordingLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+              self?.recordingLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
                   self?.updateRecordingLevel()
               }
           }
