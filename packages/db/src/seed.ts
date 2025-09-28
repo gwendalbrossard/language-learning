@@ -119,7 +119,15 @@ async function seed() {
       for (const scenario of scenarios) {
         const created = await prisma.roleplayScenario.create({
           data: {
-            ...scenario,
+            emoji: scenario.emoji,
+            title: scenario.title,
+            assistantRole: scenario.assistantRole,
+            userRole: scenario.userRole,
+            description: scenario.description,
+            prompt: scenario.prompt,
+            difficulty: scenario.difficulty,
+            isPublic: scenario.isPublic,
+
             categoryId: createdCategory.id,
           },
         })
