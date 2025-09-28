@@ -66,10 +66,10 @@ const FilterSection = ({ title, children }: FilterSectionProps) => {
 }
 
 type Props = {
-  categories: RouterOutputs["roleplayCategory"]["getAll"][number][]
-  selectedCategory: RouterOutputs["roleplayCategory"]["getAll"][number] | null
+  categories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]
+  selectedCategory: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null
   selectedDifficulty: number | null
-  onCategoryChange: (category: RouterOutputs["roleplayCategory"]["getAll"][number] | null) => void
+  onCategoryChange: (category: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null) => void
   onDifficultyChange: (difficulty: number | null) => void
   filteredCount: number
 }

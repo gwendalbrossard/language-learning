@@ -11,37 +11,41 @@ import * as Button from "~/ui/button"
 import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
+import { useUserStore } from "~/utils/zustand/user-store"
 import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario-details"
 import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
 
 const RoleplayScenarios: FC = () => {
-  const roleplayScenarioGetAll = useQuery(trpc.roleplayScenario.getAll.queryOptions())
-  if (!roleplayScenarioGetAll.data) throw new Error("Roleplay scenarios not found")
+  const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
+  if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
-  const roleplayCategoryGetAll = useQuery(trpc.roleplayCategory.getAll.queryOptions())
-  if (!roleplayCategoryGetAll.data) throw new Error("Roleplay categories not found")
+  const profileRoleplayScenarioGetAll = useQuery(trpc.profile.roleplayScenario.getAll.queryOptions({ organizationId: currentOrganizationId }))
+  if (!profileRoleplayScenarioGetAll.data) throw new Error("Roleplay scenarios not found")
+
+  const profileRoleplayCategoryGetAll = useQuery(trpc.profile.roleplayCategory.getAll.queryOptions({ organizationId: currentOrganizationId }))
+  if (!profileRoleplayCategoryGetAll.data) throw new Error("Roleplay categories not found")
 
   // Bottom sheet refs
   const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
   const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
-  const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["roleplayCategory"]["getAll"][number] | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
 
   // Selected scenario state
-  const [selectedScenario, setSelectedScenario] = useState<RouterOutputs["roleplayScenario"]["getAll"][number] | null>(null)
+  const [selectedScenario, setSelectedScenario] = useState<RouterOutputs["profile"]["roleplayScenario"]["getAll"][number] | null>(null)
 
   // Filter scenarios based on selected filters
   const filteredScenarios = useMemo(() => {
-    return roleplayScenarioGetAll.data.filter((scenario) => {
+    return profileRoleplayScenarioGetAll.data.filter((scenario) => {
       const categoryMatch = !selectedCategory || scenario.category.id === selectedCategory.id
       const difficultyMatch = !selectedDifficulty || scenario.difficulty === selectedDifficulty
       return categoryMatch && difficultyMatch
     })
-  }, [roleplayScenarioGetAll.data, selectedCategory, selectedDifficulty])
+  }, [profileRoleplayScenarioGetAll.data, selectedCategory, selectedDifficulty])
 
-  const handleRoleplayScenarioPress = (scenario: RouterOutputs["roleplayScenario"]["getAll"][number]) => {
+  const handleRoleplayScenarioPress = (scenario: RouterOutputs["profile"]["roleplayScenario"]["getAll"][number]) => {
     setSelectedScenario(scenario)
   }
 
@@ -115,7 +119,7 @@ const RoleplayScenarios: FC = () => {
 
       <BottomSheetRoleplayScenarioFilters
         ref={roleplayScenarioFiltersBottomSheetRef}
-        categories={roleplayCategoryGetAll.data}
+        categories={profileRoleplayCategoryGetAll.data}
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
         onCategoryChange={setSelectedCategory}
