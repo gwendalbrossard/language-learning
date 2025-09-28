@@ -8,11 +8,11 @@ import { ZProfileRoleplayScenarioCreateSchema } from "@acme/validators"
 import { organizationProcedure } from "../../../trpc"
 
 const ZRoleplayScenarioGenerateSchema = z.object({
-  emoji: z.string().describe("A single emoji that represents the roleplay scenario"),
   title: z.string().describe("A clear, descriptive title for the roleplay scenario"),
   prompt: z
     .string()
     .describe("Detailed instructions for the AI assistant on how to roleplay the character, including personality, behavior, and conversation style"),
+  emoji: z.string().describe("A single emoji that represents the roleplay scenario"),
   difficulty: z.number().min(1).max(3).describe("Difficulty level from 1-3 (1 being easiest, 3 being hardest)"),
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
@@ -65,9 +65,6 @@ ${JSON.stringify(
 = TASK =
 Generate a complete ORAL roleplay scenario with the following components:
 
-== Emoji ==
-Choose a single emoji that best represents the scenario or setting.
-
 == Title ==
 Create a clear, descriptive title that captures the essence of the ORAL roleplay scenario.
 
@@ -82,6 +79,9 @@ Write detailed instructions for the AI assistant on how to roleplay the characte
 - Natural conversational flow, including typical oral discourse markers
 - Patience with pronunciation, hesitations, and speaking pace
 - Use of everyday spoken expressions and colloquialisms appropriate to the scenario
+
+== Emoji ==
+Choose a single emoji that best represents the scenario or setting.
 
 == Difficulty ==
 Assess the difficulty level (1-3, with 1 being the easiest, 3 being the hardest) for ORAL communication based on:
