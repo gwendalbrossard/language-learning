@@ -1,11 +1,20 @@
 model RoleplayScenario {
-  id           String @id @default(cuid())
-  emoji        String
-  title        String
-  description  String
-  instructions String
-  category     String
-  difficulty   Int
+  id            String  @id @default(cuid())
+  emoji         String
+  title         String
+  assistantRole String
+  userRole      String
+  description   String
+  prompt        String
+  isPublic      Boolean
+
+  difficulty RoleplayDifficulty
+
+  categoryId String
+  category   RoleplayCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  profileId String?
+  profile   Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -36,7 +45,6 @@ model RoleplaySession {
   messages RoleplaySessionMessage[]
 
   @@index([profileId])
-  @@index([profileId, scenarioId])
   @@index([organizationId])
   @@map("roleplay_session")
 }
@@ -64,4 +72,27 @@ enum RoleplaySessionMessageRole {
   SYSTEM
 
   @@map("openai_role")
+}
+
+model RoleplayCategory {
+  id    String @id @default(cuid())
+  emoji String
+  name  String
+
+  subCategories    RoleplayCategory[] @relation("SubToParent")
+  parentCategory   RoleplayCategory?  @relation("SubToParent", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  parentCategoryId String?
+
+  scenarios RoleplayScenario[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roleplay_category")
+}
+
+enum RoleplayDifficulty {
+  EASY
+  MEDIUM
+  HARD
 }
