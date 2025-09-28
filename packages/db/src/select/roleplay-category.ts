@@ -4,6 +4,7 @@ export const roleplayCategorySelect = Prisma.validator<Prisma.RoleplayCategorySe
   id: true,
   emoji: true,
   name: true,
+  isPublic: true,
 
   profileId: true,
   organizationId: true,

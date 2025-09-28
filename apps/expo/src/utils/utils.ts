@@ -41,14 +41,18 @@ export const interopAllLucideIcons = () => {
 export const prefetchMain = async () => {
   const updateCurrentOrganizationId = useUserStore.getState().updateCurrentOrganizationId
 
-  const [_profileMe, organizationMe, _streakDays, _roleplayScenarios] = await Promise.all([
+  const [_profileMe, organizationMe, _streakDays] = await Promise.all([
     queryClient.fetchQuery(trpc.profile.me.queryOptions()),
     queryClient.fetchQuery(trpc.organization.me.queryOptions()),
     queryClient.fetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
-    queryClient.fetchQuery(trpc.roleplayScenario.getAll.queryOptions()),
-    queryClient.fetchQuery(trpc.roleplayCategory.getAll.queryOptions()),
   ])
 
   if (!organizationMe[0]) throw new Error("No organization found")
-  updateCurrentOrganizationId(organizationMe[0].id)
+  const currentOrganizationId = organizationMe[0].id
+  updateCurrentOrganizationId(currentOrganizationId)
+
+  const [_roleplayScenarios, _roleplayCategories] = await Promise.all([
+    queryClient.fetchQuery(trpc.profile.roleplayScenario.getAll.queryOptions({ organizationId: currentOrganizationId })),
+    queryClient.fetchQuery(trpc.profile.roleplayCategory.getAll.queryOptions({ organizationId: currentOrganizationId })),
+  ])
 }
