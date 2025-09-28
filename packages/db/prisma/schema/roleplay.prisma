@@ -16,6 +16,9 @@ model RoleplayScenario {
   profileId String?
   profile   Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -75,13 +78,20 @@ enum RoleplaySessionMessageRole {
 }
 
 model RoleplayCategory {
-  id    String @id @default(cuid())
-  emoji String
-  name  String
+  id       String  @id @default(cuid())
+  emoji    String
+  name     String
+  isPublic Boolean
 
   subCategories    RoleplayCategory[] @relation("SubToParent")
   parentCategory   RoleplayCategory?  @relation("SubToParent", fields: [parentCategoryId], references: [id], onDelete: Cascade)
   parentCategoryId String?
+
+  profileId String?
+  profile   Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   scenarios RoleplayScenario[]
 

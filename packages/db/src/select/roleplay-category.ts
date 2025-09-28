@@ -5,6 +5,9 @@ export const roleplayCategorySelect = Prisma.validator<Prisma.RoleplayCategorySe
   emoji: true,
   name: true,
 
+  profileId: true,
+  organizationId: true,
+
   createdAt: true,
   updatedAt: true,
 })

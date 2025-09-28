@@ -8,9 +8,11 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members          Member[]
-  invitations      Invitation[]
-  roleplaySessions RoleplaySession[]
+  members            Member[]
+  invitations        Invitation[]
+  roleplaySessions   RoleplaySession[]
+  roleplayScenarios  RoleplayScenario[]
+  roleplayCategories RoleplayCategory[]
 
   @@map("organization")
 }

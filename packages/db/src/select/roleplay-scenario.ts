@@ -13,7 +13,9 @@ export const roleplayScenarioSelect = Prisma.validator<Prisma.RoleplayScenarioSe
   difficulty: true,
 
   category: { select: roleplayCategorySelect },
+
   profileId: true,
+  organizationId: true,
 
   createdAt: true,
   updatedAt: true,
