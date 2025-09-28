@@ -59,7 +59,7 @@ export const getResponseSuggestions = organizationProcedure
 
 CRITICAL: This is an ORAL conversation, not written communication. All suggestions must sound natural when spoken aloud and flow seamlessly in real-time dialogue.
 
-You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the instructions to follow or additional context for you to use in crafting your response.
+You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the prompt to follow or additional context for you to use in crafting your response.
 In AsciiDoc:
 - A level 1 title is formatted with one equals sign ("=") followed by a space. Example: "= Level 1 Title ="
 - A level 2 title is formatted with two equals signs ("==") followed by a space. Example: "== Level 2 Title =="
@@ -71,7 +71,7 @@ Only the AsciiDoc titles delimit the sections. Nothing else is used for this pur
 == Roleplay Details ==
 - Title: "${roleplaySession.scenario.title}"
 - Description: ${roleplaySession.scenario.description}
-- Instructions: ${roleplaySession.scenario.instructions}
+- Prompt: ${roleplaySession.scenario.prompt}
 
 == Conversation History ==
 ${conversationHistory}
