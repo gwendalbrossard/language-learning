@@ -14,7 +14,7 @@ import { queryClient, trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
 type Props = {
-  scenario: RouterOutputs["roleplayScenario"]["getAll"][number] | null
+  scenario: RouterOutputs["profile"]["roleplayScenario"]["getAll"][number] | null
   onClose: () => void
 }
 
@@ -66,7 +66,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
       onDismiss={onClose}
     >
       {scenario && (
-        <BottomSheetView className="h-full flex-1 justify-between px-4 pt-2 pb-10">
+        <BottomSheetView className="h-full flex-1 justify-between px-4 pb-10 pt-2">
           {/* Scenario Details */}
           <View className="flex flex-col gap-6">
             {/* Header */}

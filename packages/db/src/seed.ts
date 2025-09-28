@@ -6,6 +6,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
     category: {
       emoji: "🏠",
       name: "Daily Life",
+      isPublic: true,
     },
     scenarios: [
       {
@@ -38,6 +39,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
     category: {
       emoji: "🏥",
       name: "Healthcare",
+      isPublic: true,
     },
     scenarios: [
       {
@@ -57,6 +59,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
     category: {
       emoji: "✈️",
       name: "Travel",
+      isPublic: true,
     },
     scenarios: [
       {
@@ -76,6 +79,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
     category: {
       emoji: "💼",
       name: "Professional",
+      isPublic: true,
     },
     scenarios: [
       {
