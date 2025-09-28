@@ -8,7 +8,7 @@ import { ZProfileRoleplaySessionGetResponseSuggestionsSchema } from "@acme/valid
 
 import { organizationProcedure } from "../../../trpc"
 
-const responseSuggestionsSchema = z.object({
+const ZResponseSuggestionsSchema = z.object({
   suggestions: z
     .array(
       z.object({
@@ -137,7 +137,7 @@ Generate responses that are practical, educational, and contextually perfect for
     const result = await generateObject({
       model: azure("gpt-4o-mini"),
       schemaName: "responseSuggestions",
-      schema: responseSuggestionsSchema,
+      schema: ZResponseSuggestionsSchema,
       prompt: prompt,
       temperature: 0.4,
     })
