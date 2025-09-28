@@ -1,5 +1,5 @@
 import { Prisma } from "../../generated/client"
-import { roleplayCategorySelect } from "./category"
+import { roleplayCategorySelect } from "./roleplay-category"
 
 export const roleplayScenarioSelect = Prisma.validator<Prisma.RoleplayScenarioSelect>()({
   id: true,

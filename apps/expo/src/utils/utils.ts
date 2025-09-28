@@ -46,6 +46,7 @@ export const prefetchMain = async () => {
     queryClient.fetchQuery(trpc.organization.me.queryOptions()),
     queryClient.fetchQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined })),
     queryClient.fetchQuery(trpc.roleplayScenario.getAll.queryOptions()),
+    queryClient.fetchQuery(trpc.roleplayCategory.getAll.queryOptions()),
   ])
 
   if (!organizationMe[0]) throw new Error("No organization found")
