@@ -121,7 +121,10 @@ const BottomSheetRoleplayCreate = forwardRef<BottomSheetModal, object>((_, ref) 
             variant="primary"
             onPress={handleCreateScenario}
             loading={profileRoleplayScenarioCreateMutation.isPending}
-            disabled={!form.formState.isValid || profileRoleplayScenarioCreateMutation.isPending}
+            disabled={
+              !(form.watch("userRole") !== "" && form.watch("assistantRole") !== "" && form.watch("description") !== "") ||
+              profileRoleplayScenarioCreateMutation.isPending
+            }
           >
             <Button.Text>Generate Scenario</Button.Text>
           </Button.Root>
