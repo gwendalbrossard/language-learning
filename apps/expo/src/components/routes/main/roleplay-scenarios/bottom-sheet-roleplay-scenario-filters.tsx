@@ -4,6 +4,7 @@ import { Star } from "lucide-react-native"
 import { Dimensions, Pressable, View } from "react-native"
 import { ScrollView } from "react-native-gesture-handler"
 
+import type { RouterOutputs } from "~/utils/api"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
@@ -65,10 +66,10 @@ const FilterSection = ({ title, children }: FilterSectionProps) => {
 }
 
 type Props = {
-  categories: string[]
-  selectedCategory: string | null
+  categories: RouterOutputs["roleplayCategory"]["getAll"][number][]
+  selectedCategory: RouterOutputs["roleplayCategory"]["getAll"][number] | null
   selectedDifficulty: number | null
-  onCategoryChange: (category: string | null) => void
+  onCategoryChange: (category: RouterOutputs["roleplayCategory"]["getAll"][number] | null) => void
   onDifficultyChange: (difficulty: number | null) => void
   filteredCount: number
 }
@@ -128,8 +129,8 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
                 <FilterOption title="All Categories" isSelected={!selectedCategory} onPress={() => onCategoryChange(null)} />
                 {categories.map((category) => (
                   <FilterOption
-                    key={category}
-                    title={category}
+                    key={category.id}
+                    title={category.name}
                     isSelected={selectedCategory === category}
                     onPress={() => onCategoryChange(category)}
                   />

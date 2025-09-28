@@ -18,27 +18,24 @@ const RoleplayScenarios: FC = () => {
   const roleplayScenarioGetAll = useQuery(trpc.roleplayScenario.getAll.queryOptions())
   if (!roleplayScenarioGetAll.data) throw new Error("Roleplay scenarios not found")
 
+  const roleplayCategoryGetAll = useQuery(trpc.roleplayCategory.getAll.queryOptions())
+  if (!roleplayCategoryGetAll.data) throw new Error("Roleplay categories not found")
+
   // Bottom sheet refs
   const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
   const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["roleplayCategory"]["getAll"][number] | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
 
   // Selected scenario state
   const [selectedScenario, setSelectedScenario] = useState<RouterOutputs["roleplayScenario"]["getAll"][number] | null>(null)
 
-  // Get unique categories and difficulties for filters
-  const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(roleplayScenarioGetAll.data.map((s) => s.category))]
-    return uniqueCategories.sort()
-  }, [roleplayScenarioGetAll.data])
-
   // Filter scenarios based on selected filters
   const filteredScenarios = useMemo(() => {
     return roleplayScenarioGetAll.data.filter((scenario) => {
-      const categoryMatch = !selectedCategory || scenario.category === selectedCategory
+      const categoryMatch = !selectedCategory || scenario.category.id === selectedCategory.id
       const difficultyMatch = !selectedDifficulty || scenario.difficulty === selectedDifficulty
       return categoryMatch && difficultyMatch
     })
@@ -107,7 +104,7 @@ const RoleplayScenarios: FC = () => {
 
               <View className="flex w-full flex-row items-center justify-between gap-2">
                 <Badge.Root variant="white" size="sm">
-                  <Badge.Text>{scenario.category}</Badge.Text>
+                  <Badge.Text>{scenario.category.name}</Badge.Text>
                 </Badge.Root>
                 <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(scenario.difficulty)}</View>
               </View>
@@ -118,7 +115,7 @@ const RoleplayScenarios: FC = () => {
 
       <BottomSheetRoleplayScenarioFilters
         ref={roleplayScenarioFiltersBottomSheetRef}
-        categories={categories}
+        categories={roleplayCategoryGetAll.data}
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
         onCategoryChange={setSelectedCategory}
