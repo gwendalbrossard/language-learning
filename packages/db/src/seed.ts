@@ -1,5 +1,4 @@
-import type { Prisma } from "../generated"
-import { RoleplayDifficulty } from "../generated"
+import type { Prisma } from "../generated/client"
 import { prisma } from "./client"
 
 const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenarios: Prisma.RoleplayScenarioCreateWithoutCategoryInput[] }[] = [
@@ -18,7 +17,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
         prompt:
           "You are a friendly waiter at a casual Italian restaurant. Help the customer order food by describing menu items, answering questions about ingredients, and accommodating special dietary requests. Be patient and encouraging with their language learning. Use simple, clear language and repeat information if needed. Always be polite and professional.",
 
-        difficulty: RoleplayDifficulty.EASY,
+        difficulty: 1,
         isPublic: true,
       },
       {
@@ -30,7 +29,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
         prompt:
           "You are a helpful grocery store employee. Assist the customer in finding items, explaining where different products are located, and helping with any questions about prices or products. Be friendly and patient. If they're looking for something specific, offer alternatives if the item isn't available. Use everyday vocabulary related to shopping and food.",
 
-        difficulty: RoleplayDifficulty.EASY,
+        difficulty: 1,
         isPublic: true,
       },
     ],
@@ -49,7 +48,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
         description: "Learn to describe symptoms, understand medical advice, and communicate with healthcare professionals.",
         prompt:
           "You are a compassionate doctor conducting a routine check-up. Help the patient describe their symptoms and concerns. Use medical terminology when appropriate but explain it in simple terms. Ask follow-up questions to understand their condition better. Provide clear, reassuring advice and instructions. Be patient and understanding as they may struggle with medical vocabulary.",
-        difficulty: RoleplayDifficulty.HARD,
+        difficulty: 3,
         isPublic: true,
       },
     ],
@@ -68,7 +67,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
         description: "Handle airport procedures, ask for directions, and communicate during travel situations.",
         prompt:
           "You are an airport staff member (could be check-in agent, security, or information desk). Help the traveler with their needs - checking in, finding gates, understanding announcements, or handling travel issues. Use travel-related vocabulary and be clear about procedures. Be helpful and patient, especially if they seem stressed about traveling. Provide step-by-step guidance when needed.",
-        difficulty: RoleplayDifficulty.HARD,
+        difficulty: 3,
         isPublic: true,
       },
     ],
@@ -88,7 +87,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
         prompt:
           "You are a professional hiring manager conducting a job interview for a mid-level position. Ask typical interview questions about experience, skills, and career goals. Be professional but friendly, and help the candidate express their qualifications clearly. If they struggle with professional vocabulary, gently guide them to better expressions. Provide constructive feedback and encouragement throughout the conversation.",
 
-        difficulty: RoleplayDifficulty.HARD,
+        difficulty: 3,
         isPublic: true,
       },
     ],
