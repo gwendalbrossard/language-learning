@@ -20,7 +20,7 @@ export async function getFeedback({ transcript, learningLanguage, nativeLanguage
     })
     .join("\n")
   const { object } = await generateObject({
-    model: azure("gpt-4o-mini"),
+    model: azure("gpt-5-mini"),
     schemaName: "feedback",
     schema: ZFeedbackSchema,
     prompt: `You are an expert language tutor providing comprehensive feedback for someone learning a new language.

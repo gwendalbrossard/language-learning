@@ -8,12 +8,17 @@ import { ZProfileRoleplayScenarioCreateSchema } from "@acme/validators"
 import { organizationProcedure } from "../../../trpc"
 
 const ZRoleplayScenarioGenerateSchema = z.object({
-  title: z.string().describe("A clear, descriptive title for the roleplay scenario"),
+  title: z.string().describe("A clear, descriptive title that captures the essence of the roleplay scenario"),
+  description: z
+    .string()
+    .describe("A polished version of the provided description with corrected grammar and proper capitalization. It should be 1 or 2 sentences max."),
   prompt: z
     .string()
-    .describe("Detailed instructions for the AI assistant on how to roleplay the character, including personality, behavior, and conversation style"),
-  emoji: z.string().describe("A single emoji that represents the roleplay scenario"),
-  difficulty: z.number().min(1).max(3).describe("Difficulty level from 1-3 (1 being easiest, 3 being hardest)"),
+    .describe(
+      "Comprehensive instructions for the AI assistant detailing how to roleplay the character, including personality traits, behavior patterns, and natural conversation style",
+    ),
+  emoji: z.string().describe("A single emoji that accurately represents the specific scenario, setting, or character role"),
+  difficulty: z.number().min(1).max(3).describe("Difficulty level from 1-3, where 1 is beginner-friendly and 3 is advanced"),
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
 
@@ -26,7 +31,7 @@ export const create = organizationProcedure.input(ZProfileRoleplayScenarioCreate
   })
 
   const { object } = await generateObject({
-    model: azure("gpt-4o-mini"),
+    model: azure("gpt-5-mini"),
     schemaName: "roleplay-scenario-generate",
     schema: ZRoleplayScenarioGenerateSchema,
     prompt: `You are an expert language learning scenario designer. Create a roleplay scenario for ORAL conversation practice where learners will speak naturally with an AI assistant using their voice.
@@ -68,20 +73,19 @@ Generate a complete ORAL roleplay scenario with the following components:
 == Title ==
 Create a clear, descriptive title that captures the essence of the ORAL roleplay scenario.
 
+== Description ==
+Rewrite and polish the provided description below with corrected grammar and proper capitalization. It should be 1 or 2 sentences max.
+
 == Prompt ==
-Write detailed instructions for the AI assistant on how to roleplay the character in ORAL conversation. Include:
-- Personality traits and conversational behavior style for spoken interaction
-- How to engage the language learner in natural voice conversation
-- Appropriate spoken vocabulary level and conversational complexity
-- Specific context and setting details for oral communication
-- Encouragement for spoken language learning and pronunciation practice
-- Professional or contextual expertise the character should demonstrate through speech
-- Natural conversational flow, including typical oral discourse markers
-- Patience with pronunciation, hesitations, and speaking pace
-- Use of everyday spoken expressions and colloquialisms appropriate to the scenario
+Write a concise prompt (4-5 sentences) for the AI assistant on how to roleplay the character in ORAL conversation. Include:
+- Key personality traits and behavior style for natural conversation
+- Specific context and role details
+- Natural conversational flow and typical interactions
+- A few example phrases or conversation starters the character would use
+IMPORTANT: Focus on natural conversation, not teaching. Never instruct the AI to encourage, correct pronunciation, be patient with learners, or act as a teacher. Never mention the language being spoken. This is a conversation between two people, not a lesson.
 
 == Emoji ==
-Choose a single emoji that best represents the scenario or setting.
+Choose a single emoji that accurately represents the specific scenario, setting, character role, or primary context. The emoji should be immediately recognizable and clearly relate to the roleplay situation.
 
 == Difficulty ==
 Assess the difficulty level (1-3, with 1 being the easiest, 3 being the hardest) for ORAL communication based on:
@@ -98,11 +102,10 @@ Choose the most appropriate category ID from the available categories list above
 
 = REQUIREMENTS =
 - The prompt should be comprehensive enough for the AI to engage in natural ORAL roleplay
-- Focus on spoken language learning - the AI should encourage natural speech patterns
+- Focus on natural spoken conversation patterns
 - Ensure the scenario is practical for real-world ORAL communication
 - Match the difficulty to the complexity of spoken interaction described and the learner's language level
-- Emphasize conversational flow, listening skills, and speaking confidence
-- Include guidance for the AI to adapt to different speaking speeds and accents
+- Emphasize natural conversational flow
 - Consider the learner's proficiency level when designing the scenario
 - The response should always be in English, regardless of the learning language
 - Tailor the roleplay scenario to the learner's proficiency level`,
@@ -115,8 +118,8 @@ Choose the most appropriate category ID from the available categories list above
 
       assistantRole: input.assistantRole,
       userRole: input.userRole,
-      description: input.description,
 
+      description: object.description,
       emoji: object.emoji,
       title: object.title,
       prompt: object.prompt,
