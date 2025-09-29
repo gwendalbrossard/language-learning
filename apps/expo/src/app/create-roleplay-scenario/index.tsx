@@ -32,16 +32,33 @@ const CreateRoleplayScenario = () => {
   const descriptionRef = useRef<TextInput>(null)
 
   const form = useForm<TProfileRoleplayScenarioCreateSchema>({
-    defaultValues: { userRole: "", assistantRole: "", description: "", organizationId: currentOrganizationId },
+    defaultValues: { userRole: "", assistantRole: "", description: "", difficulty: 2, organizationId: currentOrganizationId },
     mode: "all",
     resolver: zodResolver(ZProfileRoleplayScenarioCreateSchema),
   })
 
+  const profileRoleplaySessionCreateMutation = useMutation(
+    trpc.profile.roleplaySession.create.mutationOptions({
+      onSuccess: async (data) => {
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.profile.roleplaySession.getAll.queryFilter({ organizationId: currentOrganizationId })),
+          queryClient.fetchQuery(
+            trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: data.id, organizationId: currentOrganizationId }),
+          ),
+        ])
+
+        router.push(`/roleplay-session/${data.id}`)
+      },
+    }),
+  )
+
   const profileRoleplayScenarioCreateMutation = useMutation(
     trpc.profile.roleplayScenario.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(trpc.profile.roleplayScenario.getAll.queryFilter({ organizationId: currentOrganizationId }))
-        router.back()
+      onSuccess: async (data) => {
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.profile.roleplayScenario.getAll.queryFilter({ organizationId: currentOrganizationId })),
+          profileRoleplaySessionCreateMutation.mutateAsync({ scenarioId: data.id, organizationId: currentOrganizationId }),
+        ])
       },
     }),
   )

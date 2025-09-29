@@ -7,7 +7,7 @@ export const getAll = organizationProcedure.input(ZProfileRoleplayScenarioGetAll
   const roleplayScenarios = await ctx.db.roleplayScenario.findMany({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
     select: roleplayScenarioSelect,
-    orderBy: [{ difficulty: "asc" }, { createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }],
   })
 
   return roleplayScenarios

@@ -24,14 +24,14 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
 
   const profileRoleplaySessionCreateMutation = useMutation(
     trpc.profile.roleplaySession.create.mutationOptions({
-      onSuccess: async (session) => {
+      onSuccess: async (data) => {
         if (ref && "current" in ref && ref.current) {
           ref.current.dismiss()
         }
         await queryClient.fetchQuery(
-          trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: session.id, organizationId: currentOrganizationId }),
+          trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: data.id, organizationId: currentOrganizationId }),
         )
-        router.push(`/roleplay-session/${session.id}`)
+        router.push(`/roleplay-session/${data.id}`)
       },
     }),
   )
