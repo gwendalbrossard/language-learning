@@ -12,11 +12,6 @@ const ZRoleplayScenarioGenerateSchema = z.object({
   description: z
     .string()
     .describe("A polished version of the provided description with corrected grammar and proper capitalization. It should be 1 or 2 sentences max."),
-  prompt: z
-    .string()
-    .describe(
-      "Comprehensive instructions for the AI assistant detailing how to roleplay the character, including personality traits, behavior patterns, and natural conversation style",
-    ),
   emoji: z.string().describe("A single emoji that accurately represents the specific scenario, setting, or character role"),
   difficulty: z.number().min(1).max(3).describe("Difficulty level from 1-3, where 1 is beginner-friendly and 3 is advanced"),
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
@@ -76,14 +71,6 @@ Create a clear, descriptive title that captures the essence of the ORAL roleplay
 == Description ==
 Rewrite and polish the provided description below with corrected grammar and proper capitalization. It should be 1 or 2 sentences max.
 
-== Prompt ==
-Write a concise prompt (4-5 sentences) for the AI assistant on how to roleplay the character in ORAL conversation. Include:
-- Key personality traits and behavior style for natural conversation
-- Specific context and role details
-- Natural conversational flow and typical interactions
-- A few example phrases or conversation starters the character would use
-IMPORTANT: Focus on natural conversation, not teaching. Never instruct the AI to encourage, correct pronunciation, be patient with learners, or act as a teacher. Never mention the language being spoken. This is a conversation between two people, not a lesson.
-
 == Emoji ==
 Choose a single emoji that accurately represents the specific scenario, setting, character role, or primary context. The emoji should be immediately recognizable and clearly relate to the roleplay situation.
 
@@ -101,7 +88,6 @@ Choose the most appropriate category ID from the available categories list above
 - The professional or social domain where this conversation would occur
 
 = REQUIREMENTS =
-- The prompt should be comprehensive enough for the AI to engage in natural ORAL roleplay
 - Focus on natural spoken conversation patterns
 - Ensure the scenario is practical for real-world ORAL communication
 - Match the difficulty to the complexity of spoken interaction described and the learner's language level
@@ -122,7 +108,6 @@ Choose the most appropriate category ID from the available categories list above
       description: object.description,
       emoji: object.emoji,
       title: object.title,
-      prompt: object.prompt,
       difficulty: object.difficulty,
       categoryId: object.categoryId,
 
