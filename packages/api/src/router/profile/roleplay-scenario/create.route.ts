@@ -8,12 +8,15 @@ import { ZProfileRoleplayScenarioCreateSchema } from "@acme/validators"
 import { organizationProcedure } from "../../../trpc"
 
 const ZRoleplayScenarioGenerateSchema = z.object({
-  title: z.string().describe("A clear, descriptive title that captures the essence of the roleplay scenario"),
+  title: z
+    .string()
+    .describe("A short, straight-to-the-point title that summarizes what the scenario is about. No mention of 'oral conversation' or similar terms."),
   description: z
     .string()
-    .describe("A polished version of the provided description with corrected grammar and proper capitalization. It should be 1 or 2 sentences max."),
+    .describe(
+      "An expanded version of the provided description with corrected grammar and proper capitalization. Should elaborate slightly on the given description while keeping it concise.",
+    ),
   emoji: z.string().describe("A single emoji that accurately represents the specific scenario, setting, or character role"),
-  difficulty: z.number().min(1).max(3).describe("Difficulty level from 1-3, where 1 is beginner-friendly and 3 is advanced"),
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
 
@@ -29,7 +32,7 @@ export const create = organizationProcedure.input(ZProfileRoleplayScenarioCreate
     model: azure("gpt-5-mini"),
     schemaName: "roleplay-scenario-generate",
     schema: ZRoleplayScenarioGenerateSchema,
-    prompt: `You are an expert language learning scenario designer. Create a roleplay scenario for ORAL conversation practice where learners will speak naturally with an AI assistant using their voice.
+    prompt: `You are an expert language learning scenario designer. Based on the provided scenario description, generate a polished title, description, emoji, and category selection.
 
 CRITICAL: This is for ORAL/SPOKEN language practice, not written communication. The scenario must be optimized for natural voice conversations.
 
@@ -51,6 +54,9 @@ ${input.assistantRole}
 == Description ==
 ${input.description}
 
+== Difficulty Level ==
+${input.difficulty} (1=beginner, 2=intermediate, 3=advanced)
+
 == Learner Profile ==
 - Learning Language: ${ctx.profile.learningLanguage}
 - Learning Language Level: ${ctx.profile.learningLanguageLevel}
@@ -63,38 +69,25 @@ ${JSON.stringify(
 )}
 
 = TASK =
-Generate a complete ORAL roleplay scenario with the following components:
+Generate the following components:
 
 == Title ==
-Create a clear, descriptive title that captures the essence of the ORAL roleplay scenario.
+Create a short, straight-to-the-point title that summarizes what the scenario is about. Do not mention "oral conversation", "roleplay", or similar terms. Keep it concise and descriptive. Never use em dashes "—" in the title.
 
 == Description ==
-Rewrite and polish the provided description below with corrected grammar and proper capitalization. It should be 1 or 2 sentences max.
+Expand slightly on the provided description with corrected grammar and proper capitalization. Elaborate on the given description while keeping it concise and engaging. The description should be exactly 1 or 2 sentences long.
 
 == Emoji ==
-Choose a single emoji that accurately represents the specific scenario, setting, character role, or primary context. The emoji should be immediately recognizable and clearly relate to the roleplay situation.
-
-== Difficulty ==
-Assess the difficulty level (1-3, with 1 being the easiest, 3 being the hardest) for ORAL communication based on:
-- Spoken vocabulary complexity and pronunciation challenges
-- Cultural or professional knowledge needed for natural conversation
-- Real-time conversational complexity and response speed required
-- Frequency of this type of spoken interaction in real life
+Choose a single emoji that accurately represents the specific scenario, setting, character role, or primary context.
 
 == Category Selection ==
-Choose the most appropriate category ID from the available categories list above. Consider:
-- The context and setting of the oral roleplay
-- The type of spoken interaction described
-- The professional or social domain where this conversation would occur
+Choose the most appropriate category ID from the available categories list above based on the scenario context and setting.
 
 = REQUIREMENTS =
-- Focus on natural spoken conversation patterns
-- Ensure the scenario is practical for real-world ORAL communication
-- Match the difficulty to the complexity of spoken interaction described and the learner's language level
-- Emphasize natural conversational flow
-- Consider the learner's proficiency level when designing the scenario
-- The response should always be in English, regardless of the learning language
-- Tailor the roleplay scenario to the learner's proficiency level`,
+- Keep the title short and focused on the scenario content
+- Expand the description naturally while maintaining the original intent
+- Consider the learner's proficiency level and difficulty when crafting the content
+- The response should always be in English, regardless of the learning language`,
     temperature: 0.3,
   })
 
@@ -108,7 +101,7 @@ Choose the most appropriate category ID from the available categories list above
       description: object.description,
       emoji: object.emoji,
       title: object.title,
-      difficulty: object.difficulty,
+      difficulty: input.difficulty,
       categoryId: object.categoryId,
 
       organizationId: ctx.organization.id,
