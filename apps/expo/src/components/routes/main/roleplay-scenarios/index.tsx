@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Filter, Star } from "lucide-react-native"
+import { Filter, Plus, Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
 import type { RouterOutputs } from "~/utils/api"
@@ -12,6 +12,7 @@ import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
+import BottomSheetRoleplayCreate from "./bottom-sheet-roleplay-create"
 import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario-details"
 import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
 
@@ -28,6 +29,7 @@ const RoleplayScenarios: FC = () => {
   // Bottom sheet refs
   const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
   const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
+  const roleplayCreateBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null>(null)
@@ -78,15 +80,22 @@ const RoleplayScenarios: FC = () => {
       <View className="flex flex-row items-center justify-between">
         <Text className="text-xl font-bold">Practice Roleplay</Text>
 
-        <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayScenarioFiltersBottomSheetRef.current?.present()}>
-          <Button.Icon icon={Filter} />
-          <Button.Text>Filters</Button.Text>
-          {hasActiveFilters && (
-            <View className="ml-1 flex size-4.5 items-center justify-center rounded-full bg-white">
-              <Text className="text-xs font-semibold text-neutral-900">{(selectedCategory ? 1 : 0) + (selectedDifficulty ? 1 : 0)}</Text>
-            </View>
-          )}
-        </Button.Root>
+        <View className="flex flex-row items-center gap-2">
+          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => roleplayCreateBottomSheetRef.current?.present()}>
+            <Button.Icon icon={Plus} />
+            <Button.Text>Create</Button.Text>
+          </Button.Root>
+
+          <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayScenarioFiltersBottomSheetRef.current?.present()}>
+            <Button.Icon icon={Filter} />
+            <Button.Text>Filters</Button.Text>
+            {hasActiveFilters && (
+              <View className="ml-1 flex size-4.5 items-center justify-center rounded-full bg-white">
+                <Text className="text-xs font-semibold text-neutral-900">{(selectedCategory ? 1 : 0) + (selectedDifficulty ? 1 : 0)}</Text>
+              </View>
+            )}
+          </Button.Root>
+        </View>
       </View>
 
       {/* Scenarios */}
@@ -128,6 +137,8 @@ const RoleplayScenarios: FC = () => {
       />
 
       <BottomSheetRoleplayScenarioDetails ref={roleplayScenarioDetailsBottomSheetRef} scenario={selectedScenario} onClose={handleCloseDetails} />
+
+      <BottomSheetRoleplayCreate ref={roleplayCreateBottomSheetRef} />
     </View>
   )
 }
