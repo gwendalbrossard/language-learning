@@ -34,7 +34,7 @@ type TabsProps = { size?: TabsSize; variant?: TabsVariant; orientation?: TabsOri
 const Tabs: FC<TabsProps> = ({ size = "md", variant = "default", orientation = "horizontal", children, ...props }) => {
   return (
     <TabsContextProvider size={size} variant={variant} orientation={orientation}>
-      <TabsPrimitive.Root {...props} orientation={orientation}>
+      <TabsPrimitive.Root {...props} orientation={orientation} className="shrink-0">
         {children}
       </TabsPrimitive.Root>
     </TabsContextProvider>

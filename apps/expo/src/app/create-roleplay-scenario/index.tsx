@@ -142,12 +142,8 @@ const CreateRoleplayScenario = () => {
             {/* Difficulty */}
             <View className="flex flex-col gap-2">
               <Label>📊 Difficulty</Label>
-              <TabsButton.Root
-                value={mapping[difficulty] ?? "medium"}
-                onValueChange={(value) => handleDifficultyChange(value)}
-                className="h-fit flex-1 bg-red-100"
-                size="sm"
-              >
+
+              <TabsButton.Root value={mapping[difficulty] ?? "medium"} onValueChange={(value) => handleDifficultyChange(value)} size="sm">
                 <TabsButton.List>
                   <TabsButton.Trigger value="easy">
                     <TabsButton.TriggerText>Easy</TabsButton.TriggerText>

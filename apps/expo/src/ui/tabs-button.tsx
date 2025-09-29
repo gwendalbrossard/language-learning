@@ -33,7 +33,7 @@ type TabsButtonProps = { size?: TabsButtonSize; variant?: TabsButtonVariant; ori
 const TabsButton: React.FC<TabsButtonProps> = ({ size = "md", variant = "plain", orientation = "horizontal", children, ...props }) => {
   return (
     <TabsButtonContextProvider size={size} variant={variant} orientation={orientation}>
-      <TabsPrimitive.Root {...props} orientation={orientation}>
+      <TabsPrimitive.Root {...props} orientation={orientation} className="shrink-0">
         {children}
       </TabsPrimitive.Root>
     </TabsButtonContextProvider>
