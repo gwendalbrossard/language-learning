@@ -18,7 +18,7 @@ const SwitchWeb = React.forwardRef<SwitchPrimitives.RootRef, SwitchPrimitives.Ro
   >
     <SwitchPrimitives.Thumb
       className={cn(
-        "bg-background shadow-foreground/5 pointer-events-none block h-5 w-5 rounded-full shadow-md ring-0 transition-transform",
+        "bg-background shadow-foreground/5 shadow-custom-sm pointer-events-none block h-5 w-5 rounded-full ring-0 transition-transform",
         props.checked ? "translate-x-5" : "translate-x-0",
       )}
     />
@@ -56,7 +56,7 @@ const SwitchNative = React.forwardRef<SwitchPrimitives.RootRef, SwitchPrimitives
         ref={ref}
       >
         <Animated.View style={animatedThumbStyle}>
-          <SwitchPrimitives.Thumb className={"size-5.5 rounded-full bg-white shadow-xs ring-0"} />
+          <SwitchPrimitives.Thumb className={"shadow-custom-xs size-5.5 rounded-full bg-white ring-0"} />
         </Animated.View>
       </SwitchPrimitives.Root>
     </Animated.View>

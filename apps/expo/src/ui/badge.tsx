@@ -17,7 +17,7 @@ type BadgeProps = BadgeBaseProps & SlottableViewProps
 const badgeVariants = cva("flex w-fit flex-row items-center border", {
   variants: {
     variant: {
-      white: "border-neutral-300 bg-white shadow-xs",
+      white: "shadow-custom-xs border-neutral-300 bg-white",
       error: "border-error-200 bg-error-50",
       primary: "border-primary-200 bg-primary-50",
       success: "border-success-200 bg-success-50",

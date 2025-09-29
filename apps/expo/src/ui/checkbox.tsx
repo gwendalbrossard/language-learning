@@ -16,7 +16,7 @@ type CheckboxRootBaseProps = {} & CheckboxRootVariantProps
 type CheckboxRootProps = CheckboxRootBaseProps & React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
 
 const checkboxRootVariants = cva(
-  cn("peer relative flex shrink-0 items-center justify-center border border-none transition", "web:disabled:pointer-events-none", "shadow-xs"),
+  cn("peer relative flex shrink-0 items-center justify-center border border-none transition", "web:disabled:pointer-events-none", "shadow-custom-xs"),
   {
     variants: {
       size: {

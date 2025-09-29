@@ -10,12 +10,12 @@ import { cn } from "~/utils/utils"
 const buttonVariants = cva(cn("relative flex w-fit flex-row items-center justify-center border transition", "web:focus-visible:outline-none"), {
   variants: {
     variant: {
-      primary: cn("border-transparent bg-primary-600 shadow-xs active:bg-primary-700 disabled:bg-primary-100"),
-      secondary: cn("border-neutral-200 bg-white shadow-xs active:bg-neutral-50 disabled:text-neutral-300"),
+      primary: cn("shadow-custom-xs border-transparent bg-primary-600 active:bg-primary-700 disabled:bg-primary-100"),
+      secondary: cn("shadow-custom-xs border-neutral-200 bg-white active:bg-neutral-50 disabled:text-neutral-300"),
       tertiary: "",
-      destructive: cn("border-transparent bg-error-600 shadow-xs active:bg-error-700 disabled:bg-error-100"),
+      destructive: cn("shadow-custom-xs border-transparent bg-error-600 active:bg-error-700 disabled:bg-error-100"),
       ghost: cn("border-transparent bg-white active:bg-neutral-100"),
-      black: cn("border-transparent bg-black shadow-xs active:opacity-90 disabled:opacity-50"),
+      black: cn("shadow-custom-xs border-transparent bg-black active:opacity-90 disabled:opacity-50"),
     },
     size: {
       xxs: "h-8 gap-1.5 rounded-md px-2.5",

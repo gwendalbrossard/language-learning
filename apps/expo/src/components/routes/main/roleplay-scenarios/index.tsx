@@ -1,6 +1,7 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { router } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { Filter, Plus, Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
@@ -12,7 +13,6 @@ import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
-import BottomSheetRoleplayCreate from "./bottom-sheet-roleplay-create"
 import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario-details"
 import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
 
@@ -29,7 +29,6 @@ const RoleplayScenarios: FC = () => {
   // Bottom sheet refs
   const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
   const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
-  const roleplayCreateBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null>(null)
@@ -81,7 +80,7 @@ const RoleplayScenarios: FC = () => {
         <Text className="text-xl font-bold">Practice Roleplay</Text>
 
         <View className="flex flex-row items-center gap-2">
-          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => roleplayCreateBottomSheetRef.current?.present()}>
+          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => router.push("/create-roleplay-scenario")}>
             <Button.Icon icon={Plus} />
             <Button.Text>Create</Button.Text>
           </Button.Root>
@@ -104,7 +103,7 @@ const RoleplayScenarios: FC = () => {
           <Pressable
             key={scenario.id}
             onPress={() => handleRoleplayScenarioPress(scenario)}
-            className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm active:bg-neutral-50"
+            className="shadow-custom-sm flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50"
           >
             {/* Header with emoji and title */}
             <View className="flex flex-col items-start gap-3">
@@ -137,8 +136,6 @@ const RoleplayScenarios: FC = () => {
       />
 
       <BottomSheetRoleplayScenarioDetails ref={roleplayScenarioDetailsBottomSheetRef} scenario={selectedScenario} onClose={handleCloseDetails} />
-
-      <BottomSheetRoleplayCreate ref={roleplayCreateBottomSheetRef} />
     </View>
   )
 }

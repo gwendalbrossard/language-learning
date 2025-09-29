@@ -171,11 +171,11 @@ export default {
         },
       },
       boxShadow: ({ theme }: { theme: (key: string) => string }) => ({
-        xs: `0px 1px 2px ${theme("colors.neutral.900/6%")}`,
-        sm: `0px 2px 4px ${theme("colors.neutral.900/6%")}`,
-        md: `0px 3px 6px ${theme("colors.neutral.900/7%")}`,
-        lg: `0px 4px 8px -2px ${theme("colors.neutral.900/5%")}, 0px 5px 10px ${theme("colors.neutral.900/8%")}`,
-        xl: `0px 20px 24px -4px ${theme("colors.neutral.900/10%")}, 0px 8px 8px -4px ${theme("colors.neutral.900/4%")}`,
+        "custom-xs": `0px 1px 2px ${theme("colors.neutral.900/6%")}`,
+        "custom-sm": `0px 2px 4px ${theme("colors.neutral.900/6%")}`,
+        "custom-md": `0px 3px 6px ${theme("colors.neutral.900/7%")}`,
+        "custom-lg": `0px 4px 8px -2px ${theme("colors.neutral.900/5%")}, 0px 5px 10px ${theme("colors.neutral.900/8%")}`,
+        "custom-xl": `0px 20px 24px -4px ${theme("colors.neutral.900/10%")}, 0px 8px 8px -4px ${theme("colors.neutral.900/4%")}`,
       }),
       spacing: {
         4.5: "1.125rem",

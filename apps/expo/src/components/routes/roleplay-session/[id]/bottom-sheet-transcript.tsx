@@ -101,7 +101,7 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
 
       {/* Feedback display - only show when expanded */}
       {message.feedback && expandedFeedback && (
-        <View className="mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <View className="shadow-custom-sm mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-6">
           {/* Header with quality score and close button */}
           <View className="mb-6 flex-row items-center justify-between">
             <Text className="text-lg font-bold">Feedback</Text>

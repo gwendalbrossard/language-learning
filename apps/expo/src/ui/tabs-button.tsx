@@ -1,9 +1,9 @@
 import type { VariantProps } from "class-variance-authority"
+import type { LucideIcon } from "lucide-react-native"
+import type { PressableStateCallbackType } from "react-native"
 import * as React from "react"
 import * as TabsPrimitive from "@rn-primitives/tabs"
 import { cva } from "class-variance-authority"
-import { type LucideIcon } from "lucide-react-native"
-import { type PressableStateCallbackType } from "react-native"
 
 import { cn } from "~/utils/utils"
 import { Text } from "./text"
@@ -98,7 +98,7 @@ const tabsButtonTriggerVariants = cva(
     "rounded-md",
     "border-none",
     "disabled:text-neutral-300",
-    "shadow-xs",
+    "shadow-custom-xs",
   ),
   {
     variants: {

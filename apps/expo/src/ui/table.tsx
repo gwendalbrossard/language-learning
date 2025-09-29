@@ -7,7 +7,7 @@ import { cn } from "~/utils/utils"
 const Table = React.forwardRef<TablePrimitive.RootRef, TablePrimitive.RootProps>(({ className, ...props }, ref) => (
   <TablePrimitive.Root
     ref={ref}
-    className={cn("w-full caption-bottom rounded-xl border border-neutral-200 bg-neutral-50 p-1 text-sm shadow-xs", className)}
+    className={cn("shadow-custom-xs w-full caption-bottom rounded-xl border border-neutral-200 bg-neutral-50 p-1 text-sm", className)}
     {...props}
   />
 ))
@@ -21,7 +21,7 @@ TableHeader.displayName = "TableHeader"
 const TableBody = React.forwardRef<TablePrimitive.BodyRef, TablePrimitive.BodyProps>(({ className, style, ...props }, ref) => (
   <TablePrimitive.Body
     ref={ref}
-    className={cn("rounded-xl border border-neutral-200 bg-white shadow-xs", className)}
+    className={cn("shadow-custom-xs rounded-xl border border-neutral-200 bg-white", className)}
     style={[{ minHeight: 2 }, style]}
     {...props}
   />

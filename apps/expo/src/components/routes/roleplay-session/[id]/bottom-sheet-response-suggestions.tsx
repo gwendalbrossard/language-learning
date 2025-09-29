@@ -50,7 +50,7 @@ type SuggestionCardProps = {
 
 const SuggestionCard: FC<SuggestionCardProps> = ({ suggestion, index }) => {
   return (
-    <View className="w-full rounded-2xl bg-white p-5 shadow-sm">
+    <View className="shadow-custom-sm w-full rounded-2xl bg-white p-5">
       {/* Header */}
       <View className="mb-5 flex-row items-center gap-3">
         <View className="size-8 items-center justify-center rounded-full bg-primary-100">
