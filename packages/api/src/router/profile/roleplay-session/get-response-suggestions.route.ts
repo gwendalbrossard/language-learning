@@ -71,7 +71,7 @@ Only the AsciiDoc titles delimit the sections. Nothing else is used for this pur
 == Roleplay Details ==
 - Title: "${roleplaySession.scenario.title}"
 - Description: ${roleplaySession.scenario.description}
-- Prompt: ${roleplaySession.scenario.prompt}
+
 
 == Conversation History ==
 ${conversationHistory}
