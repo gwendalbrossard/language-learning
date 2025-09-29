@@ -135,7 +135,7 @@ Sophisticated responses with nuanced language, cultural appropriateness, and nat
 Generate responses that are practical, educational, and contextually perfect for this ORAL roleplay situation. Each suggestion should include the response text optimized for spoken delivery, its English translation, and difficulty level.`
 
     const result = await generateObject({
-      model: azure("gpt-5-mini"),
+      model: azure("gpt-4o-mini"),
       schemaName: "responseSuggestions",
       schema: ZResponseSuggestionsSchema,
       prompt: prompt,
