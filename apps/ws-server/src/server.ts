@@ -12,6 +12,7 @@ import { ZPracticeSchema } from "@acme/validators"
 import { env } from "~/env.server"
 import { auth } from "./auth"
 import { getFeedback } from "./utils/get-feedback"
+import { getRoleplayScenarioInstructions } from "./utils/get-roleplay-scenario-instructions"
 
 // Express setup
 const app = express()
@@ -75,6 +76,9 @@ io.on("connection", async (socket) => {
 
   const roleplaySession = await prisma.roleplaySession.findUnique({
     where: { id: parsedPractice.data.roleplaySessionId },
+    include: {
+      scenario: true,
+    },
   })
 
   if (!roleplaySession) {
@@ -224,6 +228,11 @@ io.on("connection", async (socket) => {
   ws.on("open", function open() {
     console.log("Connected to server.")
 
+    const roleplayScenarioInstructions = getRoleplayScenarioInstructions({
+      scenario: roleplaySession.scenario,
+      profile: profile,
+    })
+
     // Initialize session
     ws.send(
       JSON.stringify({
@@ -250,7 +259,7 @@ io.on("connection", async (socket) => {
               voice: "ballad",
             },
           },
-          instructions: "Speak clearly and briefly. Confirm understanding before taking actions.",
+          instructions: roleplayScenarioInstructions,
         },
       }),
     )
