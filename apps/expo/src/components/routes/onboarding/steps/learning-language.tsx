@@ -3,38 +3,12 @@ import * as RadioGroupPrimitive from "@rn-primitives/radio-group"
 import { useFormContext } from "react-hook-form"
 
 import type { TProfileOnboardSchema } from "@acme/validators"
+import { languageOptions } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
 import RadioItemWithEmoji from "~/components/common/radio-item-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-
-type LanguageOption = {
-  code: string
-  emoji: string
-  label: string
-}
-
-const languageOptions: LanguageOption[] = [
-  { code: "en-US", emoji: "🇺🇸", label: "English" },
-  { code: "zh-CN", emoji: "🇨🇳", label: "Chinese (Mandarin)" },
-  { code: "es-ES", emoji: "🇪🇸", label: "Spanish" },
-  { code: "fr-FR", emoji: "🇫🇷", label: "French" },
-  { code: "ar-SA", emoji: "🇸🇦", label: "Arabic" },
-  { code: "ru-RU", emoji: "🇷🇺", label: "Russian" },
-  { code: "pt-PT", emoji: "🇵🇹", label: "Portuguese" },
-  { code: "ja-JP", emoji: "🇯🇵", label: "Japanese" },
-  { code: "de-DE", emoji: "🇩🇪", label: "German" },
-  { code: "it-IT", emoji: "🇮🇹", label: "Italian" },
-  { code: "ko-KR", emoji: "🇰🇷", label: "Korean" },
-  { code: "tr-TR", emoji: "🇹🇷", label: "Turkish" },
-  { code: "nl-NL", emoji: "🇳🇱", label: "Dutch" },
-  { code: "pl-PL", emoji: "🇵🇱", label: "Polish" },
-  { code: "sv-SE", emoji: "🇸🇪", label: "Swedish" },
-  { code: "no-NO", emoji: "🇳🇴", label: "Norwegian" },
-  { code: "da-DK", emoji: "🇩🇰", label: "Danish" },
-  { code: "fi-FI", emoji: "🇫🇮", label: "Finnish" },
-]
 
 const LearningLanguage: FC<StepProps> = ({ onContinue, onBack, progress }) => {
   const { setValue, watch } = useFormContext<TProfileOnboardSchema>()
