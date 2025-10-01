@@ -43,7 +43,7 @@ model LessonSession {
   updatedAt DateTime @updatedAt
 
   messages   LessonSessionMessage[]
-  vocabulary LessonVocabulary[]
+  vocabulary LessonSessionVocabulary[]
 
   @@index([profileId])
   @@index([organizationId])
@@ -99,12 +99,12 @@ model LessonCategory {
   @@map("lesson_category")
 }
 
-model LessonVocabulary {
-  id          String               @id @default(cuid())
-  type        LessonVocabularyType
+model LessonSessionVocabulary {
+  id          String                      @id @default(cuid())
+  type        LessonSessionVocabularyType
   text        String
   translation String
-  information String
+  information String?
 
   sessionId String
   session   LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -113,10 +113,10 @@ model LessonVocabulary {
   updatedAt DateTime @updatedAt
 
   @@index([sessionId])
-  @@map("lesson_vocabulary")
+  @@map("lesson_session_vocabulary")
 }
 
-enum LessonVocabularyType {
+enum LessonSessionVocabularyType {
   WORD
   PHRASE
   EXPRESSION
