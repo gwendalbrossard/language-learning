@@ -73,7 +73,7 @@ enum RoleplaySessionMessageRole {
   USER
   SYSTEM
 
-  @@map("openai_role")
+  @@map("roleplay_session_message_role")
 }
 
 model RoleplayCategory {
