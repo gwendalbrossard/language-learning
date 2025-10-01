@@ -13,6 +13,9 @@ model Organization {
   roleplaySessions   RoleplaySession[]
   roleplayScenarios  RoleplayScenario[]
   roleplayCategories RoleplayCategory[]
+  lessons            Lesson[]
+  lessonSessions     LessonSession[]
+  lessonCategories   LessonCategory[]
 
   @@map("organization")
 }

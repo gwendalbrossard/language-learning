@@ -27,6 +27,9 @@ model Profile {
   roleplayScenarios  RoleplayScenario[]
   roleplaySessions   RoleplaySession[]
   roleplayCategories RoleplayCategory[]
+  lessons            Lesson[]
+  lessonSessions     LessonSession[]
+  lessonCategories   LessonCategory[]
 
   @@map("profile")
 }
