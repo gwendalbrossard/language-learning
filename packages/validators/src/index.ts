@@ -1,10 +1,15 @@
 export * from "./router/auth/me.schema"
+
 export * from "./router/organization/create.schema"
 export * from "./router/organization/upload-logo.schema"
 export * from "./router/organization/update.schema"
+
 export * from "./router/profile/create.schema"
+export * from "./router/profile/lesson/create.schema"
+export * from "./router/profile/lesson/get-all.schema"
+export * from "./router/profile/lesson-category/create.schema"
+export * from "./router/profile/lesson-category/get-all.schema"
 export * from "./router/profile/onboard.schema"
-export * from "./router/profile/streak-days.schema"
 export * from "./router/profile/roleplay-category/create.schema"
 export * from "./router/profile/roleplay-category/get-all.schema"
 export * from "./router/profile/roleplay-scenario/create.schema"
@@ -13,6 +18,9 @@ export * from "./router/profile/roleplay-session/create.schema"
 export * from "./router/profile/roleplay-session/get.schema"
 export * from "./router/profile/roleplay-session/get-all.schema"
 export * from "./router/profile/roleplay-session/get-response-suggestions.schema"
+export * from "./router/profile/streak-days.schema"
+
 export * from "./router/user/delete.schema"
+
 export * from "./ws-server/feedback.schema"
 export * from "./ws-server/practice.schema"

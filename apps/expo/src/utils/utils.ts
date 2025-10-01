@@ -51,8 +51,10 @@ export const prefetchMain = async () => {
   const currentOrganizationId = organizationMe[0].id
   updateCurrentOrganizationId(currentOrganizationId)
 
-  const [_roleplayScenarios, _roleplayCategories] = await Promise.all([
+  const [_roleplayScenarios, _roleplayCategories, _lessons, _lessonCategories] = await Promise.all([
     queryClient.fetchQuery(trpc.profile.roleplayScenario.getAll.queryOptions({ organizationId: currentOrganizationId })),
     queryClient.fetchQuery(trpc.profile.roleplayCategory.getAll.queryOptions({ organizationId: currentOrganizationId })),
+    queryClient.fetchQuery(trpc.profile.lesson.getAll.queryOptions({ organizationId: currentOrganizationId })),
+    queryClient.fetchQuery(trpc.profile.lessonCategory.getAll.queryOptions({ organizationId: currentOrganizationId })),
   ])
 }
