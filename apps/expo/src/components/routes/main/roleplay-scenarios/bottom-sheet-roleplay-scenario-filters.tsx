@@ -74,7 +74,7 @@ type Props = {
   filteredCount: number
 }
 
-const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
+const BottomSheetRoleplayFilters = forwardRef<BottomSheetModal, Props>(
   ({ categories, selectedCategory, selectedDifficulty, onCategoryChange, onDifficultyChange, filteredCount }, ref) => {
     const hasActiveFilters = selectedCategory !== null || selectedDifficulty !== null
 
@@ -118,7 +118,7 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
         <View className="flex-1">
           {/* Fixed Header */}
           <View className="px-4 pb-4 pt-2">
-            <Text className="text-center text-lg font-semibold">Filter Scenarios</Text>
+            <Text className="text-center text-lg font-semibold">Filter Roleplays</Text>
           </View>
 
           {/* Scrollable Content with Footer Space */}
@@ -162,7 +162,7 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
 
               <Button.Root variant="primary" onPress={closeBottomSheet} className="w-full">
                 <Button.Text>
-                  Apply Filters ({filteredCount} scenario{filteredCount !== 1 ? "s" : ""})
+                  Apply Filters ({filteredCount} roleplay{filteredCount !== 1 ? "s" : ""})
                 </Button.Text>
               </Button.Root>
             </View>
@@ -173,6 +173,6 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
   },
 )
 
-BottomSheetRoleplayScenarioFilters.displayName = "BottomSheetRoleplayScenarioFilters"
+BottomSheetRoleplayFilters.displayName = "BottomSheetRoleplayFilters"
 
-export default BottomSheetRoleplayScenarioFilters
+export default BottomSheetRoleplayFilters

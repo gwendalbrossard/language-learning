@@ -2,25 +2,25 @@ import { azure } from "@ai-sdk/azure"
 import { generateObject } from "ai"
 import { z } from "zod/v4"
 
-import { roleplayCategorySelect, roleplayScenarioSelect } from "@acme/db"
-import { ZProfileRoleplayScenarioCreateSchema } from "@acme/validators"
+import { roleplayCategorySelect, roleplaySelect } from "@acme/db"
+import { ZProfileRoleplayCreateSchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../../trpc"
 
-const ZRoleplayScenarioGenerateSchema = z.object({
+const ZRoleplayGenerateSchema = z.object({
   title: z
     .string()
-    .describe("A short, straight-to-the-point title that summarizes what the scenario is about. No mention of 'oral conversation' or similar terms."),
+    .describe("A short, straight-to-the-point title that summarizes what the roleplay is about. No mention of 'oral conversation' or similar terms."),
   description: z
     .string()
     .describe(
       "An expanded version of the provided description with corrected grammar and proper capitalization. Should elaborate slightly on the given description while keeping it concise.",
     ),
-  emoji: z.string().describe("A single emoji that accurately represents the specific scenario, setting, or character role"),
+  emoji: z.string().describe("A single emoji that accurately represents the specific roleplay, setting, or character role"),
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
 
-export const create = organizationProcedure.input(ZProfileRoleplayScenarioCreateSchema).mutation(async ({ ctx, input }) => {
+export const create = organizationProcedure.input(ZProfileRoleplayCreateSchema).mutation(async ({ ctx, input }) => {
   // Fetch all available categories for the user
   const roleplayCategories = await ctx.db.roleplayCategory.findMany({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
@@ -30,11 +30,11 @@ export const create = organizationProcedure.input(ZProfileRoleplayScenarioCreate
 
   const { object } = await generateObject({
     model: azure("gpt-5-mini"),
-    schemaName: "roleplay-scenario-generate",
-    schema: ZRoleplayScenarioGenerateSchema,
-    prompt: `You are an expert language learning scenario designer. Based on the provided scenario description, generate a polished title, description, emoji, and category selection.
+    schemaName: "roleplay-generate",
+    schema: ZRoleplayGenerateSchema,
+    prompt: `You are an expert language learning roleplay designer. Based on the provided roleplay description, generate a polished title, description, emoji, and category selection.
 
-CRITICAL: This is for ORAL/SPOKEN language practice, not written communication. The scenario must be optimized for natural voice conversations.
+CRITICAL: This is for ORAL/SPOKEN language practice, not written communication. The roleplay must be optimized for natural voice conversations.
 
 You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the instructions to follow or additional context for you to use in crafting your response.
 In AsciiDoc:
@@ -73,26 +73,26 @@ ${JSON.stringify(
 Generate the following components:
 
 == Title ==
-Create a short, straight-to-the-point title that summarizes what the scenario is about. Do not mention "oral conversation", "roleplay", or similar terms. Keep it concise and descriptive. Never use em dashes "—" in the title.
+Create a short, straight-to-the-point title that summarizes what the roleplay is about. Do not mention "oral conversation", "roleplay", or similar terms. Keep it concise and descriptive. Never use em dashes "—" in the title.
 
 == Description ==
 Expand slightly on the provided description with corrected grammar and proper capitalization. Elaborate on the given description while keeping it concise and engaging. The description should be exactly 1 or 2 sentences long.
 
 == Emoji ==
-Choose a single emoji that accurately represents the specific scenario, setting, character role, or primary context.
+Choose a single emoji that accurately represents the specific roleplay, setting, character role, or primary context.
 
 == Category Selection ==
-Choose the most appropriate category ID from the available categories list above based on the scenario context and setting.
+Choose the most appropriate category ID from the available categories list above based on the roleplay context and setting.
 
 = REQUIREMENTS =
-- Keep the title short and focused on the scenario content
+- Keep the title short and focused on the roleplay content
 - Expand the description naturally while maintaining the original intent
 - Consider the learner's proficiency level and difficulty when crafting the content
 - The response should always be in ${ctx.profile.nativeLanguage}, regardless of the learning language`,
     temperature: 0.3,
   })
 
-  const createdRoleplayScenario = await ctx.db.roleplayScenario.create({
+  const createdRoleplay = await ctx.db.roleplay.create({
     data: {
       isPublic: false,
 
@@ -108,8 +108,8 @@ Choose the most appropriate category ID from the available categories list above
       organizationId: ctx.organization.id,
       profileId: ctx.profile.id,
     },
-    select: roleplayScenarioSelect,
+    select: roleplaySelect,
   })
 
-  return createdRoleplayScenario
+  return createdRoleplay
 })

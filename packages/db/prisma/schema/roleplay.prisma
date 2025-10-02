@@ -1,4 +1,4 @@
-model RoleplayScenario {
+model Roleplay {
   id            String  @id @default(cuid())
   emoji         String
   title         String
@@ -23,7 +23,7 @@ model RoleplayScenario {
 
   sessions RoleplaySession[]
 
-  @@map("roleplay_scenario")
+  @@map("roleplay")
 }
 
 model RoleplaySession {
@@ -32,8 +32,8 @@ model RoleplaySession {
   userSpeakingDuration Int    @default(0)
   aiSpeakingDuration   Int    @default(0)
 
-  scenarioId String
-  scenario   RoleplayScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  roleplayId String
+  roleplay   Roleplay @relation(fields: [roleplayId], references: [id], onDelete: Cascade)
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -92,7 +92,7 @@ model RoleplayCategory {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  scenarios RoleplayScenario[]
+  roleplays Roleplay[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

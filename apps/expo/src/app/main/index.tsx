@@ -14,7 +14,7 @@ import BottomSheetPaywall from "~/components/common/bottom-sheet-paywall"
 import BottomSheetStreak from "~/components/common/bottom-sheet-streak"
 import { HeaderTitleLogo } from "~/components/common/stack-screen/header-title-logo"
 import BottomSheetSettings from "~/components/routes/main/bottom-sheet-settings"
-import RoleplayScenarios from "~/components/routes/main/roleplay-scenarios"
+import Roleplays from "~/components/routes/main/roleplay-scenarios"
 import Streak from "~/components/routes/main/streak"
 import { useRevenueCat } from "~/hooks/use-revenuecat"
 import { Text } from "~/ui/text"
@@ -96,7 +96,7 @@ const Main: FC = () => {
       <KeyboardAwareScrollView bottomOffset={16} enabled>
         <View className="flex flex-col gap-6">
           <Streak />
-          <RoleplayScenarios />
+          <Roleplays />
         </View>
       </KeyboardAwareScrollView>
 

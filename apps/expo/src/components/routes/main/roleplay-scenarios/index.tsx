@@ -13,50 +13,50 @@ import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
-import BottomSheetRoleplayScenarioDetails from "./bottom-sheet-roleplay-scenario-details"
-import BottomSheetRoleplayScenarioFilters from "./bottom-sheet-roleplay-scenario-filters"
+import BottomSheetRoleplayDetails from "./bottom-sheet-roleplay-scenario-details"
+import BottomSheetRoleplayFilters from "./bottom-sheet-roleplay-scenario-filters"
 
-const RoleplayScenarios: FC = () => {
+const Roleplays: FC = () => {
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
-  const profileRoleplayScenarioGetAll = useQuery(trpc.profile.roleplayScenario.getAll.queryOptions({ organizationId: currentOrganizationId }))
-  if (!profileRoleplayScenarioGetAll.data) throw new Error("Roleplay scenarios not found")
+  const profileRoleplayGetAll = useQuery(trpc.profile.roleplay.getAll.queryOptions({ organizationId: currentOrganizationId }))
+  if (!profileRoleplayGetAll.data) throw new Error("Roleplays not found")
 
   const profileRoleplayCategoryGetAll = useQuery(trpc.profile.roleplayCategory.getAll.queryOptions({ organizationId: currentOrganizationId }))
   if (!profileRoleplayCategoryGetAll.data) throw new Error("Roleplay categories not found")
 
   // Bottom sheet refs
-  const roleplayScenarioFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
-  const roleplayScenarioDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
+  const roleplayFiltersBottomSheetRef = useRef<BottomSheetModal>(null)
+  const roleplayDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
 
-  // Selected scenario state
-  const [selectedScenario, setSelectedScenario] = useState<RouterOutputs["profile"]["roleplayScenario"]["getAll"][number] | null>(null)
+  // Selected roleplay state
+  const [selectedRoleplay, setSelectedRoleplay] = useState<RouterOutputs["profile"]["roleplay"]["getAll"][number] | null>(null)
 
-  // Filter scenarios based on selected filters
-  const filteredScenarios = useMemo(() => {
-    return profileRoleplayScenarioGetAll.data.filter((scenario) => {
-      const categoryMatch = !selectedCategory || scenario.category.id === selectedCategory.id
-      const difficultyMatch = !selectedDifficulty || scenario.difficulty === selectedDifficulty
+  // Filter roleplays based on selected filters
+  const filteredRoleplays = useMemo(() => {
+    return profileRoleplayGetAll.data.filter((roleplay) => {
+      const categoryMatch = !selectedCategory || roleplay.category.id === selectedCategory.id
+      const difficultyMatch = !selectedDifficulty || roleplay.difficulty === selectedDifficulty
       return categoryMatch && difficultyMatch
     })
-  }, [profileRoleplayScenarioGetAll.data, selectedCategory, selectedDifficulty])
+  }, [profileRoleplayGetAll.data, selectedCategory, selectedDifficulty])
 
-  const handleRoleplayScenarioPress = (scenario: RouterOutputs["profile"]["roleplayScenario"]["getAll"][number]) => {
-    setSelectedScenario(scenario)
+  const handleRoleplayPress = (roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number]) => {
+    setSelectedRoleplay(roleplay)
   }
 
   useEffect(() => {
-    if (!selectedScenario) return
-    roleplayScenarioDetailsBottomSheetRef.current?.present()
-  }, [selectedScenario])
+    if (!selectedRoleplay) return
+    roleplayDetailsBottomSheetRef.current?.present()
+  }, [selectedRoleplay])
 
   const handleCloseDetails = () => {
-    setSelectedScenario(null)
+    setSelectedRoleplay(null)
   }
 
   // Helper function to render difficulty stars
@@ -85,7 +85,7 @@ const RoleplayScenarios: FC = () => {
             <Button.Text>Create</Button.Text>
           </Button.Root>
 
-          <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayScenarioFiltersBottomSheetRef.current?.present()}>
+          <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayFiltersBottomSheetRef.current?.present()}>
             <Button.Icon icon={Filter} />
             <Button.Text>Filters</Button.Text>
             {hasActiveFilters && (
@@ -97,47 +97,47 @@ const RoleplayScenarios: FC = () => {
         </View>
       </View>
 
-      {/* Scenarios */}
+      {/* Roleplays */}
       <View className="flex flex-col gap-3">
-        {filteredScenarios.map((scenario) => (
+        {filteredRoleplays.map((roleplay) => (
           <Pressable
-            key={scenario.id}
-            onPress={() => handleRoleplayScenarioPress(scenario)}
+            key={roleplay.id}
+            onPress={() => handleRoleplayPress(roleplay)}
             className="shadow-custom-sm flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50"
           >
             {/* Header with emoji and title */}
             <View className="flex flex-col items-start gap-3">
               <View className="flex w-full flex-row items-center justify-between gap-2.5">
-                <Text className="text-2xl">{scenario.emoji}</Text>
-                <Text className="flex-1 text-lg font-semibold">{scenario.title}</Text>
+                <Text className="text-2xl">{roleplay.emoji}</Text>
+                <Text className="flex-1 text-lg font-semibold">{roleplay.title}</Text>
               </View>
 
-              <TextDescription>{scenario.description}</TextDescription>
+              <TextDescription>{roleplay.description}</TextDescription>
 
               <View className="flex w-full flex-row items-center justify-between gap-2">
                 <Badge.Root variant="white" size="sm">
-                  <Badge.Text>{scenario.category.name}</Badge.Text>
+                  <Badge.Text>{roleplay.category.name}</Badge.Text>
                 </Badge.Root>
-                <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(scenario.difficulty)}</View>
+                <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(roleplay.difficulty)}</View>
               </View>
             </View>
           </Pressable>
         ))}
       </View>
 
-      <BottomSheetRoleplayScenarioFilters
-        ref={roleplayScenarioFiltersBottomSheetRef}
+      <BottomSheetRoleplayFilters
+        ref={roleplayFiltersBottomSheetRef}
         categories={profileRoleplayCategoryGetAll.data}
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
         onCategoryChange={setSelectedCategory}
         onDifficultyChange={setSelectedDifficulty}
-        filteredCount={filteredScenarios.length}
+        filteredCount={filteredRoleplays.length}
       />
 
-      <BottomSheetRoleplayScenarioDetails ref={roleplayScenarioDetailsBottomSheetRef} scenario={selectedScenario} onClose={handleCloseDetails} />
+      <BottomSheetRoleplayDetails ref={roleplayDetailsBottomSheetRef} roleplay={selectedRoleplay} onClose={handleCloseDetails} />
     </View>
   )
 }
 
-export default RoleplayScenarios
+export default Roleplays

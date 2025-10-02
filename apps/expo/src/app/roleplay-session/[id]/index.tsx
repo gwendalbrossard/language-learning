@@ -196,7 +196,6 @@ const RoleplaySession: FC = () => {
   // Animate scale based on audio levels with immediate response for 240fps
   useEffect(() => {
     const targetScale = 80 + (isRecording ? recordingLevel : playbackLevel) * 20
-    console.log(`Animating to scale: ${targetScale}, recording: ${isRecording}, recordingLevel: ${recordingLevel}, playbackLevel: ${playbackLevel}`)
 
     // Use timing with very short duration for immediate response at 240fps
     Animated.spring(animatedScale, {
@@ -456,7 +455,7 @@ const RoleplaySession: FC = () => {
             <ClockIcon size={16} className="text-neutral-400" />
             <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
           </View> */}
-          <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.scenario.title}</Text>
+          <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.roleplay.title}</Text>
 
           {sessionEnded && (
             <View className="items-center">

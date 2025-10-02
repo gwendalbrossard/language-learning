@@ -29,7 +29,7 @@ export const getResponseSuggestions = organizationProcedure
         AND: [{ id: input.roleplaySessionId }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }],
       },
       include: {
-        scenario: true,
+        roleplay: true,
         messages: {
           orderBy: { createdAt: "asc" },
         },
@@ -55,7 +55,7 @@ export const getResponseSuggestions = organizationProcedure
       })
       .join("\n")
 
-    const prompt = `You are an expert language tutor helping a learner practice ORAL conversational skills in a roleplay scenario.
+    const prompt = `You are an expert language tutor helping a learner practice ORAL conversational skills in a roleplay.
 
 CRITICAL: This is an ORAL conversation, not written communication. All suggestions must sound natural when spoken aloud and flow seamlessly in real-time dialogue.
 
@@ -67,10 +67,10 @@ In AsciiDoc:
 
 Only the AsciiDoc titles delimit the sections. Nothing else is used for this purpose.
 
-= SCENARIO CONTEXT =
+= ROLEPLAY CONTEXT =
 == Roleplay Details ==
-- Title: "${roleplaySession.scenario.title}"
-- Description: ${roleplaySession.scenario.description}
+- Title: "${roleplaySession.roleplay.title}"
+- Description: ${roleplaySession.roleplay.description}
 
 
 == Conversation History ==
@@ -87,7 +87,7 @@ Generate 3 response suggestions that help the learner continue this ORAL rolepla
 == ORAL Conversation Priority ==
 - ALL suggestions must sound natural when spoken aloud in real-time
 - Use conversational spoken language patterns
-- Avoid overly formal or written-style language unless the scenario specifically requires it
+- Avoid overly formal or written-style language unless the roleplay specifically requires it
 - Consider rhythm, flow, and natural speech patterns
 - Include responses that feel spontaneous and authentic in spoken dialogue
 
@@ -104,7 +104,7 @@ Sophisticated responses with nuanced language, cultural appropriateness, and nat
 
 == Contextual Appropriateness ==
 - Each suggestion must directly respond to the assistant's last message in real-time oral dialogue
-- Maintain the roleplay scenario's tone and setting appropriate for spoken interaction
+- Maintain the roleplay's tone and setting appropriate for spoken interaction
 - Consider cultural context and social registers as they apply to oral communication
 - Ensure responses advance the ORAL conversation naturally and maintain conversational momentum
 
@@ -122,7 +122,7 @@ Sophisticated responses with nuanced language, cultural appropriateness, and nat
 == Natural ORAL Conversation Flow ==
 - Responses should feel authentic and unforced when spoken
 - Consider what a native speaker would realistically say in oral dialogue
-- Match the conversational style and pace established in the spoken scenario
+- Match the conversational style and pace established in the spoken roleplay
 - Include natural hesitations, emphasis, and oral communication patterns where appropriate
 
 == Translation Requirements ==

@@ -8,7 +8,7 @@ import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { env } from "~/env.server"
 import { calculateAudioDuration, parseWAVFile } from "./utils/audio"
 import { getFeedback } from "./utils/get-feedback"
-import { getRoleplayScenarioInstructions } from "./utils/get-roleplay-scenario-instructions"
+import { getRoleplayInstructions } from "./utils/get-roleplay-scenario-instructions"
 
 type Props = {
   roleplaySessionId: string
@@ -20,7 +20,7 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
   const roleplaySession = await prisma.roleplaySession.findUnique({
     where: { id: roleplaySessionId, profileId: profile.id, organizationId: organization.id },
     include: {
-      scenario: true,
+      roleplay: true,
     },
   })
 
@@ -96,8 +96,8 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
   ws.on("open", function open() {
     console.log("Connected to server.")
 
-    const roleplayInstructions = getRoleplayScenarioInstructions({
-      scenario: roleplaySession.scenario,
+    const roleplayInstructions = getRoleplayInstructions({
+      roleplay: roleplaySession.roleplay,
       profile: profile,
     })
 

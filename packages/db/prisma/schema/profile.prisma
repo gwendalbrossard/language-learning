@@ -24,7 +24,7 @@ model Profile {
   members            Member[]
   invitations        Invitation[]
   streakDays         StreakDay[]
-  roleplayScenarios  RoleplayScenario[]
+  roleplays          Roleplay[]
   roleplaySessions   RoleplaySession[]
   roleplayCategories RoleplayCategory[]
   lessons            Lesson[]

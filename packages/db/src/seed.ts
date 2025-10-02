@@ -1,14 +1,14 @@
 import type { Prisma } from "../generated/client"
 import { prisma } from "./client"
 
-const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenarios: Prisma.RoleplayScenarioCreateWithoutCategoryInput[] }[] = [
+const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; roleplays: Prisma.RoleplayCreateWithoutCategoryInput[] }[] = [
   {
     category: {
       emoji: "🏠",
       name: "Daily Life",
       isPublic: true,
     },
-    scenarios: [
+    roleplays: [
       {
         emoji: "🍕",
         title: "Ordering Food at a Restaurant",
@@ -35,7 +35,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
       name: "Healthcare",
       isPublic: true,
     },
-    scenarios: [
+    roleplays: [
       {
         emoji: "🏥",
         title: "Doctor's Appointment",
@@ -53,7 +53,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
       name: "Travel",
       isPublic: true,
     },
-    scenarios: [
+    roleplays: [
       {
         emoji: "✈️",
         title: "Airport and Travel",
@@ -71,7 +71,7 @@ const roleplayCategories: { category: Prisma.RoleplayCategoryCreateInput; scenar
       name: "Professional",
       isPublic: true,
     },
-    scenarios: [
+    roleplays: [
       {
         emoji: "💼",
         title: "Job Interview",
@@ -209,38 +209,38 @@ async function seed() {
   try {
     // Check existing roleplay data
     const existingRoleplayCategories = await prisma.roleplayCategory.findMany()
-    const existingRoleplayScenarios = await prisma.roleplayScenario.findMany()
+    const existingRoleplays = await prisma.roleplay.findMany()
 
     // Check existing lesson data
     const existingLessonCategories = await prisma.lessonCategory.findMany()
     const existingLessons = await prisma.lesson.findMany()
 
     // Seed roleplay data if not exists
-    if (existingRoleplayCategories.length === 0 && existingRoleplayScenarios.length === 0) {
-      console.log("📁 Creating roleplay categories and scenarios...")
+    if (existingRoleplayCategories.length === 0 && existingRoleplays.length === 0) {
+      console.log("📁 Creating roleplay categories and roleplays...")
 
-      for (const { category, scenarios } of roleplayCategories) {
+      for (const { category, roleplays } of roleplayCategories) {
         const createdCategory = await prisma.roleplayCategory.create({
           data: category,
         })
         console.log(`✅ Created roleplay category: ${createdCategory.name}`)
 
-        // Create scenarios for this category
-        for (const scenario of scenarios) {
-          const created = await prisma.roleplayScenario.create({
+        // Create roleplays for this category
+        for (const roleplay of roleplays) {
+          const created = await prisma.roleplay.create({
             data: {
-              emoji: scenario.emoji,
-              title: scenario.title,
-              assistantRole: scenario.assistantRole,
-              userRole: scenario.userRole,
-              description: scenario.description,
-              difficulty: scenario.difficulty,
-              isPublic: scenario.isPublic,
+              emoji: roleplay.emoji,
+              title: roleplay.title,
+              assistantRole: roleplay.assistantRole,
+              userRole: roleplay.userRole,
+              description: roleplay.description,
+              difficulty: roleplay.difficulty,
+              isPublic: roleplay.isPublic,
 
               categoryId: createdCategory.id,
             },
           })
-          console.log(`✅ Created roleplay scenario: ${created.title}`)
+          console.log(`✅ Created roleplay: ${created.title}`)
         }
       }
     } else {

@@ -1,7 +1,7 @@
 import { Prisma } from "../../generated/client"
 import { roleplayCategorySelect } from "./roleplay-category"
 
-export const roleplayScenarioSelect = Prisma.validator<Prisma.RoleplayScenarioSelect>()({
+export const roleplaySelect = Prisma.validator<Prisma.RoleplaySelect>()({
   id: true,
   emoji: true,
   title: true,
@@ -21,4 +21,4 @@ export const roleplayScenarioSelect = Prisma.validator<Prisma.RoleplayScenarioSe
   updatedAt: true,
 })
 
-export type RoleplayScenarioSelected = Prisma.RoleplayScenarioGetPayload<{ select: typeof roleplayScenarioSelect }>
+export type RoleplaySelected = Prisma.RoleplayGetPayload<{ select: typeof roleplaySelect }>

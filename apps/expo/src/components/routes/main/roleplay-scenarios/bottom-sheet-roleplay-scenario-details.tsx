@@ -14,11 +14,11 @@ import { queryClient, trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
 type Props = {
-  scenario: RouterOutputs["profile"]["roleplayScenario"]["getAll"][number] | null
+  roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number] | null
   onClose: () => void
 }
 
-const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>(({ scenario, onClose }, ref) => {
+const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ roleplay, onClose }, ref) => {
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
@@ -36,9 +36,9 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
     }),
   )
 
-  const handleStartScenario = () => {
-    if (!scenario) throw new Error("Scenario not found")
-    profileRoleplaySessionCreateMutation.mutate({ scenarioId: scenario.id, organizationId: currentOrganizationId })
+  const handleStartRoleplay = () => {
+    if (!roleplay) throw new Error("Roleplay not found")
+    profileRoleplaySessionCreateMutation.mutate({ roleplayId: roleplay.id, organizationId: currentOrganizationId })
   }
 
   // Helper function to render difficulty stars
@@ -65,28 +65,28 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
       enableDynamicSizing={false}
       onDismiss={onClose}
     >
-      {scenario && (
+      {roleplay && (
         <BottomSheetView className="h-full flex-1 justify-between px-4 pb-10 pt-2">
-          {/* Scenario Details */}
+          {/* Roleplay Details */}
           <View className="flex flex-col gap-6">
             {/* Header */}
             <View className="flex flex-col items-center gap-4">
-              <Text className="text-4xl">{scenario.emoji}</Text>
+              <Text className="text-4xl">{roleplay.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
-                <Text className="text-center text-2xl font-semibold">{scenario.title}</Text>
+                <Text className="text-center text-2xl font-semibold">{roleplay.title}</Text>
                 <View className="flex flex-row items-center gap-3">
                   <Badge.Root variant="white" size="sm">
-                    <Badge.Text>{scenario.category.name}</Badge.Text>
+                    <Badge.Text>{roleplay.category.name}</Badge.Text>
                   </Badge.Root>
-                  <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(scenario.difficulty)}</View>
+                  <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(roleplay.difficulty)}</View>
                 </View>
               </View>
             </View>
 
             {/* Description */}
             <View className="flex flex-col gap-3">
-              <Text className="text-lg font-semibold">About This Scenario</Text>
-              <TextDescription className="text-base leading-6">{scenario.description}</TextDescription>
+              <Text className="text-lg font-semibold">About This Roleplay</Text>
+              <TextDescription className="text-base leading-6">{roleplay.description}</TextDescription>
             </View>
           </View>
 
@@ -96,11 +96,11 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
               className="w-full"
               size="lg"
               variant="primary"
-              onPress={handleStartScenario}
+              onPress={handleStartRoleplay}
               loading={profileRoleplaySessionCreateMutation.isPending}
             >
               <Button.Icon icon={Play} />
-              <Button.Text>Start Scenario</Button.Text>
+              <Button.Text>Start Roleplay</Button.Text>
             </Button.Root>
           </View>
         </BottomSheetView>
@@ -109,6 +109,6 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
   )
 })
 
-BottomSheetRoleplayScenarioDetails.displayName = "BottomSheetRoleplayScenarioDetails"
+BottomSheetRoleplayDetails.displayName = "BottomSheetRoleplayDetails"
 
-export default BottomSheetRoleplayScenarioDetails
+export default BottomSheetRoleplayDetails

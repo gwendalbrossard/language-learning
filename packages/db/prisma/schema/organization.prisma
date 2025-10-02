@@ -11,7 +11,7 @@ model Organization {
   members            Member[]
   invitations        Invitation[]
   roleplaySessions   RoleplaySession[]
-  roleplayScenarios  RoleplayScenario[]
+  roleplays          Roleplay[]
   roleplayCategories RoleplayCategory[]
   lessons            Lesson[]
   lessonSessions     LessonSession[]

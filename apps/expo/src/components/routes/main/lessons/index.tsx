@@ -34,10 +34,10 @@ const Lessons: FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["lessonCategory"]["getAll"][number] | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
 
-  // Selected scenario state
+  // Selected lesson state
   const [selectedLesson, setSelectedLesson] = useState<RouterOutputs["profile"]["lesson"]["getAll"][number] | null>(null)
 
-  // Filter scenarios based on selected filters
+  // Filter lessons based on selected filters
   const filteredLessons = useMemo(() => {
     return profileLessonGetAll.data.filter((lesson) => {
       const categoryMatch = !selectedCategory || lesson.category.id === selectedCategory.id
@@ -46,8 +46,8 @@ const Lessons: FC = () => {
     })
   }, [profileLessonGetAll.data, selectedCategory, selectedDifficulty])
 
-  const handleLessonPress = (scenario: RouterOutputs["profile"]["lesson"]["getAll"][number]) => {
-    setSelectedLesson(scenario)
+  const handleLessonPress = (lesson: RouterOutputs["profile"]["lesson"]["getAll"][number]) => {
+    setSelectedLesson(lesson)
   }
 
   useEffect(() => {

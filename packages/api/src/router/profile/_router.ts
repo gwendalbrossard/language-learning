@@ -7,7 +7,7 @@ import { lessonRouter } from "./lesson/_router"
 import { me } from "./me.route"
 import { onboard } from "./onboard.route"
 import { roleplayCategoryRouter } from "./roleplay-category/_router"
-import { roleplayScenarioRouter } from "./roleplay-scenario/_router"
+import { roleplayRouter } from "./roleplay-scenario/_router"
 import { roleplaySessionRouter } from "./roleplay-session/_router"
 import { streakDays } from "./streak-days.route"
 
@@ -19,7 +19,7 @@ export const profileRouter = {
   me: me,
   onboard: onboard,
   streakDays: streakDays,
+  roleplay: roleplayRouter,
   roleplayCategory: roleplayCategoryRouter,
-  roleplayScenario: roleplayScenarioRouter,
   roleplaySession: roleplaySessionRouter,
 } satisfies TRPCRouterRecord

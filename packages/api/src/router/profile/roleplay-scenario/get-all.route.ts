@@ -1,14 +1,14 @@
-import { roleplayScenarioSelect } from "@acme/db"
-import { ZProfileRoleplayScenarioGetAllSchema } from "@acme/validators"
+import { roleplaySelect } from "@acme/db"
+import { ZProfileRoleplayGetAllSchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../../trpc"
 
-export const getAll = organizationProcedure.input(ZProfileRoleplayScenarioGetAllSchema).query(async ({ ctx }) => {
-  const roleplayScenarios = await ctx.db.roleplayScenario.findMany({
+export const getAll = organizationProcedure.input(ZProfileRoleplayGetAllSchema).query(async ({ ctx }) => {
+  const roleplays = await ctx.db.roleplay.findMany({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
-    select: roleplayScenarioSelect,
+    select: roleplaySelect,
     orderBy: [{ createdAt: "desc" }],
   })
 
-  return roleplayScenarios
+  return roleplays
 })

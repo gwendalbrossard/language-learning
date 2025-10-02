@@ -65,7 +65,7 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
     >
       {lesson && (
         <BottomSheetView className="h-full flex-1 justify-between px-4 pb-10 pt-2">
-          {/* Scenario Details */}
+          {/* Lesson Details */}
           <View className="flex flex-col gap-6">
             {/* Header */}
             <View className="flex flex-col items-center gap-4">
