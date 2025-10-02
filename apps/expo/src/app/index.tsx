@@ -52,7 +52,7 @@ export default function Index() {
     // The user has a profile and has completed onboarding
     const redirectToMain = async () => {
       await prefetchMain()
-      router.replace("/main")
+      router.replace("/(tabs)/lessons")
     }
     void redirectToMain()
   }, [authMe.data, router, queryClient])
