@@ -53,7 +53,7 @@ ${lesson.description}
 
 - Native Language: ${profile.nativeLanguage}
 - Learning Language: ${profile.learningLanguage}
-- Learning Language Level: ${profile.learningLanguageLevel}
+- Learning Language Level: ${profile.learningLanguageLevel} (Beginner, Intermediate, Advanced, Proficient, Fluent)
 
 
 = CRITICAL BEHAVIORAL INSTRUCTIONS =

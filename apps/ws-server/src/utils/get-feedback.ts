@@ -18,10 +18,10 @@ export async function getFeedback({ transcript, profile, roleplaySessionMessages
     })
     .join("\n")
   const { object } = await generateObject({
-    model: azure("gpt-5-mini"),
+    model: azure("gpt-4o-mini"),
     schemaName: "feedback",
     schema: ZFeedbackSchema,
-    prompt: `You are an expert language tutor providing comprehensive feedback for someone learning a new language.
+    prompt: `You are an expert language tutor providing feedback for someone learning a new language.
 
 You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the instructions to follow or additional context for you to use in crafting your response.
 In AsciiDoc:
@@ -32,14 +32,9 @@ In AsciiDoc:
 Only the AsciiDoc titles delimit the sections. Nothing else is used for this purpose.
 
 = LEARNER PROFILE =
-== Target Language ==
-Learning language: ${profile.learningLanguage} (BCP 47 language tag (ISO 639 + ISO 3166))
-
-== Native Language ==
-Native language: ${profile.nativeLanguage} (BCP 47 language tag (ISO 639 + ISO 3166))
-
-== Proficiency Level ==
-Difficulty level: ${profile.learningLanguageLevel} (Beginner, Intermediate, Advanced, Proficient, Fluent)
+- Native Language: ${profile.nativeLanguage}
+- Learning Language: ${profile.learningLanguage}
+- Learning Language Level: ${profile.learningLanguageLevel} (Beginner, Intermediate, Advanced, Proficient, Fluent)
 
 == Text Source ==
 ORAL CONVERSATION TRANSCRIPT (speech-to-text conversion)
@@ -51,38 +46,20 @@ ${messages ? `Previous conversation context: ${messages}` : "No previous context
 "${transcript}"
 
 = CRITICAL REQUIREMENTS =
-IMPORTANT: ALL feedback messages, explanations, and detailed feedback MUST be written in ${profile.nativeLanguage} (the user's native language).
+IMPORTANT: ALL feedback messages MUST be written in ${profile.nativeLanguage} (the user's native language).
 
 IMPORTANT: This text comes from ORAL CONVERSATION, not written text. It's a speech transcript from someone speaking naturally. Adapt your feedback for spoken language patterns, not formal writing standards.
 
 = FEEDBACK REQUIREMENTS =
 
-== Overall Quality Assessment ==
-Provide an overall quality score (1-100) evaluating correctness and appropriateness
+If the text is already correct or has no significant errors that need correction:
+- Set isCorrect to true
+- Set both feedback and correctedPhrase to null
 
-== General Feedback ==
-Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive. Avoid generic encouragement phrases like "Great effort!", "Keep practicing!", or "You're doing well!" (in ${profile.nativeLanguage})
-
-== Corrected Version ==
-Provide the complete corrected version of the text
-
-== Specific Corrections ==
-For each mistake, provide:
-- "wrong": the incorrect part from the original text
-- "correct": the corrected version of that part
-- "explanation": a clear, concise explanation for the correction
-Example: { "wrong": "Je appelle", "correct": "Je m'appelle" }
-
-== Detailed Scoring ==
-All scoring messages must be in ${profile.nativeLanguage}:
-=== Accuracy (1-100) ===
-Grammar, syntax, word choice correctness - provide helpful guidance on specific issues found
-
-=== Fluency (1-100) ===
-How natural and smooth the expression sounds - offer friendly suggestions for improvement
-
-=== Vocabulary (1-100) ===
-Appropriateness and variety of word choices - suggest alternatives in a supportive way
+If there are errors that should be corrected:
+- Set isCorrect to false
+- Provide concise, friendly feedback (maximum 2-3 sentences) focusing on the most important issues while being constructive and supportive in ${profile.nativeLanguage}
+- Provide the complete corrected version of the text
 
 = FOCUS AREAS FOR ORAL CONVERSATION =
 
@@ -104,7 +81,7 @@ Appropriateness and variety of word choices - suggest alternatives in a supporti
 ❌ Casual contractions and spoken shortcuts
 
 = TONE AND APPROACH =
-Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve their SPOKEN language skills through constructive guidance. Remember this is oral communication, not academic writing. Avoid generic praise but maintain a warm, encouraging approach. Write ALL feedback in ${profile.nativeLanguage}.`,
+Be friendly, supportive, and educational while remaining specific and actionable. Focus on helping the learner improve their SPOKEN language skills through constructive guidance. Remember this is oral communication, not academic writing. Write ALL feedback in ${profile.nativeLanguage}.`,
     temperature: 0.3,
   })
 
