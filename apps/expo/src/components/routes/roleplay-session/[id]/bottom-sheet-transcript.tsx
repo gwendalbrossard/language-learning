@@ -1,7 +1,7 @@
 import type { FC } from "react"
 import React, { forwardRef, useState } from "react"
 import { BottomSheetModal } from "@gorhom/bottom-sheet"
-import { CheckCircle, Circle } from "lucide-react-native"
+import { CheckIcon, XIcon } from "lucide-react-native"
 import { ActivityIndicator, Dimensions, ScrollView, TouchableOpacity, View } from "react-native"
 import Markdown from "react-native-markdown-display"
 
@@ -27,7 +27,7 @@ const FeedbackIcon: React.FC<FeedbackIconProps> = ({ message }) => {
   if (!message.feedback) {
     // Show spinner when waiting for feedback
     return (
-      <View className="h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+      <View className="h-8 w-8 items-center justify-center rounded-full bg-neutral-100">
         <ActivityIndicator size="small" color="#6B7280" />
       </View>
     )
@@ -36,16 +36,16 @@ const FeedbackIcon: React.FC<FeedbackIconProps> = ({ message }) => {
   // If feedback is correct (no corrections needed), show a check icon
   if (message.feedback.isCorrect) {
     return (
-      <View className={cn(`size-8 items-center justify-center rounded-full border`, "border-green-200 bg-green-100")}>
-        <CheckCircle size={20} strokeWidth={2} color="#16A34A" />
+      <View className={cn(`size-8 items-center justify-center rounded-full border`, "border-success-100 bg-success-50")}>
+        <CheckIcon size={20} strokeWidth={2} color="#16A34A" />
       </View>
     )
   }
 
   // If feedback exists (corrections needed), show an info icon
   return (
-    <View className={cn(`size-8 items-center justify-center rounded-full border`, "border-yellow-200 bg-yellow-100")}>
-      <Circle size={20} strokeWidth={2} color="#D97706" />
+    <View className={cn(`size-8 items-center justify-center rounded-full border`, "border-error-100 bg-error-50")}>
+      <XIcon size={20} strokeWidth={2} color="#D97706" />
     </View>
   )
 }
