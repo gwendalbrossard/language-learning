@@ -6,8 +6,8 @@ import { ZProfileRoleplaySessionCreateSchema } from "@acme/validators"
 import { organizationProcedure } from "../../../trpc"
 
 export const create = organizationProcedure.input(ZProfileRoleplaySessionCreateSchema).mutation(async ({ ctx, input }) => {
-  const roleplayScenario = await ctx.db.roleplayScenario.findUnique({
-    where: { id: input.scenarioId },
+  const roleplayScenario = await ctx.db.roleplayScenario.findFirst({
+    where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
     select: roleplayScenarioSelect,
   })
 
