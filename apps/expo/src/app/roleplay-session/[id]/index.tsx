@@ -5,8 +5,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Stack, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, PhoneOff, Square, X } from "lucide-react-native"
-import { ActivityIndicator, Alert, Pressable, TouchableOpacity, View } from "react-native"
+import { ActivityIndicator, Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import Rive from "rive-react-native"
 import { io } from "socket.io-client"
 
 import type { RouterOutputs } from "@acme/api"
@@ -60,6 +61,8 @@ const RoleplaySession: FC = () => {
   const [recordingLevel, setRecordingLevel] = useState(0)
   const [playbackLevel, setPlaybackLevel] = useState(0)
 
+  const animatedScale = useRef(new Animated.Value(80)).current
+
   // Cache for response suggestions to avoid duplicate fetches
   const [cachedSuggestions, setCachedSuggestions] = useState<Record<string, Suggestion[]>>({})
 
@@ -95,6 +98,7 @@ const RoleplaySession: FC = () => {
 
     const practice: TPracticeSchema = {
       roleplaySessionId: id,
+      organizationId: currentOrganizationId,
     }
 
     socketRef.current = io(getWsBaseUrl(), {
@@ -188,6 +192,20 @@ const RoleplaySession: FC = () => {
       }
     }
   }, [initializeSocket])
+
+  // Animate scale based on audio levels with immediate response for 240fps
+  useEffect(() => {
+    const targetScale = 80 + (isRecording ? recordingLevel : playbackLevel) * 20
+    console.log(`Animating to scale: ${targetScale}, recording: ${isRecording}, recordingLevel: ${recordingLevel}, playbackLevel: ${playbackLevel}`)
+
+    // Use timing with very short duration for immediate response at 240fps
+    Animated.spring(animatedScale, {
+      toValue: targetScale,
+      tension: 200,
+      friction: 5,
+      useNativeDriver: false,
+    }).start()
+  }, [recordingLevel, playbackLevel, isRecording, animatedScale])
 
   const initializeAudio = async (): Promise<void> => {
     try {
@@ -411,7 +429,7 @@ const RoleplaySession: FC = () => {
           headerTitle: () => <View />,
           headerLeft: () => <View />,
           /*  headerLeft: () => (
-            <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-xs">
+            <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-custom-xs">
               <Text className="text-sm font-medium text-neutral-700">{formatTime(timeRemaining)}</Text>
             </View>
           ), */
@@ -423,7 +441,7 @@ const RoleplaySession: FC = () => {
           ), */
           /*   headerRight: () => (
             <View className="flex flex-row items-center gap-2">
-              <Pressable className="flex size-12 flex-row items-center justify-center rounded-full bg-error-600 shadow-xs" onPress={handleEndSession}>
+              <Pressable className="flex size-12 flex-row items-center justify-center rounded-full bg-error-600 shadow-custom-xs" onPress={handleEndSession}>
                 <PhoneOff size={16} className="text-white" />
               </Pressable>
             </View>
@@ -443,73 +461,31 @@ const RoleplaySession: FC = () => {
           {sessionEnded && (
             <View className="items-center">
               <Text className="mb-8 text-center text-xl font-medium text-neutral-700">Session ended</Text>
-              <View className="h-40 w-40 items-center justify-center rounded-3xl bg-neutral-300 shadow-lg">
+              <View className="shadow-custom-lg h-40 w-40 items-center justify-center rounded-3xl bg-neutral-300">
                 <X size={56} color="#666E7D" />
               </View>
               <Text className="mt-6 text-center text-lg font-medium text-success-600">Thank you for practicing!</Text>
             </View>
           )}
-
-          {isAssistantSpeaking && (
-            <View className="items-center">
-              <Text className="mb-8 text-center text-xl font-medium text-primary-700">Assistant is speaking...</Text>
-
-              {/* ChatGPT-style voice visualization - 6 circles */}
-              <View className="flex-row items-end gap-2">
-                {[0, 1, 2, 3].map((index) => {
-                  const baseHeight = 20
-                  const maxHeight = 60
-                  const animationDelay = index * 0.1
-                  const heightMultiplier = Math.sin((playbackLevel * 10 + animationDelay) * Math.PI) * 0.5 + 0.5
-                  const circleHeight = baseHeight + (maxHeight - baseHeight) * heightMultiplier * (playbackLevel > 0.05 ? 1 : 0.3)
-
-                  return (
-                    <View
-                      key={index}
-                      className="w-3 rounded-full bg-primary-600"
-                      style={{
-                        height: circleHeight,
-                        opacity: playbackLevel > 0.02 ? 0.8 + heightMultiplier * 0.2 : 0.4,
-                      }}
-                    />
-                  )
-                })}
-              </View>
-
-              <Text className="mt-6 text-center text-base font-medium text-neutral-600">Listening...</Text>
-            </View>
-          )}
-
-          {!isAssistantSpeaking && (
-            <View className="items-center">
-              <View
-                className="size-52 items-center justify-center rounded-full bg-primary-600 duration-75"
-                style={{
-                  /* opacity: recordingLevel * 0.8 + 0.2, */
-                  transform: [{ scale: 1 + recordingLevel * 0.15 }],
-                }}
-              />
-              <Text className="mt-12 max-w-[90%] text-center text-lg font-medium text-neutral-500">
-                {isRecording ? "Recording..." : "Ready to listen"}
-              </Text>
-
-              {/* Recording level visualization when recording */}
-              {isRecording && (
-                <View className="mb-8 items-center">
-                  <Text className="mb-4 text-sm text-neutral-500">Level: {(recordingLevel * 100).toFixed(0)}%</Text>
-                  <View className="h-4 w-40 overflow-hidden rounded-full bg-neutral-200 shadow-inner">
-                    <View
-                      className="h-full rounded-full bg-error-500 shadow-sm transition-all duration-150 ease-out"
-                      style={{
-                        width: `${Math.max(recordingLevel * 100, 8)}%`,
-                        opacity: recordingLevel > 0.02 ? 1 : 0.4,
-                      }}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
+          <Animated.View
+            style={{
+              marginTop: 40,
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
+              width: animatedScale.interpolate({
+                inputRange: [80, 100],
+                outputRange: ["80%", "100%"],
+              }),
+              height: animatedScale.interpolate({
+                inputRange: [80, 100],
+                outputRange: ["80%", "100%"],
+              }),
+            }}
+          >
+            <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "100%", height: "100%" }} />
+          </Animated.View>
 
           <View className="mt-10 flex flex-col items-center gap-2">
             <View className="flex flex-row items-center gap-2">
