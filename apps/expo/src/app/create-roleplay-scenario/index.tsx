@@ -1,3 +1,4 @@
+import type { FC } from "react"
 import { useRef } from "react"
 import { router, Stack } from "expo-router"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -7,8 +8,8 @@ import { useForm } from "react-hook-form"
 import { TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
-import type { TProfileRoleplayScenarioCreateSchema } from "@acme/validators"
-import { ZProfileRoleplayScenarioCreateSchema } from "@acme/validators"
+import type { TProfileRoleplayCreateSchema } from "@acme/validators"
+import { ZProfileRoleplayCreateSchema } from "@acme/validators"
 
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
@@ -21,7 +22,7 @@ import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
 
-const CreateRoleplayScenario = () => {
+const CreateRoleplay: FC = () => {
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
@@ -31,10 +32,10 @@ const CreateRoleplayScenario = () => {
   const assistantRoleRef = useRef<TextInput>(null)
   const descriptionRef = useRef<TextInput>(null)
 
-  const form = useForm<TProfileRoleplayScenarioCreateSchema>({
+  const form = useForm<TProfileRoleplayCreateSchema>({
     defaultValues: { userRole: "", assistantRole: "", description: "", difficulty: 2, organizationId: currentOrganizationId },
     mode: "all",
-    resolver: zodResolver(ZProfileRoleplayScenarioCreateSchema),
+    resolver: zodResolver(ZProfileRoleplayCreateSchema),
   })
 
   const profileRoleplaySessionCreateMutation = useMutation(
@@ -52,19 +53,19 @@ const CreateRoleplayScenario = () => {
     }),
   )
 
-  const profileRoleplayScenarioCreateMutation = useMutation(
-    trpc.profile.roleplayScenario.create.mutationOptions({
+  const profileRoleplayCreateMutation = useMutation(
+    trpc.profile.roleplay.create.mutationOptions({
       onSuccess: async (data) => {
         await Promise.all([
-          queryClient.invalidateQueries(trpc.profile.roleplayScenario.getAll.queryFilter({ organizationId: currentOrganizationId })),
-          profileRoleplaySessionCreateMutation.mutateAsync({ scenarioId: data.id, organizationId: currentOrganizationId }),
+          queryClient.invalidateQueries(trpc.profile.roleplay.getAll.queryFilter({ organizationId: currentOrganizationId })),
+          profileRoleplaySessionCreateMutation.mutateAsync({ roleplayId: data.id, organizationId: currentOrganizationId }),
         ])
       },
     }),
   )
 
-  const handleCreateScenario = () => {
-    void form.handleSubmit(async (data) => await profileRoleplayScenarioCreateMutation.mutateAsync(data))()
+  const handleCreateRoleplay = () => {
+    void form.handleSubmit(async (data) => await profileRoleplayCreateMutation.mutateAsync(data))()
   }
 
   const difficulty = form.watch("difficulty")
@@ -103,8 +104,8 @@ const CreateRoleplayScenario = () => {
       />
       <Step.Container>
         <Step.Header>
-          <Step.HeaderTitle>Create Roleplay Scenario</Step.HeaderTitle>
-          <Step.HeaderDescription>We will generate a personalized roleplay scenario based on your inputs</Step.HeaderDescription>
+          <Step.HeaderTitle>Create Roleplay</Step.HeaderTitle>
+          <Step.HeaderDescription>We will generate a personalized roleplay based on your inputs</Step.HeaderDescription>
         </Step.Header>
         <Step.Body>
           {/* Form */}
@@ -141,7 +142,7 @@ const CreateRoleplayScenario = () => {
 
             {/* Description */}
             <View className="flex flex-col gap-2">
-              <Label>💬 Scenario Description</Label>
+              <Label>💬 Roleplay Description</Label>
               <Textarea
                 ref={descriptionRef}
                 className={cn(textareaClasses({ size: "lg" }))}
@@ -182,18 +183,18 @@ const CreateRoleplayScenario = () => {
             className="w-full"
             size="lg"
             variant="primary"
-            onPress={handleCreateScenario}
-            loading={profileRoleplayScenarioCreateMutation.isPending}
+            onPress={handleCreateRoleplay}
+            loading={profileRoleplayCreateMutation.isPending}
             disabled={
               !(
                 form.watch("userRole") !== "" &&
                 form.watch("assistantRole") !== "" &&
                 form.watch("description") !== "" &&
                 form.watch("difficulty")
-              ) || profileRoleplayScenarioCreateMutation.isPending
+              ) || profileRoleplayCreateMutation.isPending
             }
           >
-            <Button.Text>Create Scenario</Button.Text>
+            <Button.Text>Create Roleplay</Button.Text>
           </Button.Root>
         </Step.Bottom>
       </Step.Container>
@@ -201,4 +202,4 @@ const CreateRoleplayScenario = () => {
   )
 }
 
-export default CreateRoleplayScenario
+export default CreateRoleplay

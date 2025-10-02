@@ -1,7 +1,7 @@
 import type { FC } from "react"
 import { Stack } from "expo-router"
 
-const CreateRoleplayScenarioLayout: FC = () => {
+const CreateRoleplayLayout: FC = () => {
   return (
     <Stack
       screenOptions={{
@@ -12,4 +12,4 @@ const CreateRoleplayScenarioLayout: FC = () => {
   )
 }
 
-export default CreateRoleplayScenarioLayout
+export default CreateRoleplayLayout
