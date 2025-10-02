@@ -2,7 +2,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import TabsHeader from "~/components/common/tabs/tabs-header"
-import Roleplays from "~/components/routes/main/roleplay-scenarios"
+import Roleplays from "~/components/routes/main/roleplays"
 
 export default function RoleplaysTab() {
   return (

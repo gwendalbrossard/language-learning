@@ -7,6 +7,7 @@ import { ZProfileLessonCreateSchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../../trpc"
 
+// TODO: Update schema and prompt
 const ZLessonGenerateSchema = z.object({
   title: z
     .string()
@@ -84,7 +85,7 @@ Choose the most appropriate category ID from the available categories list above
 - Keep the title focused on the vocabulary/topic being taught
 - The description should clearly indicate what will be learned (vocabulary, phrases, skills)
 - Consider the learner's proficiency level and difficulty when crafting the content
-- Focus on structured learning outcomes rather than roleplay scenarios
+- Focus on structured learning outcomes rather than roleplays
 - The response should always be in ${ctx.profile.nativeLanguage}, regardless of the learning language`,
     temperature: 0.3,
   })

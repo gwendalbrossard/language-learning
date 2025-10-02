@@ -13,8 +13,8 @@ import { Text, TextDescription } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
-import BottomSheetRoleplayDetails from "./bottom-sheet-roleplay-scenario-details"
-import BottomSheetRoleplayFilters from "./bottom-sheet-roleplay-scenario-filters"
+import BottomSheetRoleplayDetails from "./bottom-sheet-roleplay-details"
+import BottomSheetRoleplayFilters from "./bottom-sheet-roleplay-filters"
 
 const Roleplays: FC = () => {
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
@@ -80,7 +80,7 @@ const Roleplays: FC = () => {
         <Text className="text-xl font-semibold">Practice Roleplay</Text>
 
         <View className="flex flex-row items-center gap-2">
-          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => router.push("/create-roleplay-scenario")}>
+          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => router.push("/create-roleplay")}>
             <Button.Icon icon={Plus} />
             <Button.Text>Create</Button.Text>
           </Button.Root>

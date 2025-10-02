@@ -8,7 +8,7 @@ import { prisma, RoleplaySessionMessageRole } from "@acme/db"
 import { env } from "~/env.server"
 import { calculateAudioDuration, parseWAVFile } from "./utils/audio"
 import { getFeedback } from "./utils/get-feedback"
-import { getRoleplayInstructions } from "./utils/get-roleplay-scenario-instructions"
+import { getRoleplayInstructions } from "./utils/get-roleplay-instructions"
 
 type Props = {
   roleplaySessionId: string
