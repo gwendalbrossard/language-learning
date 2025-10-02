@@ -64,7 +64,7 @@ const PersonalizingPlan: FC<StepProps> = ({ onContinue, onBack, progress }) => {
             radius={110}
             innerRadius={90}
             innerCircleColor="#FFFFFF"
-            centerLabelComponent={() => <Text className="text-2xl font-bold">{Math.round(finalizingProgress)}%</Text>}
+            centerLabelComponent={() => <Text className="text-2xl font-semibold">{Math.round(finalizingProgress)}%</Text>}
             isAnimated
             animationDuration={50}
           />

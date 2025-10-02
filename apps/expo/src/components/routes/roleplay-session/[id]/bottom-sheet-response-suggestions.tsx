@@ -94,7 +94,7 @@ export const BottomSheetResponseSuggestions = forwardRef<BottomSheetModal, Props
       <BottomSheetView className="flex-1">
         {/* Fixed Header */}
         <View className="border-b border-neutral-200 px-4 pb-4 pt-1">
-          <Text className="text-center text-lg font-bold">Response Suggestions</Text>
+          <Text className="text-center text-lg font-semibold">Response Suggestions</Text>
           <Text className="mt-1 text-center text-sm text-neutral-600">Swipe to see different difficulty levels</Text>
         </View>
 

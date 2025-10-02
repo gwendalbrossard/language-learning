@@ -73,7 +73,7 @@ const BottomSheetRoleplayScenarioDetails = forwardRef<BottomSheetModal, Props>((
             <View className="flex flex-col items-center gap-4">
               <Text className="text-4xl">{scenario.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
-                <Text className="text-center text-2xl font-bold">{scenario.title}</Text>
+                <Text className="text-center text-2xl font-semibold">{scenario.title}</Text>
                 <View className="flex flex-row items-center gap-3">
                   <Badge.Root variant="white" size="sm">
                     <Badge.Text>{scenario.category.name}</Badge.Text>

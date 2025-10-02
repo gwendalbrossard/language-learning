@@ -118,7 +118,7 @@ const BottomSheetRoleplayScenarioFilters = forwardRef<BottomSheetModal, Props>(
         <View className="flex-1">
           {/* Fixed Header */}
           <View className="px-4 pb-4 pt-2">
-            <Text className="text-center text-lg font-bold">Filter Scenarios</Text>
+            <Text className="text-center text-lg font-semibold">Filter Scenarios</Text>
           </View>
 
           {/* Scrollable Content with Footer Space */}

@@ -104,10 +104,10 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
         <View className="shadow-custom-sm mt-3 max-w-[92%] self-end rounded-2xl border border-neutral-200 bg-white p-6">
           {/* Header with quality score and close button */}
           <View className="mb-6 flex-row items-center justify-between">
-            <Text className="text-lg font-bold">Feedback</Text>
+            <Text className="text-lg font-semibold">Feedback</Text>
             <View className="flex-row items-center gap-3">
               <View className="rounded-xl bg-blue-600 px-4 py-2">
-                <Text className="text-sm font-bold text-white">{message.feedback.quality}/100</Text>
+                <Text className="text-sm font-semibold text-white">{message.feedback.quality}/100</Text>
               </View>
               <TouchableOpacity
                 onPress={(e) => {
@@ -186,7 +186,7 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
                 <View className="mb-3 flex-row items-center justify-between">
                   <Text className="text-base font-semibold text-blue-900">Accuracy</Text>
                   <View className="rounded-lg bg-blue-600 px-3 py-1">
-                    <Text className="text-sm font-bold text-white">{message.feedback.accuracy.score}</Text>
+                    <Text className="text-sm font-semibold text-white">{message.feedback.accuracy.score}</Text>
                   </View>
                 </View>
                 <Text className="text-sm text-blue-800">{message.feedback.accuracy.message}</Text>
@@ -197,7 +197,7 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
                 <View className="mb-3 flex-row items-center justify-between">
                   <Text className="text-base font-semibold text-purple-900">Fluency</Text>
                   <View className="rounded-lg bg-purple-600 px-3 py-1">
-                    <Text className="text-sm font-bold text-white">{message.feedback.fluency.score}</Text>
+                    <Text className="text-sm font-semibold text-white">{message.feedback.fluency.score}</Text>
                   </View>
                 </View>
                 <Text className="text-sm text-purple-800">{message.feedback.fluency.message}</Text>
@@ -208,7 +208,7 @@ const UserMessage: FC<UserMessageProps> = ({ message }) => {
                 <View className="mb-3 flex-row items-center justify-between">
                   <Text className="text-base font-semibold text-emerald-900">Vocabulary</Text>
                   <View className="rounded-lg bg-emerald-600 px-3 py-1">
-                    <Text className="text-sm font-bold text-white">{message.feedback.vocabulary.score}</Text>
+                    <Text className="text-sm font-semibold text-white">{message.feedback.vocabulary.score}</Text>
                   </View>
                 </View>
                 <Text className="text-sm text-emerald-800">{message.feedback.vocabulary.message}</Text>
@@ -253,7 +253,7 @@ export const BottomSheetTranscript = forwardRef<BottomSheetModal, Props>(({ mess
       <View className="flex-1">
         {/* Fixed Header */}
         <View className="border-b border-neutral-200 px-4 pb-4 pt-1">
-          <Text className="text-center text-lg font-bold">Conversation Transcript</Text>
+          <Text className="text-center text-lg font-semibold">Conversation Transcript</Text>
         </View>
 
         {/* Scrollable Content*/}
