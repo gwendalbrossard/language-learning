@@ -59,6 +59,7 @@ ${input.difficulty} (1=beginner, 2=intermediate, 3=advanced)
 
 == Learner Profile ==
 - Learning Language: ${ctx.profile.learningLanguage}
+- Native Language: ${ctx.profile.nativeLanguage}
 - Learning Language Level: ${ctx.profile.learningLanguageLevel}
 
 == Available Categories ==
@@ -87,7 +88,7 @@ Choose the most appropriate category ID from the available categories list above
 - Keep the title short and focused on the scenario content
 - Expand the description naturally while maintaining the original intent
 - Consider the learner's proficiency level and difficulty when crafting the content
-- The response should always be in English, regardless of the learning language`,
+- The response should always be in ${ctx.profile.nativeLanguage}, regardless of the learning language`,
     temperature: 0.3,
   })
 

@@ -62,6 +62,12 @@ Extract the specific content the user should focus on:
 - For "REPEAT": The exact words, phrases, or expressions to repeat
 - For "ANSWER": The question being asked or prompt being given
 
+== Target Content Translation ==
+Translate the target content into the user's native language (${profile.nativeLanguage}) to help them understand what they're practicing or being asked to do. This translation should be:
+- Accurate and contextually appropriate
+- Natural in the target language
+- Helpful for learning comprehension
+
 == Vocabulary Type (for "REPEAT" actions only) ==
 When the action type is "REPEAT", also identify the vocabulary type:
 - "WORD": Single vocabulary words (e.g., "hello", "merci", "casa")
@@ -80,7 +86,8 @@ IMPORTANT: The AI message is from speech-to-text conversion, so account for pote
 Analyze the AI tutor's message to identify:
 1. What the AI is asking the user to do ("REPEAT" or "ANSWER")
 2. The specific content (words, phrases, expressions, questions) the user should focus on
-3. For "REPEAT" actions: the vocabulary type (WORD, PHRASE, or EXPRESSION)`,
+3. The translation of that content into the user's native language (${profile.nativeLanguage})
+4. For "REPEAT" actions: the vocabulary type (WORD, PHRASE, or EXPRESSION)`,
     temperature: 0.3,
   })
 

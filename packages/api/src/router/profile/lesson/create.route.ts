@@ -55,6 +55,7 @@ ${input.difficulty} (1=beginner, 2=intermediate, 3=advanced)
 
 == Learner Profile ==
 - Learning Language: ${ctx.profile.learningLanguage}
+- Native Language: ${ctx.profile.nativeLanguage}
 - Learning Language Level: ${ctx.profile.learningLanguageLevel}
 
 == Available Categories ==
@@ -84,7 +85,7 @@ Choose the most appropriate category ID from the available categories list above
 - The description should clearly indicate what will be learned (vocabulary, phrases, skills)
 - Consider the learner's proficiency level and difficulty when crafting the content
 - Focus on structured learning outcomes rather than roleplay scenarios
-- The response should always be in English, regardless of the learning language`,
+- The response should always be in ${ctx.profile.nativeLanguage}, regardless of the learning language`,
     temperature: 0.3,
   })
 
