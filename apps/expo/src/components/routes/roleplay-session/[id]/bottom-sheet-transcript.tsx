@@ -1,7 +1,7 @@
 import type { FC } from "react"
-import React, { forwardRef, useRef, useState } from "react"
+import React, { forwardRef, useState } from "react"
 import { BottomSheetModal } from "@gorhom/bottom-sheet"
-import { CheckCircle, Circle, X } from "lucide-react-native"
+import { CheckCircle, Circle } from "lucide-react-native"
 import { ActivityIndicator, Dimensions, ScrollView, TouchableOpacity, View } from "react-native"
 import Markdown from "react-native-markdown-display"
 
