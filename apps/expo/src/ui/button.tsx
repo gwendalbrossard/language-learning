@@ -91,7 +91,7 @@ const buttonTextVariants = cva("web:pointer-events-none web:whitespace-nowrap fo
       xl: "text-lg",
     },
     loading: {
-      true: "text-transparent",
+      true: "text-transparent disabled:text-transparent",
     },
   },
   defaultVariants: {

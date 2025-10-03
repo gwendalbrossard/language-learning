@@ -5,6 +5,25 @@ export default {
   content: ["src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["DMSans-Regular", "sans-serif"],
+        thin: ["DMSans-Thin", "sans-serif"],
+        extralight: ["DMSans-ExtraLight", "sans-serif"],
+        light: ["DMSans-Light", "sans-serif"],
+        normal: ["DMSans-Regular", "sans-serif"],
+        medium: ["DMSans-Medium", "sans-serif"],
+        semibold: ["DMSans-SemiBold", "sans-serif"],
+        bold: ["DMSans-Bold", "sans-serif"],
+        extrabold: ["DMSans-ExtraBold", "sans-serif"],
+        black: ["DMSans-Black", "sans-serif"],
+        "shantell-extralight": ["ShantellSans-ExtraLight", "sans-serif"],
+        "shantell-light": ["ShantellSans-Light", "sans-serif"],
+        "shantell-normal": ["ShantellSans-Regular", "sans-serif"],
+        "shantell-medium": ["ShantellSans-Medium", "sans-serif"],
+        "shantell-semibold": ["ShantellSans-SemiBold", "sans-serif"],
+        "shantell-bold": ["ShantellSans-Bold", "sans-serif"],
+        "shantell-extrabold": ["ShantellSans-ExtraBold", "sans-serif"],
+      },
       fontSize: {
         "9xl": [
           "8rem",
