@@ -3,10 +3,13 @@ import type { FC } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { router } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
-import { Filter, Plus, Star } from "lucide-react-native"
+import { ChevronRightIcon, Filter, Plus, Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
+import type { Difficulty } from "~/components/common/difficulty"
+import type { DifficultyIconProps } from "~/components/common/filters"
 import type { RouterOutputs } from "~/utils/api"
+import { getDifficultyIcon, getDifficultyName } from "~/components/common/difficulty"
 import * as Badge from "~/ui/badge"
 import * as Button from "~/ui/button"
 import { Text, TextDescription } from "~/ui/text"
@@ -32,7 +35,7 @@ const Roleplays: FC = () => {
 
   // Filter state
   const [selectedCategories, setSelectedCategories] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]>([])
-  const [selectedDifficulties, setSelectedDifficulties] = useState<number[]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<Difficulty[]>([])
 
   // Selected roleplay state
   const [selectedRoleplay, setSelectedRoleplay] = useState<RouterOutputs["profile"]["roleplay"]["getAll"][number] | null>(null)
@@ -40,8 +43,8 @@ const Roleplays: FC = () => {
   // Filter roleplays based on selected filters
   const filteredRoleplays = useMemo(() => {
     return profileRoleplayGetAll.data.filter((roleplay) => {
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some(category => category.id === roleplay.category.id)
-      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(roleplay.difficulty)
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some((category) => category.id === roleplay.category.id)
+      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(roleplay.difficulty as Difficulty)
       return categoryMatch && difficultyMatch
     })
   }, [profileRoleplayGetAll.data, selectedCategories, selectedDifficulties])
@@ -57,6 +60,11 @@ const Roleplays: FC = () => {
 
   const handleCloseDetails = () => {
     setSelectedRoleplay(null)
+  }
+
+  const DifficultyIcon: FC<DifficultyIconProps> = ({ difficulty }) => {
+    const Icon = getDifficultyIcon(difficulty)
+    return <Icon width={12} height={12} />
   }
 
   // Helper function to render difficulty stars
@@ -95,6 +103,45 @@ const Roleplays: FC = () => {
             )}
           </Button.Root>
         </View>
+      </View>
+
+      {/* Roleplays */}
+      <View className="flex flex-col gap-3">
+        {filteredRoleplays.map((roleplay) => (
+          <Pressable
+            key={roleplay.id}
+            onPress={() => handleRoleplayPress(roleplay)}
+            className="shadow-custom-xs flex flex-row items-center gap-3 rounded-xl border border-neutral-200 bg-white px-2.5 py-3.5 active:bg-neutral-50"
+          >
+            {/* Emoji */}
+            <View className="flex size-11 items-center justify-center rounded-xl border border-neutral-100 bg-neutral-50">
+              <Text className="text-3xl">{roleplay.emoji}</Text>
+            </View>
+
+            {/* Content */}
+            <View className="flex flex-1 flex-col gap-0.5">
+              {/* Title */}
+              <Text className="line-clamp-2 text-base font-semibold text-neutral-700">{roleplay.title}</Text>
+
+              {/* Category and difficulty */}
+              <View className="flex flex-row items-center gap-2">
+                <Text className="text-xs font-medium text-neutral-500">
+                  {roleplay.category.emoji} {roleplay.category.name}
+                </Text>
+
+                <View className="flex flex-row items-center gap-1">
+                  <DifficultyIcon difficulty={roleplay.difficulty as Difficulty} />
+                  <Text className="text-xs font-medium text-neutral-500">{getDifficultyName(roleplay.difficulty as Difficulty)}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Chevron right */}
+            <View className="flex size-11 items-center justify-center rounded-xl">
+              <ChevronRightIcon className="text-neutral-400" size={20} />
+            </View>
+          </Pressable>
+        ))}
       </View>
 
       {/* Roleplays */}

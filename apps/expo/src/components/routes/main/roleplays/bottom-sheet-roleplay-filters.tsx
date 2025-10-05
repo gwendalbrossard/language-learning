@@ -3,18 +3,20 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet"
 import { Dimensions, View } from "react-native"
 import { ScrollView } from "react-native-gesture-handler"
 
+import type { Difficulty } from "~/components/common/difficulty"
 import type { RouterOutputs } from "~/utils/api"
-import { difficulties, DifficultyIcon, FilterOption, FilterSection, getDifficultyName } from "~/components/common/filters"
+import { difficulties, getDifficultyName } from "~/components/common/difficulty"
+import { DifficultyIcon, FilterOption, FilterSection } from "~/components/common/filters"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 
 type Props = {
-  categories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]
-  selectedCategories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]
-  selectedDifficulties: number[]
-  onCategoryChange: (categories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]) => void
-  onDifficultyChange: (difficulties: number[]) => void
+  categories: RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]
+  selectedCategories: RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]
+  selectedDifficulties: Difficulty[]
+  onCategoryChange: (categories: RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]) => void
+  onDifficultyChange: (difficulties: Difficulty[]) => void
   filteredCount: number
 }
 

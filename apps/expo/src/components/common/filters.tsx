@@ -1,47 +1,18 @@
 import type { FC } from "react"
 import { Pressable, View } from "react-native"
 
-import Easy from "~/components/common/svg/filters/difficulties/easy"
-import Hard from "~/components/common/svg/filters/difficulties/hard"
-import Medium from "~/components/common/svg/filters/difficulties/medium"
+import type { Difficulty } from "./difficulty"
 import { Text } from "~/ui/text"
 import { cn } from "~/utils/utils"
+import { getDifficultyIcon } from "./difficulty"
 
-// Shared filter constants and utilities
-export const difficulties = [1, 2, 3]
-
-export const getDifficultyName = (difficulty: number): string => {
-  const names = {
-    1: "Easy",
-    2: "Medium",
-    3: "Hard",
-  }
-
-  const name = names[difficulty as keyof typeof names]
-  if (!name) throw new Error(`Unknown difficulty level: ${difficulty}`)
-  return name
+export type DifficultyIconProps = {
+  difficulty: Difficulty
 }
 
-export type DifficultyStarsProps = {
-  difficulty: number
-  maxStars?: number
-}
-
-export const DifficultyIcon: FC<DifficultyStarsProps> = ({ difficulty }) => {
-  const getDifficultyIcon = () => {
-    switch (difficulty) {
-      case 1:
-        return <Easy width={16} height={16} />
-      case 2:
-        return <Medium width={16} height={16} />
-      case 3:
-        return <Hard width={16} height={16} />
-      default:
-        throw new Error(`Unknown difficulty level: ${difficulty}`)
-    }
-  }
-
-  return <View className="flex flex-row items-center">{getDifficultyIcon()}</View>
+export const DifficultyIcon: FC<DifficultyIconProps> = ({ difficulty }) => {
+  const Icon = getDifficultyIcon(difficulty)
+  return <Icon width={16} height={16} />
 }
 
 export type FilterOptionProps = {

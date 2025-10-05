@@ -8,18 +8,13 @@ import { Platform } from "react-native"
 import Purchases, { LOG_LEVEL } from "react-native-purchases"
 
 import BottomSheetPaywall from "~/components/common/bottom-sheet-paywall"
-import BottomSheetStreak from "~/components/common/bottom-sheet-streak"
-import BottomSheetSettings from "~/components/routes/main/bottom-sheet-settings"
 import { useRevenueCat } from "~/hooks/use-revenuecat"
 import { trpc } from "~/utils/api"
 import { publicApiKeys } from "~/utils/revenuecat"
-import { useBottomSheetsStore } from "~/utils/zustand/bottom-sheets-store"
 import { useUserStore } from "~/utils/zustand/user-store"
 
 export default function TabLayout() {
-  const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
   const bottomSheetPaywallRef = useRef<BottomSheetModal>(null)
-  const bottomSheetStreakRef = useBottomSheetsStore((state) => state.bottomSheetStreakRef)
 
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   const profile = profileMe.data
@@ -96,9 +91,7 @@ export default function TabLayout() {
         }}
       />
 
-      <BottomSheetSettings ref={bottomSheetSettingsRef} />
       <BottomSheetPaywall ref={bottomSheetPaywallRef} />
-      <BottomSheetStreak ref={bottomSheetStreakRef} />
     </Tabs>
   )
 }

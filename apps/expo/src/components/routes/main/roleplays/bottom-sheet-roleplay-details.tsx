@@ -1,11 +1,15 @@
+import type { FC } from "react"
 import { forwardRef } from "react"
 import { router } from "expo-router"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { useMutation } from "@tanstack/react-query"
-import { Play, Star } from "lucide-react-native"
+import { Play } from "lucide-react-native"
 import { Dimensions, View } from "react-native"
 
+import type { Difficulty } from "~/components/common/difficulty"
+import type { DifficultyIconProps } from "~/components/common/filters"
 import type { RouterOutputs } from "~/utils/api"
+import { getDifficultyIcon, getDifficultyName } from "~/components/common/difficulty"
 import * as Badge from "~/ui/badge"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
@@ -16,6 +20,11 @@ import { useUserStore } from "~/utils/zustand/user-store"
 type Props = {
   roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number] | null
   onClose: () => void
+}
+
+const DifficultyIcon: FC<DifficultyIconProps> = ({ difficulty }) => {
+  const Icon = getDifficultyIcon(difficulty)
+  return <Icon width={14} height={14} />
 }
 
 const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ roleplay, onClose }, ref) => {
@@ -41,19 +50,6 @@ const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ rolepl
     profileRoleplaySessionCreateMutation.mutate({ roleplayId: roleplay.id, organizationId: currentOrganizationId })
   }
 
-  // Helper function to render difficulty stars
-  const renderDifficultyStars = (difficulty: number) => {
-    const stars = []
-    const maxStars = 5
-
-    for (let i = 1; i <= maxStars; i++) {
-      const isFilled = i <= difficulty
-      stars.push(<Star key={i} size={16} fill={isFilled ? "#F59E0B" : "transparent"} color={isFilled ? "#F59E0B" : "#D1D5DB"} strokeWidth={1.5} />)
-    }
-
-    return stars
-  }
-
   return (
     <BottomSheetModal
       ref={ref}
@@ -74,18 +70,26 @@ const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ rolepl
               <Text className="text-4xl">{roleplay.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
                 <Text className="text-center text-2xl font-semibold">{roleplay.title}</Text>
-                <View className="flex flex-row items-center gap-3">
+
+                {/* Category and difficulty */}
+                <View className="flex flex-row items-center gap-2.5">
                   <Badge.Root variant="white" size="sm">
-                    <Badge.Text>{roleplay.category.name}</Badge.Text>
+                    <Badge.Text>
+                      {roleplay.category.emoji} {roleplay.category.name}
+                    </Badge.Text>
                   </Badge.Root>
-                  <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(roleplay.difficulty)}</View>
+
+                  <Badge.Root variant="white" size="sm">
+                    <DifficultyIcon difficulty={roleplay.difficulty as Difficulty} />
+                    <Badge.Text>{getDifficultyName(roleplay.difficulty as Difficulty)}</Badge.Text>
+                  </Badge.Root>
                 </View>
               </View>
             </View>
 
             {/* Description */}
-            <View className="flex flex-col gap-3">
-              <Text className="text-lg font-semibold">About This Roleplay</Text>
+            <View className="flex flex-col gap-1">
+              <Text className="text-xl font-semibold">About This Roleplay</Text>
               <TextDescription className="text-base leading-6">{roleplay.description}</TextDescription>
             </View>
           </View>

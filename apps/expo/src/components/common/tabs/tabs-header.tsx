@@ -7,14 +7,13 @@ import { Pressable, Text, View } from "react-native"
 
 import { languageOptions } from "@acme/validators"
 
-import BottomSheetSettings from "~/components/routes/main/bottom-sheet-settings"
 import { trpc } from "~/utils/api"
-import { useBottomSheetsStore } from "~/utils/zustand/bottom-sheets-store"
+import BottomSheetSettings from "../bottom-sheet-settings"
 import BottomSheetStreak from "../bottom-sheet-streak"
 
 const TabsHeader: FC = () => {
   const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
-  const bottomSheetStreakRef = useBottomSheetsStore((state) => state.bottomSheetStreakRef)
+  const bottomSheetStreakRef = useRef<BottomSheetModal>(null)
 
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   const profile = profileMe.data
@@ -33,7 +32,7 @@ const TabsHeader: FC = () => {
           <Text className="h-[28px] text-[28px] font-semibold text-neutral-500">{findLanguageOption(profile.learningLanguage).emoji}</Text>
 
           <Pressable
-            onPress={() => bottomSheetStreakRef?.current?.present()}
+            onPress={() => bottomSheetStreakRef.current?.present()}
             className="flex flex-row items-center gap-2 rounded-md border border-neutral-400 px-2 py-1"
           >
             <Text className="text-xs font-semibold text-neutral-500">🔥 {profile.currentStreak}</Text>
@@ -49,6 +48,7 @@ const TabsHeader: FC = () => {
           </Pressable>
         </View>
       </View>
+
       <BottomSheetSettings ref={bottomSheetSettingsRef} />
       <BottomSheetStreak ref={bottomSheetStreakRef} />
     </>

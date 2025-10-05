@@ -30,7 +30,7 @@ const ReadyToStart: FC<StepProps> = ({ onBack, progress }) => {
       onSuccess: async () => {
         posthog.capture(POSTHOG_EVENTS["onboarding completed"])
         await prefetchMain()
-        router.replace("/main")
+        router.replace("/(tabs)/lessons")
       },
     }),
   )

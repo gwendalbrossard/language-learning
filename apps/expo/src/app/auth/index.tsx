@@ -81,7 +81,7 @@ const handleAuthSuccess = async (userInformation: UserInformation) => {
     router.push("/onboarding")
   } else {
     await prefetchMain()
-    router.replace("/main")
+    router.replace("/(tabs)/lessons")
   }
 }
 
