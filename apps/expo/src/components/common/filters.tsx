@@ -1,24 +1,47 @@
 import type { FC } from "react"
-import { Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
+import Easy from "~/components/common/svg/filters/difficulties/easy"
+import Hard from "~/components/common/svg/filters/difficulties/hard"
+import Medium from "~/components/common/svg/filters/difficulties/medium"
 import { Text } from "~/ui/text"
 import { cn } from "~/utils/utils"
+
+// Shared filter constants and utilities
+export const difficulties = [1, 2, 3]
+
+export const getDifficultyName = (difficulty: number): string => {
+  const names = {
+    1: "Easy",
+    2: "Medium",
+    3: "Hard",
+  }
+
+  const name = names[difficulty as keyof typeof names]
+  if (!name) throw new Error(`Unknown difficulty level: ${difficulty}`)
+  return name
+}
 
 export type DifficultyStarsProps = {
   difficulty: number
   maxStars?: number
 }
 
-export const DifficultyStars: FC<DifficultyStarsProps> = ({ difficulty, maxStars = 3 }) => {
-  const stars = []
-
-  for (let i = 1; i <= maxStars; i++) {
-    const isFilled = i <= difficulty
-    stars.push(<Star key={i} size={14} fill={isFilled ? "#F59E0B" : "transparent"} color={isFilled ? "#F59E0B" : "#D1D5DB"} strokeWidth={1.5} />)
+export const DifficultyIcon: FC<DifficultyStarsProps> = ({ difficulty }) => {
+  const getDifficultyIcon = () => {
+    switch (difficulty) {
+      case 1:
+        return <Easy width={16} height={16} />
+      case 2:
+        return <Medium width={16} height={16} />
+      case 3:
+        return <Hard width={16} height={16} />
+      default:
+        throw new Error(`Unknown difficulty level: ${difficulty}`)
+    }
   }
 
-  return <View className="flex flex-row items-center gap-0.5">{stars}</View>
+  return <View className="flex flex-row items-center">{getDifficultyIcon()}</View>
 }
 
 export type FilterOptionProps = {

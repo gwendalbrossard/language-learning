@@ -4,10 +4,10 @@ import { Dimensions, View } from "react-native"
 import { ScrollView } from "react-native-gesture-handler"
 
 import type { RouterOutputs } from "~/utils/api"
+import { difficulties, DifficultyIcon, FilterOption, FilterSection, getDifficultyName } from "~/components/common/filters"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
-import { DifficultyStars, FilterOption, FilterSection } from "~/components/common/filters"
 
 type Props = {
   categories: RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]
@@ -21,20 +21,6 @@ type Props = {
 const BottomSheetLessonFilters = forwardRef<BottomSheetModal, Props>(
   ({ categories, selectedCategories, selectedDifficulties, onCategoryChange, onDifficultyChange, filteredCount }, ref) => {
     const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
-
-    const difficulties = [1, 2, 3]
-
-    const getDifficultyName = (difficulty: number): string => {
-      const names = {
-        1: "Easy",
-        2: "Medium",
-        3: "Hard",
-      }
-
-      const name = names[difficulty as keyof typeof names]
-      if (!name) throw new Error(`Unknown difficulty level: ${difficulty}`)
-      return name
-    }
 
     const clearAllFilters = () => {
       onCategoryChange([])
@@ -108,7 +94,7 @@ const BottomSheetLessonFilters = forwardRef<BottomSheetModal, Props>(
                       title={getDifficultyName(difficulty)}
                       isSelected={isSelected}
                       onPress={toggleDifficulty}
-                      rightElement={<DifficultyStars difficulty={difficulty} />}
+                      leftElement={<DifficultyIcon difficulty={difficulty} />}
                     />
                   )
                 })}
