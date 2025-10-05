@@ -2,10 +2,11 @@ import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Stack, useLocalSearchParams } from "expo-router"
+import { router, Stack, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { ClockIcon, LightbulbIcon, Mic, NotepadTextIcon, PhoneOff, Square, X } from "lucide-react-native"
-import { ActivityIndicator, Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
+import { PlayIcon, SettingsIcon, XIcon } from "lucide-react-native"
+import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
+import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
 import Rive from "rive-react-native"
 import { io } from "socket.io-client"
@@ -14,11 +15,13 @@ import type { RouterOutputs } from "@acme/api"
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
 import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
+import Microphone from "~/components/common/svg/microphone"
 import { BottomSheetResponseSuggestions } from "~/components/routes/roleplay-session/[id]/bottom-sheet-response-suggestions"
+import BottomSheetSettings from "~/components/routes/roleplay-session/[id]/bottom-sheet-settings"
 import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
-import { trpc } from "~/utils/api"
+import { queryClient, trpc } from "~/utils/api"
 import { getWsBaseUrl } from "~/utils/base-url"
 import { getBearerToken } from "~/utils/bearer-store"
 import { cn } from "~/utils/utils"
@@ -45,34 +48,6 @@ const RoleplaySession: FC = () => {
   )
   if (!profileRoleplaySessionGet.data) throw new Error("Roleplay session not found")
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      transcript: "Hello! How can I assist you today?",
-    },
-  ])
-  const [isRecording, setIsRecording] = useState(false)
-  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
-
-  const [audioInitialized, setAudioInitialized] = useState(false)
-  const [sessionEnded, setSessionEnded] = useState(false)
-  const [timeRemaining, setTimeRemaining] = useState(5 * 60) // 5 minutes in seconds
-  const [recordingLevel, setRecordingLevel] = useState(0)
-  const [playbackLevel, setPlaybackLevel] = useState(0)
-
-  const animatedScale = useRef(new Animated.Value(80)).current
-
-  // Cache for response suggestions to avoid duplicate fetches
-  const [cachedSuggestions, setCachedSuggestions] = useState<Record<string, Suggestion[]>>({})
-
-  const socketRef = useRef<Socket | null>(null)
-  const sentUserMessageRef = useRef<string | null>(null)
-  const sessionStartTimeRef = useRef<number>(Date.now())
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
-  const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
-
   const profileGetResponseSuggestionsMutation = useMutation(
     trpc.profile.roleplaySession.getResponseSuggestions.mutationOptions({
       onSuccess: (data) => {
@@ -92,6 +67,43 @@ const RoleplaySession: FC = () => {
       },
     }),
   )
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      role: "assistant",
+      transcript: "Hello! How can I assist you today?",
+    },
+  ])
+  const [isRecording, setIsRecording] = useState(false)
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
+
+  const [audioInitialized, setAudioInitialized] = useState(false)
+  const [sessionEnded, setSessionEnded] = useState(false)
+  const [recordingLevel, setRecordingLevel] = useState(0)
+  const [playbackLevel, setPlaybackLevel] = useState(0)
+
+  const animatedScale = useRef(new Animated.Value(80)).current
+
+  // Smooth progress bar animation
+  const progressWidth = useSharedValue(100)
+
+  const progressAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${progressWidth.value}%`,
+    }
+  })
+
+  // Cache for response suggestions to avoid duplicate fetches
+  const [cachedSuggestions, setCachedSuggestions] = useState<Record<string, Suggestion[]>>({})
+
+  const socketRef = useRef<Socket | null>(null)
+  const sentUserMessageRef = useRef<string | null>(null)
+  const sessionStartTimeRef = useRef<number>(Date.now())
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
+  const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
+  const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
 
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
@@ -147,6 +159,13 @@ const RoleplaySession: FC = () => {
     })
   }, [id])
 
+  const goToEnded = async () => {
+    await queryClient.invalidateQueries(
+      trpc.profile.roleplaySession.get.queryOptions({ organizationId: currentOrganizationId, roleplaySessionId: id }),
+    )
+    router.replace(`/roleplay-session/${id}/ended`)
+  }
+
   useEffect(() => {
     initializeSocket()
     void initializeAudio()
@@ -173,7 +192,6 @@ const RoleplaySession: FC = () => {
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
       const remaining = Math.max(0, 5 * 60 - elapsed) // 5 minutes - elapsed
-      setTimeRemaining(remaining)
 
       if (remaining === 0) {
         endSession()
@@ -206,6 +224,27 @@ const RoleplaySession: FC = () => {
     }).start()
   }, [recordingLevel, playbackLevel, isRecording, animatedScale])
 
+  // Super smooth continuous progress bar animation
+  useEffect(() => {
+    const startTime = sessionStartTimeRef.current
+    const totalDuration = 5 * 60 * 1000 // 5 minutes in milliseconds
+
+    const animateProgress = () => {
+      const elapsed = Date.now() - startTime
+      const remaining = Math.max(0, totalDuration - elapsed)
+      const percentage = (remaining / totalDuration) * 100
+
+      progressWidth.value = percentage
+
+      if (remaining > 0) {
+        requestAnimationFrame(animateProgress)
+      }
+    }
+
+    // Start the continuous animation
+    requestAnimationFrame(animateProgress)
+  }, [progressWidth])
+
   const initializeAudio = async (): Promise<void> => {
     try {
       const granted = await MyModule.requestRecordingPermissions()
@@ -227,12 +266,6 @@ const RoleplaySession: FC = () => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
     }
-  }
-
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
   }
 
   const handleEndSession = () => {
@@ -385,10 +418,6 @@ const RoleplaySession: FC = () => {
     }
   }
 
-  const getLatestAssistantMessage = () => {
-    return [...messages].reverse().find((msg) => msg.role === "assistant")
-  }
-
   const getCurrentSuggestions = (): Suggestion[] => {
     const latestAssistantMessage = getLatestAssistantMessage()
     if (latestAssistantMessage) {
@@ -396,6 +425,10 @@ const RoleplaySession: FC = () => {
       if (cached) return cached
     }
     return profileGetResponseSuggestionsMutation.data?.suggestions ?? []
+  }
+
+  const getLatestAssistantMessage = () => {
+    return [...messages].reverse().find((msg) => msg.role === "assistant")
   }
 
   const handleGetResponseSuggestions = async () => {
@@ -421,12 +454,19 @@ const RoleplaySession: FC = () => {
 
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
+      {/* Progress Bar Timer */}
+
       <Stack.Screen
         options={{
           headerShown: true,
           headerShadowVisible: false,
-          headerTitle: () => <View />,
+          headerTitle: () => <Text className="text-lg font-medium text-neutral-700">{profileRoleplaySessionGet.data.roleplay.title}</Text>,
           headerLeft: () => <View />,
+          /* headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()}>
+              <ChevronLeftIcon size={24} className="text-neutral-500" />
+            </TouchableOpacity>
+          ), */
           /*  headerLeft: () => (
             <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-custom-xs">
               <Text className="text-sm font-medium text-neutral-700">{formatTime(timeRemaining)}</Text>
@@ -448,104 +488,81 @@ const RoleplaySession: FC = () => {
           headerRight: () => <View />,
         }}
       />
-      <View className="flex flex-1 flex-col">
+      <View className="flex flex-1 flex-col pt-4">
+        {/* Progress Bar Timer */}
+        <View className="flex flex-row items-center gap-3 px-4">
+          {/* <Text className="text-sm">⌛️</Text> */}
+          <View className="h-4 flex-1 rounded-full bg-neutral-200">
+            <Reanimated.View className="h-full rounded-full bg-success-400" style={progressAnimatedStyle} />
+          </View>
+          {/* <Text className="text-sm">⏳</Text> */}
+        </View>
+
         {/* Main content area */}
-        <View className="flex-1 flex-col items-center pt-[15%]">
-          {/*  <View className="mb-1 flex flex-row items-center gap-2">
-            <ClockIcon size={16} className="text-neutral-400" />
-            <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
-          </View> */}
-          <Text className="mb-8 text-center text-xl font-medium text-neutral-600">{profileRoleplaySessionGet.data.roleplay.title}</Text>
+        <View className="flex-1 flex-col items-center px-4">
+          <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "50%", height: "30%" }} />
 
           {sessionEnded && (
             <View className="items-center">
-              <Text className="mb-8 text-center text-xl font-medium text-neutral-700">Session ended</Text>
-              <View className="shadow-custom-lg h-40 w-40 items-center justify-center rounded-3xl bg-neutral-300">
-                <X size={56} color="#666E7D" />
-              </View>
-              <Text className="mt-6 text-center text-lg font-medium text-success-600">Thank you for practicing!</Text>
+              <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Your session has ended!</Text>
+              <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
             </View>
           )}
-          <Animated.View
-            style={{
-              marginTop: 40,
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-              width: animatedScale.interpolate({
-                inputRange: [80, 100],
-                outputRange: ["80%", "100%"],
-              }),
-              height: animatedScale.interpolate({
-                inputRange: [80, 100],
-                outputRange: ["80%", "100%"],
-              }),
-            }}
-          >
-            <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "100%", height: "100%" }} />
-          </Animated.View>
-
-          <View className="mt-10 flex flex-col items-center gap-2">
-            <View className="flex flex-row items-center gap-2">
-              <ClockIcon size={16} className="text-neutral-400" />
-              <Text className="text-sm font-medium text-neutral-400">{formatTime(timeRemaining)}</Text>
-            </View>
-            <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
-              <Button.Icon icon={PhoneOff} />
-              <Button.Text>End Conversation</Button.Text>
-            </Button.Root>
-          </View>
+          {!sessionEnded && (
+            <Text className="font-shantell-semibold text-center text-lg text-neutral-700">{getLatestAssistantMessage()?.transcript}</Text>
+          )}
         </View>
 
         {/* Bottom */}
-        <View className="flex w-full flex-row items-end justify-center gap-8 px-4">
-          {/* Help */}
-          <View className="flex w-[90px] flex-col items-center gap-3">
-            <TouchableOpacity
-              onPress={() => void handleGetResponseSuggestions()}
-              disabled={profileGetResponseSuggestionsMutation.isPending}
-              className={cn(
-                "size-16 items-center justify-center rounded-full",
-                profileGetResponseSuggestionsMutation.isPending ? "bg-neutral-200" : "bg-neutral-100",
-              )}
-            >
-              {profileGetResponseSuggestionsMutation.isPending ? (
-                <ActivityIndicator size="small" color="#6B7280" />
-              ) : (
-                <LightbulbIcon size={28} className="text-neutral-500" />
-              )}
-            </TouchableOpacity>
-            <Text className="text-xs font-medium text-neutral-600">Answer</Text>
-          </View>
+        <View className="mt-20 flex w-full flex-row items-end justify-center gap-8 px-4">
+          {!sessionEnded && (
+            <>
+              {/* Help */}
+              <View className="flex w-[90px] flex-col items-center gap-3">
+                <TouchableOpacity
+                  onPress={() => bottomSheetSettingsRef.current?.present()}
+                  className={cn("size-14 items-center justify-center rounded-full bg-neutral-100")}
+                >
+                  <SettingsIcon size={24} className="text-neutral-500" />
+                </TouchableOpacity>
+              </View>
 
-          {/* Record */}
-          <View className="flex flex-col items-center gap-3">
-            <Pressable
-              onPressIn={() => void startRecording()}
-              onPressOut={() => void stopRecording()}
-              className={cn(`flex size-32 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
-            >
-              {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />}
-            </Pressable>
-            <Text className="text-xs font-medium text-neutral-600">Hold to speak</Text>
-          </View>
+              {/* Record */}
+              <View className="flex flex-col items-center gap-5">
+                <Text className="text-xs font-medium text-neutral-500">Hold to speak</Text>
+                <Pressable
+                  onPressIn={() => void startRecording()}
+                  onPressOut={() => void stopRecording()}
+                  className={cn(`flex size-24 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
+                >
+                  <Microphone color="white" height={56} width={56} />
+                  {/* {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />} */}
+                </Pressable>
+              </View>
 
-          {/* Transcript */}
-          <View className="flex w-[90px] flex-col items-center gap-3">
-            <TouchableOpacity
-              onPress={() => {
-                bottomSheetTranscriptRef.current?.present()
-              }}
-              className="size-16 items-center justify-center rounded-full bg-neutral-100"
-            >
-              <NotepadTextIcon size={28} className="text-neutral-500" />
-            </TouchableOpacity>
-            <Text className="text-xs font-medium text-neutral-600">Transcript</Text>
-          </View>
+              {/* Transcript */}
+              <View className="flex w-[90px] flex-col items-center gap-3">
+                <TouchableOpacity onPress={() => handleEndSession()} className="size-14 items-center justify-center rounded-full bg-neutral-100">
+                  <XIcon size={24} className="text-neutral-500" />
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+          {sessionEnded && (
+            <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={profileRoleplaySessionGet.isRefetching}>
+              <Button.Icon icon={PlayIcon} />
+              <Button.Text>Review Session</Button.Text>
+            </Button.Root>
+          )}
         </View>
       </View>
 
+      <BottomSheetSettings
+        ref={bottomSheetSettingsRef}
+        isResponseSuggestionsLoading={profileGetResponseSuggestionsMutation.isPending}
+        onOpenTranscript={() => bottomSheetTranscriptRef.current?.present()}
+        onOpenResponseSuggestions={() => void handleGetResponseSuggestions()}
+      />
       <BottomSheetTranscript ref={bottomSheetTranscriptRef} messages={messages} />
       <BottomSheetResponseSuggestions ref={bottomSheetResponseSuggestionsRef} suggestions={getCurrentSuggestions()} />
     </SafeAreaView>
