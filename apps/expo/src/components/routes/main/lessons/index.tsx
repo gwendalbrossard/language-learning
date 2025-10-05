@@ -7,6 +7,7 @@ import { Filter, Plus, Star } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
 import type { RouterOutputs } from "~/utils/api"
+import { Difficulty } from "~/components/common/difficulty"
 import * as Badge from "~/ui/badge"
 import * as Button from "~/ui/button"
 import { Text, TextDescription } from "~/ui/text"
@@ -32,7 +33,7 @@ const Lessons: FC = () => {
 
   // Filter state
   const [selectedCategories, setSelectedCategories] = useState<RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]>([])
-  const [selectedDifficulties, setSelectedDifficulties] = useState<number[]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<Difficulty[]>([])
 
   // Selected lesson state
   const [selectedLesson, setSelectedLesson] = useState<RouterOutputs["profile"]["lesson"]["getAll"][number] | null>(null)
@@ -40,8 +41,8 @@ const Lessons: FC = () => {
   // Filter lessons based on selected filters
   const filteredLessons = useMemo(() => {
     return profileLessonGetAll.data.filter((lesson) => {
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some(category => category.id === lesson.category.id)
-      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(lesson.difficulty)
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some((category) => category.id === lesson.category.id)
+      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(lesson.difficulty as Difficulty)
       return categoryMatch && difficultyMatch
     })
   }, [profileLessonGetAll.data, selectedCategories, selectedDifficulties])
