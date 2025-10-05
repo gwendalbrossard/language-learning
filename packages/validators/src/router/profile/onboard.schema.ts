@@ -66,30 +66,3 @@ export const ZProfileOnboardSchema = z.object({
 })
 
 export type TProfileOnboardSchema = z.infer<typeof ZProfileOnboardSchema>
-
-export type LanguageOption = {
-  code: string
-  emoji: string
-  label: string
-}
-
-export const languageOptions: LanguageOption[] = [
-  { code: "en-US", emoji: "🇺🇸", label: "English" },
-  { code: "zh-CN", emoji: "🇨🇳", label: "Chinese (Mandarin)" },
-  { code: "es-ES", emoji: "🇪🇸", label: "Spanish" },
-  { code: "fr-FR", emoji: "🇫🇷", label: "French" },
-  { code: "ar-SA", emoji: "🇸🇦", label: "Arabic" },
-  { code: "ru-RU", emoji: "🇷🇺", label: "Russian" },
-  { code: "pt-PT", emoji: "🇵🇹", label: "Portuguese" },
-  { code: "ja-JP", emoji: "🇯🇵", label: "Japanese" },
-  { code: "de-DE", emoji: "🇩🇪", label: "German" },
-  { code: "it-IT", emoji: "🇮🇹", label: "Italian" },
-  { code: "ko-KR", emoji: "🇰🇷", label: "Korean" },
-  { code: "tr-TR", emoji: "🇹🇷", label: "Turkish" },
-  { code: "nl-NL", emoji: "🇳🇱", label: "Dutch" },
-  { code: "pl-PL", emoji: "🇵🇱", label: "Polish" },
-  { code: "sv-SE", emoji: "🇸🇪", label: "Swedish" },
-  { code: "no-NO", emoji: "🇳🇴", label: "Norwegian" },
-  { code: "da-DK", emoji: "🇩🇰", label: "Danish" },
-  { code: "fi-FI", emoji: "🇫🇮", label: "Finnish" },
-]

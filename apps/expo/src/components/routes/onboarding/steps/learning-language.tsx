@@ -3,9 +3,9 @@ import * as RadioGroupPrimitive from "@rn-primitives/radio-group"
 import { useFormContext } from "react-hook-form"
 
 import type { TProfileOnboardSchema } from "@acme/validators"
-import { languageOptions } from "@acme/validators"
 
 import type { StepProps } from "~/components/common/step"
+import { languageOptions } from "~/components/common/language"
 import RadioItemWithEmoji from "~/components/common/radio-item-with-emoji"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"

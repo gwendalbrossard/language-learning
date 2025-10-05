@@ -72,7 +72,7 @@ const Button = React.forwardRef<ButtonRef, ButtonProps>(({ className, variant, s
 })
 Button.displayName = "Button"
 
-const buttonTextVariants = cva("web:pointer-events-none web:whitespace-nowrap font-medium transition-all", {
+const buttonTextVariants = cva("web:pointer-events-none web:whitespace-nowrap font-semibold transition-all", {
   variants: {
     variant: {
       primary: "text-white",

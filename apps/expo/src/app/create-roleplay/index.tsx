@@ -11,6 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import type { TProfileRoleplayCreateSchema } from "@acme/validators"
 import { ZProfileRoleplayCreateSchema } from "@acme/validators"
 
+import type { Difficulty } from "~/components/common/difficulty"
+import { difficulties, getDifficultyName } from "~/components/common/difficulty"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
 import { inputClasses } from "~/ui/input"
@@ -33,7 +35,7 @@ const CreateRoleplay: FC = () => {
   const descriptionRef = useRef<TextInput>(null)
 
   const form = useForm<TProfileRoleplayCreateSchema>({
-    defaultValues: { userRole: "", assistantRole: "", description: "", difficulty: 2, organizationId: currentOrganizationId },
+    defaultValues: { userRole: "", assistantRole: "", description: "", difficulty: 2 as Difficulty, organizationId: currentOrganizationId },
     mode: "all",
     resolver: zodResolver(ZProfileRoleplayCreateSchema),
   })
@@ -69,22 +71,9 @@ const CreateRoleplay: FC = () => {
   }
 
   const difficulty = form.watch("difficulty")
-  const mapping: Record<number, string> = {
-    1: "easy",
-    2: "medium",
-    3: "hard",
-  }
 
-  const reverseMapping: Record<string, number> = {
-    easy: 1,
-    medium: 2,
-    hard: 3,
-  }
-
-  const handleDifficultyChange = (value: string) => {
-    const val = reverseMapping[value]
-    if (!val) throw new Error("Invalid difficulty value")
-    form.setValue("difficulty", val)
+  const handleDifficultyChange = (selectedDifficulty: Difficulty) => {
+    form.setValue("difficulty", selectedDifficulty)
   }
 
   return (
@@ -161,17 +150,13 @@ const CreateRoleplay: FC = () => {
             <View className="flex flex-col gap-2">
               <Label>📊 Difficulty</Label>
 
-              <TabsButton.Root value={mapping[difficulty] ?? "medium"} onValueChange={(value) => handleDifficultyChange(value)} size="sm">
+              <TabsButton.Root value={difficulty.toString()} onValueChange={(value) => handleDifficultyChange(parseInt(value) as Difficulty)} size="sm">
                 <TabsButton.List>
-                  <TabsButton.Trigger value="easy">
-                    <TabsButton.TriggerText>Easy</TabsButton.TriggerText>
-                  </TabsButton.Trigger>
-                  <TabsButton.Trigger value="medium">
-                    <TabsButton.TriggerText>Medium</TabsButton.TriggerText>
-                  </TabsButton.Trigger>
-                  <TabsButton.Trigger value="hard">
-                    <TabsButton.TriggerText>Hard</TabsButton.TriggerText>
-                  </TabsButton.Trigger>
+                  {difficulties.map((difficultyLevel) => (
+                    <TabsButton.Trigger key={difficultyLevel} value={difficultyLevel.toString()}>
+                      <TabsButton.TriggerText>{getDifficultyName(difficultyLevel)}</TabsButton.TriggerText>
+                    </TabsButton.Trigger>
+                  ))}
                 </TabsButton.List>
               </TabsButton.Root>
               {form.formState.errors.difficulty && <TextError>{form.formState.errors.difficulty.message}</TextError>}
