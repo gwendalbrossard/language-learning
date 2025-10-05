@@ -31,8 +31,8 @@ const Lessons: FC = () => {
   const lessonDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
-  const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["lessonCategory"]["getAll"][number] | null>(null)
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<RouterOutputs["profile"]["lessonCategory"]["getAll"][number][]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<number[]>([])
 
   // Selected lesson state
   const [selectedLesson, setSelectedLesson] = useState<RouterOutputs["profile"]["lesson"]["getAll"][number] | null>(null)
@@ -40,11 +40,11 @@ const Lessons: FC = () => {
   // Filter lessons based on selected filters
   const filteredLessons = useMemo(() => {
     return profileLessonGetAll.data.filter((lesson) => {
-      const categoryMatch = !selectedCategory || lesson.category.id === selectedCategory.id
-      const difficultyMatch = !selectedDifficulty || lesson.difficulty === selectedDifficulty
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some(category => category.id === lesson.category.id)
+      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(lesson.difficulty)
       return categoryMatch && difficultyMatch
     })
-  }, [profileLessonGetAll.data, selectedCategory, selectedDifficulty])
+  }, [profileLessonGetAll.data, selectedCategories, selectedDifficulties])
 
   const handleLessonPress = (lesson: RouterOutputs["profile"]["lesson"]["getAll"][number]) => {
     setSelectedLesson(lesson)
@@ -72,7 +72,7 @@ const Lessons: FC = () => {
     return stars
   }
 
-  const hasActiveFilters = selectedCategory !== null || selectedDifficulty !== null
+  const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
 
   return (
     <View className="flex flex-col gap-4">
@@ -90,7 +90,7 @@ const Lessons: FC = () => {
             <Button.Text>Filters</Button.Text>
             {hasActiveFilters && (
               <View className="ml-1 flex size-4.5 items-center justify-center rounded-full bg-white">
-                <Text className="text-xs font-semibold text-neutral-900">{(selectedCategory ? 1 : 0) + (selectedDifficulty ? 1 : 0)}</Text>
+                <Text className="text-xs font-semibold text-neutral-900">{selectedCategories.length + selectedDifficulties.length}</Text>
               </View>
             )}
           </Button.Root>
@@ -128,10 +128,10 @@ const Lessons: FC = () => {
       <BottomSheetLessonFilters
         ref={lessonFiltersBottomSheetRef}
         categories={profileLessonCategoryGetAll.data}
-        selectedCategory={selectedCategory}
-        selectedDifficulty={selectedDifficulty}
-        onCategoryChange={setSelectedCategory}
-        onDifficultyChange={setSelectedDifficulty}
+        selectedCategories={selectedCategories}
+        selectedDifficulties={selectedDifficulties}
+        onCategoryChange={setSelectedCategories}
+        onDifficultyChange={setSelectedDifficulties}
         filteredCount={filteredLessons.length}
       />
 

@@ -31,8 +31,8 @@ const Roleplays: FC = () => {
   const roleplayDetailsBottomSheetRef = useRef<BottomSheetModal>(null)
 
   // Filter state
-  const [selectedCategory, setSelectedCategory] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null>(null)
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<number[]>([])
 
   // Selected roleplay state
   const [selectedRoleplay, setSelectedRoleplay] = useState<RouterOutputs["profile"]["roleplay"]["getAll"][number] | null>(null)
@@ -40,11 +40,11 @@ const Roleplays: FC = () => {
   // Filter roleplays based on selected filters
   const filteredRoleplays = useMemo(() => {
     return profileRoleplayGetAll.data.filter((roleplay) => {
-      const categoryMatch = !selectedCategory || roleplay.category.id === selectedCategory.id
-      const difficultyMatch = !selectedDifficulty || roleplay.difficulty === selectedDifficulty
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.some(category => category.id === roleplay.category.id)
+      const difficultyMatch = selectedDifficulties.length === 0 || selectedDifficulties.includes(roleplay.difficulty)
       return categoryMatch && difficultyMatch
     })
-  }, [profileRoleplayGetAll.data, selectedCategory, selectedDifficulty])
+  }, [profileRoleplayGetAll.data, selectedCategories, selectedDifficulties])
 
   const handleRoleplayPress = (roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number]) => {
     setSelectedRoleplay(roleplay)
@@ -72,7 +72,7 @@ const Roleplays: FC = () => {
     return stars
   }
 
-  const hasActiveFilters = selectedCategory !== null || selectedDifficulty !== null
+  const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
 
   return (
     <View className="flex flex-col gap-4">
@@ -90,7 +90,7 @@ const Roleplays: FC = () => {
             <Button.Text>Filters</Button.Text>
             {hasActiveFilters && (
               <View className="ml-1 flex size-4.5 items-center justify-center rounded-full bg-white">
-                <Text className="text-xs font-semibold text-neutral-900">{(selectedCategory ? 1 : 0) + (selectedDifficulty ? 1 : 0)}</Text>
+                <Text className="text-xs font-semibold text-neutral-900">{selectedCategories.length + selectedDifficulties.length}</Text>
               </View>
             )}
           </Button.Root>
@@ -128,10 +128,10 @@ const Roleplays: FC = () => {
       <BottomSheetRoleplayFilters
         ref={roleplayFiltersBottomSheetRef}
         categories={profileRoleplayCategoryGetAll.data}
-        selectedCategory={selectedCategory}
-        selectedDifficulty={selectedDifficulty}
-        onCategoryChange={setSelectedCategory}
-        onDifficultyChange={setSelectedDifficulty}
+        selectedCategories={selectedCategories}
+        selectedDifficulties={selectedDifficulties}
+        onCategoryChange={setSelectedCategories}
+        onDifficultyChange={setSelectedDifficulties}
         filteredCount={filteredRoleplays.length}
       />
 

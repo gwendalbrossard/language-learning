@@ -69,16 +69,16 @@ const FilterSection = ({ title, children }: FilterSectionProps) => {
 
 type Props = {
   categories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]
-  selectedCategory: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null
-  selectedDifficulty: number | null
-  onCategoryChange: (category: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number] | null) => void
-  onDifficultyChange: (difficulty: number | null) => void
+  selectedCategories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]
+  selectedDifficulties: number[]
+  onCategoryChange: (categories: RouterOutputs["profile"]["roleplayCategory"]["getAll"][number][]) => void
+  onDifficultyChange: (difficulties: number[]) => void
   filteredCount: number
 }
 
 const BottomSheetRoleplayFilters = forwardRef<BottomSheetModal, Props>(
-  ({ categories, selectedCategory, selectedDifficulty, onCategoryChange, onDifficultyChange, filteredCount }, ref) => {
-    const hasActiveFilters = selectedCategory !== null || selectedDifficulty !== null
+  ({ categories, selectedCategories, selectedDifficulties, onCategoryChange, onDifficultyChange, filteredCount }, ref) => {
+    const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
 
     const difficulties = [1, 2, 3]
 
@@ -95,8 +95,8 @@ const BottomSheetRoleplayFilters = forwardRef<BottomSheetModal, Props>(
     }
 
     const clearAllFilters = () => {
-      onCategoryChange(null)
-      onDifficultyChange(null)
+      onCategoryChange([])
+      onDifficultyChange([])
     }
 
     const closeBottomSheet = () => {
@@ -126,30 +126,50 @@ const BottomSheetRoleplayFilters = forwardRef<BottomSheetModal, Props>(
             <View className="flex flex-col gap-6">
               {/* Category Filter */}
               <FilterSection title="Category">
-                <FilterOption title="All Categories" isSelected={!selectedCategory} onPress={() => onCategoryChange(null)} />
-                {categories.map((category) => (
-                  <FilterOption
-                    key={category.id}
-                    title={category.name}
-                    isSelected={selectedCategory === category}
-                    onPress={() => onCategoryChange(category)}
-                    leftElement={<Text className="text-sm font-medium">{category.emoji}</Text>}
-                  />
-                ))}
+                {categories.map((category) => {
+                  const isSelected = selectedCategories.some(selected => selected.id === category.id)
+                  const toggleCategory = () => {
+                    if (isSelected) {
+                      onCategoryChange(selectedCategories.filter(selected => selected.id !== category.id))
+                    } else {
+                      onCategoryChange([...selectedCategories, category])
+                    }
+                  }
+
+                  return (
+                    <FilterOption
+                      key={category.id}
+                      title={category.name}
+                      isSelected={isSelected}
+                      onPress={toggleCategory}
+                      leftElement={<Text className="text-sm font-medium">{category.emoji}</Text>}
+                    />
+                  )
+                })}
               </FilterSection>
 
               {/* Difficulty Filter */}
               <FilterSection title="Difficulty">
-                <FilterOption title="All Difficulties" isSelected={!selectedDifficulty} onPress={() => onDifficultyChange(null)} />
-                {difficulties.map((difficulty) => (
-                  <FilterOption
-                    key={difficulty}
-                    title={getDifficultyName(difficulty)}
-                    isSelected={selectedDifficulty === difficulty}
-                    onPress={() => onDifficultyChange(difficulty)}
-                    rightElement={<DifficultyStars difficulty={difficulty} />}
-                  />
-                ))}
+                {difficulties.map((difficulty) => {
+                  const isSelected = selectedDifficulties.includes(difficulty)
+                  const toggleDifficulty = () => {
+                    if (isSelected) {
+                      onDifficultyChange(selectedDifficulties.filter(selected => selected !== difficulty))
+                    } else {
+                      onDifficultyChange([...selectedDifficulties, difficulty])
+                    }
+                  }
+
+                  return (
+                    <FilterOption
+                      key={difficulty}
+                      title={getDifficultyName(difficulty)}
+                      isSelected={isSelected}
+                      onPress={toggleDifficulty}
+                      rightElement={<DifficultyStars difficulty={difficulty} />}
+                    />
+                  )
+                })}
               </FilterSection>
             </View>
           </ScrollView>
