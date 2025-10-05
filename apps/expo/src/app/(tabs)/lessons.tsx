@@ -1,12 +1,13 @@
+import type { FC } from "react"
 import { View } from "react-native"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import TabsHeader from "~/components/common/tabs/tabs-header"
-import Lessons from "~/components/routes/main/lessons"
+import Lessons from "~/components/routes/(tabs)/lessons"
 import { Text } from "~/ui/text"
 
-export default function LessonsTab() {
+const LessonsTab: FC = () => {
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="bg-white px-4">
       <KeyboardAwareScrollView enabled>
@@ -24,3 +25,5 @@ export default function LessonsTab() {
     </SafeAreaView>
   )
 }
+
+export default LessonsTab

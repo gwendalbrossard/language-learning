@@ -1,10 +1,11 @@
+import type { FC } from "react"
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import TabsHeader from "~/components/common/tabs/tabs-header"
-import Roleplays from "~/components/routes/main/roleplays"
+import Roleplays from "~/components/routes/(tabs)/roleplays"
 
-export default function RoleplaysTab() {
+const RoleplaysTab: FC = () => {
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="bg-white px-4">
       <TabsHeader />
@@ -15,3 +16,5 @@ export default function RoleplaysTab() {
     </SafeAreaView>
   )
 }
+
+export default RoleplaysTab
