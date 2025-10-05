@@ -33,15 +33,13 @@ const Banner: FC = () => {
               <Text className="text-xl font-bold text-white">Roleplay Mode</Text>
               <Text className="text-sm text-white">Play a roleplay and practice it in a conversation.</Text>
             </View>
-            <View className="w-fit max-w-fit flex-grow-0">
-              <Button.Root variant="secondary" size="xs" className="w-fit max-w-fit flex-grow-0" onPress={() => router.push("/create-roleplay")}>
-                <Button.Text>Create Roleplay</Button.Text>
-                <Sparkles width={20} height={20} color="#ad46ff" />
-              </Button.Root>
-            </View>
+            <Button.Root variant="secondary" size="xs" className="self-start" onPress={() => router.push("/create-roleplay")}>
+              <Button.Text>Create Roleplay</Button.Text>
+              <Sparkles width={20} height={20} color="#ad46ff" />
+            </Button.Root>
           </View>
           <View className="flex items-center justify-center pr-2">
-            <Text className="text-[70px]">🎭</Text>
+            <Text className="text-[85px]">🎭</Text>
           </View>
         </View>
       </MeshGradientView>
