@@ -104,7 +104,7 @@ const HeaderIllustration = React.forwardRef<ViewRef, SlottableViewProps>(({ clas
 HeaderIllustration.displayName = "HeaderIllustration"
 
 const HeaderTitle = React.forwardRef<TextRef, SlottableTextProps>(({ className, ...props }, ref) => {
-  return <Text ref={ref} className={cn("text-center text-2xl font-medium", className)} {...props} />
+  return <Text ref={ref} className={cn("text-center text-2xl font-semibold", className)} {...props} />
 })
 HeaderTitle.displayName = "HeaderTitle"
 
