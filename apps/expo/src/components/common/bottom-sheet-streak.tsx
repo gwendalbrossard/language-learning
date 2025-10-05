@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react"
 import { LinearGradient } from "expo-linear-gradient"
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
+import { BottomSheetModal } from "@gorhom/bottom-sheet"
 import MaskedView from "@react-native-masked-view/masked-view"
 import { useQuery } from "@tanstack/react-query"
 import { CheckIcon, XIcon } from "lucide-react-native"
@@ -62,46 +62,45 @@ const BottomSheetStreak = forwardRef<BottomSheetModal, object>((_, ref) => {
       enableContentPanningGesture={false}
       handleStyle={{ display: "none" }}
       stackBehavior="push"
+      enableDynamicSizing={false}
     >
-      <BottomSheetView className="relative flex-1">
-        <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
-          <View className="flex-1 justify-between">
-            {/* Body */}
-            <View className="items-center justify-center gap-3 pt-12">
-              <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: 150, height: 180 }} />
+      <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: "white" }}>
+        <View className="flex-1 justify-between">
+          {/* Body */}
+          <View className="items-center justify-center gap-3 pt-12">
+            <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: 150, height: 180 }} />
 
-              {/* Streak Count */}
-              <View className="mb-8">
-                <MaskedView
-                  style={{ height: 116 }}
-                  maskElement={<Text className="text-center text-8xl font-bold">{profileMe.data.currentStreak}</Text>}
-                >
-                  <LinearGradient colors={["#FFD74A", "#F1793E"]} start={{ x: 1, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
-                </MaskedView>
-                <Text className="text-center text-2xl font-bold text-warning-400">days of progress</Text>
+            {/* Streak Count */}
+            <View className="mb-8">
+              <MaskedView
+                style={{ height: 116 }}
+                maskElement={<Text className="text-center text-8xl font-bold">{profileMe.data.currentStreak}</Text>}
+              >
+                <LinearGradient colors={["#FFD74A", "#F1793E"]} start={{ x: 1, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
+              </MaskedView>
+              <Text className="text-center text-2xl font-bold text-warning-400">days of progress</Text>
+            </View>
+            {/* Weekly Progress */}
+            <View className="mb-4 w-full max-w-[90%] rounded-xl bg-neutral-50 p-4">
+              <View className="flex-row justify-between gap-2">
+                {daysLabels.map((day, index) => (
+                  <DayIndicator key={day + index} day={day} status={weekProgress[index] ?? DayStatus.UPCOMING} />
+                ))}
               </View>
-              {/* Weekly Progress */}
-              <View className="mb-4 w-full max-w-[90%] rounded-xl bg-neutral-50 p-4">
-                <View className="flex-row justify-between gap-2">
-                  {daysLabels.map((day, index) => (
-                    <DayIndicator key={day + index} day={day} status={weekProgress[index] ?? DayStatus.UPCOMING} />
-                  ))}
-                </View>
-              </View>
-
-              {/* Message */}
-              <Text className="text-center text-sm text-neutral-500">Keep going! Every day counts towards your journey.</Text>
             </View>
 
-            {/* Footer */}
-            <View className="flex-1 justify-end">
-              <Button.Root onPress={handleClose} className="w-full" size="xl">
-                <Button.Text>Continue</Button.Text>
-              </Button.Root>
-            </View>
+            {/* Message */}
+            <Text className="text-center text-sm text-neutral-500">Keep going! Every day counts towards your journey.</Text>
           </View>
-        </SafeAreaView>
-      </BottomSheetView>
+
+          {/* Footer */}
+          <View className="flex-1 justify-end">
+            <Button.Root onPress={handleClose} className="w-full" size="xl">
+              <Button.Text>Continue</Button.Text>
+            </Button.Root>
+          </View>
+        </View>
+      </SafeAreaView>
     </BottomSheetModal>
   )
 })
