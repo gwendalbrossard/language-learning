@@ -56,9 +56,9 @@ const tabsButtonListVariants = cva(cn("inline-flex items-center justify-center g
       border: "ring-1 ring-inset ring-neutral-200",
     },
     size: {
-      xs: "rounded-[10px] px-1 py-1",
-      sm: "rounded-[10px] px-1 py-1",
-      md: "rounded-xl px-1.5 py-1.5",
+      xs: "rounded-xl px-1 py-1",
+      sm: "rounded-xl px-1 py-1",
+      md: "rounded-2xl px-1.5 py-1.5",
     },
     orientation: {
       horizontal: "flex-row",
@@ -95,10 +95,9 @@ type TabsButtonTriggerProps = TabsButtonTriggerBaseProps & React.ComponentPropsW
 const tabsButtonTriggerVariants = cva(
   cn(
     "relative flex w-full flex-1 flex-row items-center gap-2 whitespace-nowrap transition-all",
-    "rounded-md",
-    "border-none",
+    "rounded-lg",
+    "border-2 border-transparent",
     "disabled:text-neutral-300",
-    "shadow-custom-xs",
   ),
   {
     variants: {
@@ -116,8 +115,8 @@ const tabsButtonTriggerVariants = cva(
         vertical: "",
       },
       active: {
-        true: "bg-white",
-        false: "bg-transparent shadow-transparent",
+        true: "border-neutral-100 bg-white",
+        false: "bg-transparent",
       },
     },
     defaultVariants: {
@@ -184,7 +183,7 @@ type TabsButtonTriggerTextVariantProps = VariantProps<typeof tabsButtonTriggerTe
 type TabsButtonTriggerTextBaseProps = {} & TabsButtonTriggerTextVariantProps
 type TabsButtonTriggerTextProps = TabsButtonTriggerTextBaseProps & React.ComponentPropsWithoutRef<typeof Text>
 
-const tabsButtonTriggerTextVariants = cva("web:pointer-events-none font-medium", {
+const tabsButtonTriggerTextVariants = cva("web:pointer-events-none font-semibold", {
   variants: {
     variant: {
       plain: "",
@@ -200,7 +199,7 @@ const tabsButtonTriggerTextVariants = cva("web:pointer-events-none font-medium",
       vertical: "",
     },
     active: {
-      true: "text-neutral-900",
+      true: "text-neutral-700",
       false: "text-neutral-500",
     },
   },

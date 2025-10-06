@@ -11,7 +11,7 @@ export type LabelVariantProps = VariantProps<typeof labelVariants>
 export type LabelBaseProps = {} & LabelVariantProps
 export type LabelProps = LabelBaseProps & LabelPrimitive.TextProps
 
-export const labelVariants = cva("web:peer-disabled:pointer-events-none web:peer-disabled:text-neutral-400 font-medium text-neutral-700", {
+export const labelVariants = cva("web:peer-disabled:pointer-events-none web:peer-disabled:text-neutral-400 font-semibold text-neutral-700", {
   variants: {
     size: {
       sm: "text-sm",

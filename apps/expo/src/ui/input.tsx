@@ -14,8 +14,7 @@ export type InputProps = InputBaseProps & TextInputProps
 export const inputClasses = cva(
   cn(
     "flex flex-row items-center bg-white text-base",
-    "border",
-    "shadow-custom-xs",
+    "border-2",
     "disabled:border-neutral-200 disabled:bg-neutral-50",
     "placeholder:text-neutral-400",
     "web:focus-visible:outline-none",

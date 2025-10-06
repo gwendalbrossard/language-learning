@@ -1,11 +1,12 @@
 import type { FC } from "react"
+import type { TextInput } from "react-native"
 import { useRef } from "react"
 import { router, Stack } from "expo-router"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeftIcon } from "lucide-react-native"
 import { useForm } from "react-hook-form"
-import { TextInput, TouchableOpacity, View } from "react-native"
+import { TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import type { TProfileRoleplayCreateSchema } from "@acme/validators"
@@ -15,13 +16,12 @@ import type { Difficulty } from "~/components/common/difficulty"
 import { difficulties, getDifficultyName } from "~/components/common/difficulty"
 import * as Step from "~/components/common/step"
 import * as Button from "~/ui/button"
-import { inputClasses } from "~/ui/input"
+import { Input } from "~/ui/input"
 import { Label } from "~/ui/label"
 import * as TabsButton from "~/ui/tabs-button"
 import { TextError } from "~/ui/text"
-import { Textarea, textareaClasses } from "~/ui/textarea"
+import { Textarea } from "~/ui/textarea"
 import { trpc } from "~/utils/api"
-import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
 
 const CreateRoleplay: FC = () => {
@@ -102,9 +102,9 @@ const CreateRoleplay: FC = () => {
             {/* Your Role */}
             <View className="flex flex-col gap-2">
               <Label>🙋 Your Role</Label>
-              <TextInput
+              <Input
                 ref={userRoleRef}
-                className={cn(inputClasses({ size: "lg" }))}
+                size="lg"
                 placeholder="e.g., Tourist at a restaurant"
                 value={form.watch("userRole")}
                 onChangeText={(text) => form.setValue("userRole", text)}
@@ -117,9 +117,9 @@ const CreateRoleplay: FC = () => {
             {/* Assistant Role */}
             <View className="flex flex-col gap-2">
               <Label>🤖 Assistant Role</Label>
-              <TextInput
+              <Input
                 ref={assistantRoleRef}
-                className={cn(inputClasses({ size: "lg" }))}
+                size="lg"
                 placeholder="e.g., Friendly waiter"
                 value={form.watch("assistantRole")}
                 onChangeText={(text) => form.setValue("assistantRole", text)}
@@ -134,7 +134,7 @@ const CreateRoleplay: FC = () => {
               <Label>💬 Roleplay Description</Label>
               <Textarea
                 ref={descriptionRef}
-                className={cn(textareaClasses({ size: "lg" }))}
+                size="lg"
                 placeholder="e.g., Ordering food at a French bistro in Paris"
                 value={form.watch("description")}
                 onChangeText={(text) => form.setValue("description", text)}
@@ -150,7 +150,11 @@ const CreateRoleplay: FC = () => {
             <View className="flex flex-col gap-2">
               <Label>📊 Difficulty</Label>
 
-              <TabsButton.Root value={difficulty.toString()} onValueChange={(value) => handleDifficultyChange(parseInt(value) as Difficulty)} size="sm">
+              <TabsButton.Root
+                value={difficulty.toString()}
+                onValueChange={(value) => handleDifficultyChange(parseInt(value) as Difficulty)}
+                size="sm"
+              >
                 <TabsButton.List>
                   {difficulties.map((difficultyLevel) => (
                     <TabsButton.Trigger key={difficultyLevel} value={difficultyLevel.toString()}>
