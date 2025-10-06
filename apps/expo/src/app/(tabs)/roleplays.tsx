@@ -9,7 +9,7 @@ import Roleplays from "~/components/routes/(tabs)/roleplays/roleplays"
 
 const RoleplaysTab: FC = () => {
   return (
-    <SafeAreaView edges={["top", "left", "right"]} className="bg-white">
+    <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-white">
       <KeyboardAwareScrollView enabled>
         <TabsHeader />
 

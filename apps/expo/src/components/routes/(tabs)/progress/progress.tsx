@@ -1,12 +1,20 @@
-import type { FC } from "react"
+import { forwardRef, useImperativeHandle, useRef } from "react"
+import * as Sharing from "expo-sharing"
 import { useQuery } from "@tanstack/react-query"
 import { View } from "react-native"
+import ViewShot from "react-native-view-shot"
 
 import { Text } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
+import ShareableStats from "./shareable-stats"
 
-const Progress: FC = () => {
+export interface ProgressRef {
+  shareStats: () => Promise<void>
+}
+
+const Progress = forwardRef<ProgressRef>((_, ref) => {
+  const shareableRef = useRef<ViewShot>(null)
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
@@ -46,6 +54,22 @@ const Progress: FC = () => {
     },
   ]
 
+  const handleShare = async () => {
+    if (!shareableRef.current) throw new Error("Shareable ref not found")
+    if (!shareableRef.current.capture) throw new Error("Shareable ref not found")
+
+    const uri = await shareableRef.current.capture()
+
+    await Sharing.shareAsync(uri, {
+      mimeType: "image/png",
+      dialogTitle: "Share your progress",
+    })
+  }
+
+  useImperativeHandle(ref, () => ({
+    shareStats: handleShare,
+  }))
+
   return (
     <View className="flex flex-col gap-4">
       {/* Stats */}
@@ -69,8 +93,17 @@ const Progress: FC = () => {
           ))}
         </View>
       </View>
+
+      {/* Hidden shareable component for image generation */}
+      <View style={{ position: "absolute", top: -1000, left: 0 }}>
+        <ViewShot ref={shareableRef} options={{ fileName: "progress-stats", format: "png", quality: 0.9 }}>
+          <ShareableStats stats={stats} />
+        </ViewShot>
+      </View>
     </View>
   )
-}
+})
+
+Progress.displayName = "Progress"
 
 export default Progress

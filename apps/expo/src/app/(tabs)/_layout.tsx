@@ -10,12 +10,12 @@ import Purchases, { LOG_LEVEL } from "react-native-purchases"
 import BottomSheetPaywall from "~/components/common/bottom-sheet-paywall"
 import Book from "~/components/common/svg/tabs/book"
 import BookFilled from "~/components/common/svg/tabs/book-filled"
-import Chart from "~/components/common/svg/tabs/chart"
-import ChartFilled from "~/components/common/svg/tabs/chart-filled"
 import GraduationCap from "~/components/common/svg/tabs/graduation-cap"
 import GraduationCapFilled from "~/components/common/svg/tabs/graduation-cap-filled"
 import Mask from "~/components/common/svg/tabs/mask"
 import MaskFilled from "~/components/common/svg/tabs/mask-filled"
+import Trophy from "~/components/common/svg/tabs/trophy"
+import TrophyFilled from "~/components/common/svg/tabs/trophy-filled"
 import { useRevenueCat } from "~/hooks/use-revenuecat"
 import { trpc } from "~/utils/api"
 import { publicApiKeys } from "~/utils/revenuecat"
@@ -138,7 +138,7 @@ export default function TabLayout() {
         options={{
           tabBarShowLabel: false,
           tabBarIcon: ({ focused }) => (
-            <ItemContainer focused={focused}>{focused ? <ChartFilled width={32} height={32} /> : <Chart width={32} height={32} />}</ItemContainer>
+            <ItemContainer focused={focused}>{focused ? <TrophyFilled width={32} height={32} /> : <Trophy width={32} height={32} />}</ItemContainer>
           ),
         }}
       />

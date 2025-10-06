@@ -1,13 +1,16 @@
 import type { FC } from "react"
 import { MeshGradientView } from "expo-mesh-gradient"
-import { router } from "expo-router"
 import { View } from "react-native"
 
 import Share from "~/components/common/svg/share"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 
-const Banner: FC = () => {
+interface BannerProps {
+  onShare: () => Promise<void>
+}
+
+const Banner: FC<BannerProps> = ({ onShare }) => {
   return (
     <View className="overflow-hidden rounded-2xl" style={{ boxShadow: "inset 0 0 0 3px rgba(255, 255, 255, 0.1)" }}>
       <MeshGradientView
@@ -33,7 +36,7 @@ const Banner: FC = () => {
               <Text className="text-xl font-bold text-white">Progress</Text>
               <Text className="text-sm text-white">Track your progress and stay motivated.</Text>
             </View>
-            <Button.Root variant="secondary" size="xs" className="self-start" onPress={() => router.push("/create-roleplay")}>
+            <Button.Root variant="secondary" size="xs" className="self-start" onPress={onShare}>
               <Button.Text>Share Progress</Button.Text>
               <Share width={20} height={20} color="#00A025" />
             </Button.Root>
