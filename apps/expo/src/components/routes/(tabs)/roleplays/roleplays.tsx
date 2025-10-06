@@ -3,13 +3,11 @@ import type { FC } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { FlashList } from "@shopify/flash-list"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronRightIcon, Filter } from "lucide-react-native"
+import { Filter } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
 import type { Difficulty } from "~/components/common/difficulty"
-import type { DifficultyIconProps } from "~/components/common/filters"
 import type { RouterOutputs } from "~/utils/api"
-import { getDifficultyIcon, getDifficultyName } from "~/components/common/difficulty"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 import { trpc } from "~/utils/api"
@@ -61,47 +59,20 @@ const Roleplays: FC = () => {
     setSelectedRoleplay(null)
   }
 
-  const DifficultyIcon: FC<DifficultyIconProps> = ({ difficulty }) => {
-    const Icon = getDifficultyIcon(difficulty)
-    return <Icon width={12} height={12} />
-  }
-
-  const RoleplayCompactCard: FC<{
+  type RoleplayCardProps = {
     roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number]
     onPress: (roleplay: RouterOutputs["profile"]["roleplay"]["getAll"][number]) => void
-  }> = ({ roleplay, onPress }) => {
+  }
+
+  const RoleplayCard: FC<RoleplayCardProps> = ({ roleplay, onPress }) => {
     return (
       <Pressable
         onPress={() => onPress(roleplay)}
-        className="shadow-custom-xs flex flex-row items-center gap-3 rounded-xl border border-neutral-200 bg-white px-2.5 py-3.5 active:bg-neutral-50"
+        className="shadow-custom-xs flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-white p-3 active:bg-neutral-50"
       >
-        {/* Emoji */}
-        <View className="flex size-11 items-center justify-center rounded-xl border border-neutral-100 bg-neutral-50">
-          <Text className="text-3xl">{roleplay.emoji}</Text>
-        </View>
-
-        {/* Content */}
-        <View className="flex flex-1 flex-col gap-0.5">
-          {/* Title */}
-          <Text className="line-clamp-2 text-base font-semibold text-neutral-700">{roleplay.title}</Text>
-
-          {/* Category and difficulty */}
-          <View className="flex flex-row items-center gap-2">
-            <Text className="text-xs font-medium text-neutral-500">
-              {roleplay.category.emoji} {roleplay.category.name}
-            </Text>
-
-            <View className="flex flex-row items-center gap-1">
-              <DifficultyIcon difficulty={roleplay.difficulty as Difficulty} />
-              <Text className="text-xs font-medium text-neutral-500">{getDifficultyName(roleplay.difficulty as Difficulty)}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Chevron right */}
-        <View className="flex size-11 items-center justify-center rounded-xl">
-          <ChevronRightIcon className="text-neutral-400" size={20} />
-        </View>
+        <Text className="text-[40px]">{roleplay.emoji}</Text>
+        <Text className="line-clamp-2 text-base font-semibold leading-5 text-neutral-700">{roleplay.title}</Text>
+        <Text className="mt-auto line-clamp-1 text-xs font-medium text-neutral-400">{roleplay.category.name}</Text>
       </Pressable>
     )
   }
@@ -129,10 +100,32 @@ const Roleplays: FC = () => {
       {/* Roleplays */}
       <FlashList
         data={filteredRoleplays}
+        horizontal={false}
         estimatedItemSize={80}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        renderItem={({ item }) => <RoleplayCompactCard roleplay={item} onPress={handleRoleplayPress} />}
+        ItemSeparatorComponent={() => <View className="h-3" />}
+        /*  renderItem={({ item }) => <RoleplayExtraCompactCard roleplay={item} onPress={handleRoleplayPress} />} */
+        renderItem={({ item, index }) => {
+          // Left margin increases for each column, right margin decreases for each column
+          // What's important is that marginRight + marginLeft === itemGap
+          const numCols = 2
+          const itemGap = 6
+          const marginLeft = ((index % numCols) / (numCols - 1)) * itemGap
+          const marginRight = itemGap - marginLeft
+
+          return (
+            <View
+              style={{
+                flexGrow: 1,
+                marginLeft,
+                marginRight,
+              }}
+            >
+              <RoleplayCard roleplay={item} onPress={handleRoleplayPress} />
+            </View>
+          )
+        }}
         keyExtractor={(item) => item.id}
+        numColumns={2}
       />
 
       <BottomSheetRoleplayFilters

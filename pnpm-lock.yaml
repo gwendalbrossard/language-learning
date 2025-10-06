@@ -186,6 +186,9 @@ importers:
       expo-linking:
         specifier: 7.1.7
         version: 7.1.7(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+      expo-mesh-gradient:
+        specifier: ~0.3.4
+        version: 0.3.4(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
       expo-notifications:
         specifier: ~0.31.4
         version: 0.31.4(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
@@ -5697,6 +5700,13 @@ packages:
     resolution: {integrity: sha512-1A+do6/mLUWF9xd3uCrlXr9QFDbjbfqAYmUy8UDLOjof1lMrOhyeC4Yi6WexA/A8dhZEpIxSMCKfn7G4aHAh4w==}
     peerDependencies:
       expo: '*'
+
+  expo-mesh-gradient@0.3.4:
+    resolution: {integrity: sha512-YSSxjRXo1Idn+WaqWA6Yflbbvdrye+6ZA7/JZKRhY5d8hTLDRWvS5yOW2yeXErIZQME0iemRaUemGI348uQSJA==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
 
   expo-modules-autolinking@2.1.14:
     resolution: {integrity: sha512-nT5ERXwc+0ZT/pozDoJjYZyUQu5RnXMk9jDGm5lg+PiKvsrCTSA/2/eftJGMxLkTjVI2MXp5WjSz3JRjbA7UXA==}
@@ -15273,6 +15283,12 @@ snapshots:
       expo-json-utils: 0.15.0
     transitivePeerDependencies:
       - supports-color
+
+  expo-mesh-gradient@0.3.4(expo@53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      expo: 53.0.20(@babel/core@7.28.3)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)))(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0))(react@19.0.0)
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.28.3)(@types/react@19.1.9)(bufferutil@4.0.9)(react@19.0.0)
 
   expo-modules-autolinking@2.1.14:
     dependencies:

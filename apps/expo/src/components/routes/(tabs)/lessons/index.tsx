@@ -1,16 +1,15 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { router } from "expo-router"
+import { FlashList } from "@shopify/flash-list"
 import { useQuery } from "@tanstack/react-query"
-import { Filter, Plus, Star } from "lucide-react-native"
+import { Filter } from "lucide-react-native"
 import { Pressable, View } from "react-native"
 
+import type { Difficulty } from "~/components/common/difficulty"
 import type { RouterOutputs } from "~/utils/api"
-import { Difficulty } from "~/components/common/difficulty"
-import * as Badge from "~/ui/badge"
 import * as Button from "~/ui/button"
-import { Text, TextDescription } from "~/ui/text"
+import { Text } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
@@ -60,32 +59,32 @@ const Lessons: FC = () => {
     setSelectedLesson(null)
   }
 
-  // Helper function to render difficulty stars
-  const renderDifficultyStars = (difficulty: number) => {
-    const stars = []
-    const maxStars = 5
+  const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
 
-    for (let i = 1; i <= maxStars; i++) {
-      const isFilled = i <= difficulty
-      stars.push(<Star key={i} size={14} fill={isFilled ? "#F59E0B" : "transparent"} color={isFilled ? "#F59E0B" : "#D1D5DB"} strokeWidth={1.5} />)
-    }
-
-    return stars
+  type LessonCardProps = {
+    lesson: RouterOutputs["profile"]["lesson"]["getAll"][number]
+    onPress: (lesson: RouterOutputs["profile"]["lesson"]["getAll"][number]) => void
   }
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedDifficulties.length > 0
+  const LessonCard: FC<LessonCardProps> = ({ lesson, onPress }) => {
+    return (
+      <Pressable
+        onPress={() => onPress(lesson)}
+        className="shadow-custom-xs flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-white p-3 active:bg-neutral-50"
+      >
+        <Text className="text-[40px]">{lesson.emoji}</Text>
+        <Text className="line-clamp-2 text-base font-semibold leading-5 text-neutral-700">{lesson.title}</Text>
+        <Text className="mt-auto line-clamp-1 text-xs font-medium text-neutral-400">{lesson.category.name}</Text>
+      </Pressable>
+    )
+  }
 
   return (
     <View className="flex flex-col gap-4">
       <View className="flex flex-row items-center justify-between">
-        <Text className="text-xl font-semibold">Practice Lessons</Text>
+        <Text className="text-xl font-semibold">Lessons</Text>
 
         <View className="flex flex-row items-center gap-2">
-          <Button.Root className={cn("w-fit")} size="xs" variant={"primary"} onPress={() => router.push("/create-lesson")}>
-            <Button.Icon icon={Plus} />
-            <Button.Text>Create</Button.Text>
-          </Button.Root>
-
           <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => lessonFiltersBottomSheetRef.current?.present()}>
             <Button.Icon icon={Filter} />
             <Button.Text>Filters</Button.Text>
@@ -99,32 +98,35 @@ const Lessons: FC = () => {
       </View>
 
       {/* Lessons */}
-      <View className="flex flex-col gap-3">
-        {filteredLessons.map((lesson) => (
-          <Pressable
-            key={lesson.id}
-            onPress={() => handleLessonPress(lesson)}
-            className="shadow-custom-sm flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50"
-          >
-            {/* Header with emoji and title */}
-            <View className="flex flex-col items-start gap-3">
-              <View className="flex w-full flex-row items-center justify-between gap-2.5">
-                <Text className="text-2xl">{lesson.emoji}</Text>
-                <Text className="flex-1 text-lg font-semibold">{lesson.title}</Text>
-              </View>
+      <FlashList
+        data={filteredLessons}
+        horizontal={false}
+        estimatedItemSize={80}
+        ItemSeparatorComponent={() => <View className="h-3" />}
+        /*  renderItem={({ item }) => <RoleplayExtraCompactCard roleplay={item} onPress={handleRoleplayPress} />} */
+        renderItem={({ item, index }) => {
+          // Left margin increases for each column, right margin decreases for each column
+          // What's important is that marginRight + marginLeft === itemGap
+          const numCols = 2
+          const itemGap = 6
+          const marginLeft = ((index % numCols) / (numCols - 1)) * itemGap
+          const marginRight = itemGap - marginLeft
 
-              <TextDescription>{lesson.description}</TextDescription>
-
-              <View className="flex w-full flex-row items-center justify-between gap-2">
-                <Badge.Root variant="white" size="sm">
-                  <Badge.Text>{lesson.category.name}</Badge.Text>
-                </Badge.Root>
-                <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(lesson.difficulty)}</View>
-              </View>
+          return (
+            <View
+              style={{
+                flexGrow: 1,
+                marginLeft,
+                marginRight,
+              }}
+            >
+              <LessonCard lesson={item} onPress={handleLessonPress} />
             </View>
-          </Pressable>
-        ))}
-      </View>
+          )
+        }}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+      />
 
       <BottomSheetLessonFilters
         ref={lessonFiltersBottomSheetRef}
