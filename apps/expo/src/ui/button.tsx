@@ -203,7 +203,7 @@ const ButtonIcon = ({ icon, variant, size, loading, disabled, ...props }: Button
   }[size ?? "md"]
 
   const Icon = icon
-  return <Icon strokeWidth={1.7} size={iconSize} color={loading ? "transparent" : color} {...props} />
+  return <Icon strokeWidth={2} size={iconSize} color={loading ? "transparent" : color} {...props} />
 }
 ButtonIcon.displayName = "ButtonIcon"
 // #endregion ButtonIcon
