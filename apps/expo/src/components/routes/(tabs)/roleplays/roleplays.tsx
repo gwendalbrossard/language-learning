@@ -68,7 +68,7 @@ const Roleplays: FC = () => {
     return (
       <Pressable
         onPress={() => onPress(roleplay)}
-        className="shadow-custom-xs flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-white p-3 active:bg-neutral-50"
+        className="flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border-2 border-neutral-100 bg-white p-3 active:bg-neutral-50"
       >
         <Text className="text-[40px]">{roleplay.emoji}</Text>
         <Text className="line-clamp-2 text-base font-semibold leading-5 text-neutral-700">{roleplay.title}</Text>

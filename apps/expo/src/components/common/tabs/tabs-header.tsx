@@ -38,7 +38,7 @@ const TabsHeader: FC = () => {
 
   return (
     <>
-      <View className="flex flex-col gap-4 border-b border-neutral-200 px-4 pb-2">
+      <View className="flex flex-col gap-4 border-b-2 border-neutral-200 px-4 pb-3 pt-1">
         {/* Language and streak counter */}
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center justify-start gap-6">
@@ -55,7 +55,7 @@ const TabsHeader: FC = () => {
           </Pressable> */}
 
             <Pressable onPress={() => bottomSheetSettingsRef.current?.present()} className="relative">
-              <SettingsIcon size={24} className="text-neutral-500" />
+              <SettingsIcon size={28} strokeWidth={2} className="text-neutral-400" />
             </Pressable>
           </View>
         </View>

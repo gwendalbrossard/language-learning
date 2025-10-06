@@ -70,7 +70,7 @@ const Lessons: FC = () => {
     return (
       <Pressable
         onPress={() => onPress(lesson)}
-        className="shadow-custom-xs flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border border-neutral-200 bg-white p-3 active:bg-neutral-50"
+        className="flex h-[152px] w-full flex-col gap-2.5 rounded-2xl border-2 border-neutral-100 bg-white p-3 active:bg-neutral-50"
       >
         <Text className="text-[40px]">{lesson.emoji}</Text>
         <Text className="line-clamp-2 text-base font-semibold leading-5 text-neutral-700">{lesson.title}</Text>

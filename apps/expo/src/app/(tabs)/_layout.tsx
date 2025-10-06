@@ -1,9 +1,10 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
+import type { FC } from "react"
 import React, { useEffect, useRef } from "react"
 import { Tabs } from "expo-router"
 import { useQuery } from "@tanstack/react-query"
 import { usePostHog } from "posthog-react-native"
-import { Platform } from "react-native"
+import { Platform, View } from "react-native"
 import Purchases, { LOG_LEVEL } from "react-native-purchases"
 
 import BottomSheetPaywall from "~/components/common/bottom-sheet-paywall"
@@ -18,7 +19,27 @@ import MaskFilled from "~/components/common/svg/tabs/mask-filled"
 import { useRevenueCat } from "~/hooks/use-revenuecat"
 import { trpc } from "~/utils/api"
 import { publicApiKeys } from "~/utils/revenuecat"
+import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
+
+type ItemContainerProps = {
+  children: React.ReactNode
+  focused: boolean
+}
+const ItemContainer: FC<ItemContainerProps> = ({ children, focused }) => {
+  return (
+    <View className="pb-2">
+      <View
+        className={cn(
+          "flex size-11 items-center justify-center rounded-[10px] border-2 border-transparent bg-white",
+          focused && "border-primary-200 bg-primary-50",
+        )}
+      >
+        {children}
+      </View>
+    </View>
+  )
+}
 
 export default function TabLayout() {
   const bottomSheetPaywallRef = useRef<BottomSheetModal>(null)
@@ -71,20 +92,35 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#979FAD",
         tabBarActiveTintColor: "#485261",
         tabBarLabelStyle: { marginTop: 0 },
+        tabBarStyle: {
+          borderTopColor: "#DFE3EB",
+          borderTopWidth: 2,
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+          height: 84,
+        },
       }}
     >
       <Tabs.Screen
         name="lessons"
         options={{
           tabBarShowLabel: false,
-          tabBarIcon: ({ focused }) => (focused ? <GraduationCapFilled width={28} height={28} /> : <GraduationCap width={28} height={28} />),
+          tabBarIcon: ({ focused }) => (
+            <ItemContainer focused={focused}>
+              {focused ? <GraduationCapFilled width={32} height={32} /> : <GraduationCap width={32} height={32} />}
+            </ItemContainer>
+          ),
         }}
       />
       <Tabs.Screen
         name="roleplays"
         options={{
           tabBarShowLabel: false,
-          tabBarIcon: ({ focused }) => (focused ? <MaskFilled width={28} height={28} /> : <Mask width={28} height={28} />),
+          tabBarIcon: ({ focused }) => (
+            <ItemContainer focused={focused}>{focused ? <MaskFilled width={32} height={32} /> : <Mask width={32} height={32} />}</ItemContainer>
+          ),
         }}
       />
 
@@ -92,14 +128,18 @@ export default function TabLayout() {
         name="vocabulary"
         options={{
           tabBarShowLabel: false,
-          tabBarIcon: ({ focused }) => (focused ? <BookFilled width={28} height={28} /> : <Book width={28} height={28} />),
+          tabBarIcon: ({ focused }) => (
+            <ItemContainer focused={focused}>{focused ? <BookFilled width={32} height={32} /> : <Book width={32} height={32} />}</ItemContainer>
+          ),
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
           tabBarShowLabel: false,
-          tabBarIcon: ({ focused }) => (focused ? <ChartFilled width={28} height={28} /> : <Chart width={28} height={28} />),
+          tabBarIcon: ({ focused }) => (
+            <ItemContainer focused={focused}>{focused ? <ChartFilled width={32} height={32} /> : <Chart width={32} height={32} />}</ItemContainer>
+          ),
         }}
       />
 

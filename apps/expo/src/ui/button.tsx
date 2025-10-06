@@ -7,7 +7,7 @@ import { ActivityIndicator, Pressable, Text as RNText, View } from "react-native
 
 import { cn } from "~/utils/utils"
 
-const buttonVariants = cva(cn("relative flex w-fit flex-row items-center justify-center border transition", "web:focus-visible:outline-none"), {
+const buttonVariants = cva(cn("relative flex w-fit flex-row items-center justify-center border-2 transition", "web:focus-visible:outline-none"), {
   variants: {
     variant: {
       primary: cn("shadow-custom-xs border-transparent bg-primary-600 active:bg-primary-700 disabled:bg-primary-100"),
