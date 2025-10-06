@@ -1,11 +1,15 @@
+import type { FC } from "react"
 import { forwardRef } from "react"
 import { router } from "expo-router"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { useMutation } from "@tanstack/react-query"
-import { Play, Star } from "lucide-react-native"
+import { Play } from "lucide-react-native"
 import { Dimensions, View } from "react-native"
 
+import type { Difficulty } from "~/components/common/difficulty"
+import type { DifficultyIconProps } from "~/components/common/filters"
 import type { RouterOutputs } from "~/utils/api"
+import { getDifficultyIcon, getDifficultyName } from "~/components/common/difficulty"
 import * as Badge from "~/ui/badge"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
@@ -18,11 +22,16 @@ type Props = {
   onClose: () => void
 }
 
+const DifficultyIcon: FC<DifficultyIconProps> = ({ difficulty }) => {
+  const Icon = getDifficultyIcon(difficulty)
+  return <Icon width={14} height={14} />
+}
+
 const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, onClose }, ref) => {
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
 
-  const profileLessonCreateMutation = useMutation(
+  const profileLessonSessionCreateMutation = useMutation(
     trpc.profile.lessonSession.create.mutationOptions({
       onSuccess: async (data) => {
         if (ref && "current" in ref && ref.current) {
@@ -36,20 +45,7 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
 
   const handleStartLesson = () => {
     if (!lesson) throw new Error("Lesson not found")
-    profileLessonCreateMutation.mutate({ lessonId: lesson.id, organizationId: currentOrganizationId })
-  }
-
-  // Helper function to render difficulty stars
-  const renderDifficultyStars = (difficulty: number) => {
-    const stars = []
-    const maxStars = 5
-
-    for (let i = 1; i <= maxStars; i++) {
-      const isFilled = i <= difficulty
-      stars.push(<Star key={i} size={16} fill={isFilled ? "#F59E0B" : "transparent"} color={isFilled ? "#F59E0B" : "#D1D5DB"} strokeWidth={1.5} />)
-    }
-
-    return stars
+    profileLessonSessionCreateMutation.mutate({ lessonId: lesson.id, organizationId: currentOrganizationId })
   }
 
   return (
@@ -72,11 +68,19 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
               <Text className="text-4xl">{lesson.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
                 <Text className="text-center text-2xl font-semibold">{lesson.title}</Text>
-                <View className="flex flex-row items-center gap-3">
+
+                {/* Category and difficulty */}
+                <View className="flex flex-row items-center gap-2.5">
                   <Badge.Root variant="white" size="sm">
-                    <Badge.Text>{lesson.category.name}</Badge.Text>
+                    <Badge.Text>
+                      {lesson.category.emoji} {lesson.category.name}
+                    </Badge.Text>
                   </Badge.Root>
-                  <View className="flex flex-row items-center gap-0.5">{renderDifficultyStars(lesson.difficulty)}</View>
+
+                  <Badge.Root variant="white" size="sm">
+                    <DifficultyIcon difficulty={lesson.difficulty as Difficulty} />
+                    <Badge.Text>{getDifficultyName(lesson.difficulty as Difficulty)}</Badge.Text>
+                  </Badge.Root>
                 </View>
               </View>
             </View>
@@ -90,7 +94,13 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
 
           {/* Start Button */}
           <View className="pt-6">
-            <Button.Root className="w-full" size="lg" variant="primary" onPress={handleStartLesson} loading={profileLessonCreateMutation.isPending}>
+            <Button.Root
+              className="w-full"
+              size="lg"
+              variant="primary"
+              onPress={handleStartLesson}
+              loading={profileLessonSessionCreateMutation.isPending}
+            >
               <Button.Icon icon={Play} />
               <Button.Text>Start Lesson</Button.Text>
             </Button.Root>
