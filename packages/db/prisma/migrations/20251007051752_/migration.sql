@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "public"."profile" ADD COLUMN     "daysOfPractice" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "lessonsDone" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "minutesSpoken" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "roleplaysDone" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "vocabularyLearned" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "wordsSpoken" INTEGER NOT NULL DEFAULT 0;

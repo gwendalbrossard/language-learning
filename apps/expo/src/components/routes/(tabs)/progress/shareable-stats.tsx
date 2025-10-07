@@ -43,7 +43,7 @@ const ShareableStats: FC<ShareableStatsProps> = ({ stats }) => {
 
       {/* Footer */}
       <View className="mt-4 items-center">
-        <Text className="text-center text-xs text-neutral-400">Generated with Polyglot AI</Text>
+        <Text className="text-center text-xs text-neutral-400">Generated with StudyUnfold</Text>
       </View>
     </View>
   )
