@@ -459,8 +459,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       openai:
-        specifier: ^5.19.0
-        version: 5.19.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4))(zod@4.1.9)
+        specifier: ^6.2.0
+        version: 6.2.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4))(zod@4.1.9)
       socket.io:
         specifier: ^4.8.1
         version: 4.8.1(bufferutil@4.0.9)(utf-8-validate@6.0.4)
@@ -7179,12 +7179,12 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
-  openai@5.19.0:
-    resolution: {integrity: sha512-p3PpptuUl3ARQxtt7IMBVBcg+1xRNUSr9W/pBatKuIwm9tbHvOGaixL5FCee1x/WQ7YtiA8yYUZAhF1dXJxQwQ==}
+  openai@6.2.0:
+    resolution: {integrity: sha512-qqjzHls7F5xkXNGy9P1Ei1rorI5LWupUUFWP66zPU8FlZbiITX8SFcHMKNZg/NATJ0LpIZcMUFxSwQmdeQPwSw==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
-      zod: ^3.23.8
+      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       ws:
         optional: true
@@ -17025,7 +17025,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openai@5.19.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4))(zod@4.1.9):
+  openai@6.2.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4))(zod@4.1.9):
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.4)
       zod: 4.1.9
