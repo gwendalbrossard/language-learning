@@ -17,7 +17,7 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal ref={ref} backdropComponent={BottomSheetBackdrop} enablePanDownToClose stackBehavior="push">
         <BottomSheetView className="flex-1 px-4 pb-10 pt-2">
           <View className="flex flex-col gap-3">
-            <Button.Root size="md" variant="secondary" onPress={onOpenTranscript} loading={true}>
+            <Button.Root size="md" variant="secondary" onPress={onOpenTranscript}>
               <Button.Icon icon={NotepadTextIcon} />
               <Button.Text>Transcript</Button.Text>
             </Button.Root>
