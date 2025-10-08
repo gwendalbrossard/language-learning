@@ -37,6 +37,9 @@ model Profile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  lastStreakDayId String?
+  lastStreakDay   StreakDay? @relation(name: "LastStreakDay", fields: [lastStreakDayId], references: [id])
+
   members            Member[]
   invitations        Invitation[]
   streakDays         StreakDay[]

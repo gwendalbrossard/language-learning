@@ -1,4 +1,5 @@
 import { Prisma } from "../../generated/client"
+import { streakDaySelect } from "./streak-day"
 
 export const profileSelect = Prisma.validator<Prisma.ProfileSelect>()({
   id: true,
@@ -21,6 +22,7 @@ export const profileSelect = Prisma.validator<Prisma.ProfileSelect>()({
   completedOnboarding: true,
   currentStreak: true,
   longestStreak: true,
+  lastStreakDay: { select: streakDaySelect },
   revenueCatCustomer: true,
   createdAt: true,
 })

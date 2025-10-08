@@ -16,6 +16,7 @@ model Organization {
   lessons            Lesson[]
   lessonSessions     LessonSession[]
   lessonCategories   LessonCategory[]
+  streakDays         StreakDay[]
 
   @@map("organization")
 }

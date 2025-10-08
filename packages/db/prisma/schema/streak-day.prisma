@@ -5,12 +5,18 @@ model StreakDay {
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  lastStreakDayForProfiles Profile[] @relation("LastStreakDay")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([profileId, date]) // Ensure one entry per day per profile
-  @@index([profileId, date])
+  @@unique([profileId, date, organizationId]) // Ensure one entry per day per profile and organization
+  @@index([profileId, date, organizationId])
   @@index([profileId])
+  @@index([organizationId])
   @@index([date])
   @@map("streak_day")
 }
