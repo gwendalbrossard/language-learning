@@ -93,8 +93,8 @@ const Progress = forwardRef<ProgressRef>((_, ref) => {
                   <View className="flex flex-row gap-2 rounded-2xl border-2 border-neutral-100 bg-white p-3">
                     <Text className="text-2xl">{stat.emoji}</Text>
                     <View className="flex flex-1 flex-col">
-                      <Text className="line-clamp-1 text-lg font-bold text-neutral-700">{stat.value}</Text>
-                      <Text className="-mt-1 line-clamp-1 text-xs font-medium text-neutral-400">{stat.title}</Text>
+                      <Text className="line-clamp-1 text-lg font-black text-neutral-700">{stat.value}</Text>
+                      <Text className="-mt-1 line-clamp-1 text-xs font-semibold text-neutral-400">{stat.title}</Text>
                     </View>
                   </View>
                 </View>
