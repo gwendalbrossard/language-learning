@@ -50,7 +50,7 @@ const CreateRoleplay: FC = () => {
           ),
         ])
 
-        router.push(`/roleplay-session/${data.id}`)
+        router.replace(`/roleplay-session/${data.id}`)
       },
     }),
   )

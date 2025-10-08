@@ -38,7 +38,7 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
           ref.current.dismiss()
         }
         await queryClient.fetchQuery(trpc.profile.lessonSession.get.queryOptions({ lessonSessionId: data.id, organizationId: currentOrganizationId }))
-        router.push(`/lesson-session/${data.id}`)
+        router.replace(`/lesson-session/${data.id}`)
       },
     }),
   )
