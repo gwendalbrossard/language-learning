@@ -8,9 +8,7 @@ import { profileProcedure } from "../../trpc"
 import { posthogNodeCapture } from "../../utils/posthog"
 
 export const onboard = profileProcedure.input(ZProfileOnboardSchema).mutation(async ({ ctx, input }) => {
-  const { profile } = ctx
-
-  const updatedProfile = await onboardingTransaction({ prisma: ctx.db, profile: profile, input: input })
+  const updatedProfile = await onboardingTransaction({ prisma: ctx.db, profile: ctx.profile, input: input })
 
   return updatedProfile
 })

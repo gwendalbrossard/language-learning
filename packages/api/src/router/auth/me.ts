@@ -6,13 +6,11 @@ import { publicProcedure } from "../../trpc"
 import { createProfile } from "../profile/create.route"
 
 export const me = publicProcedure.input(ZAuthMeSchema).query(async ({ ctx, input }) => {
-  const { user, profile } = ctx
-
-  if (!user) {
+  if (!ctx.user) {
     return { user: null, profile: null }
   }
 
-  let realProfile: ProfileSelected | null = profile
+  let realProfile: ProfileSelected | null = ctx.profile
 
   // If the user does not exist in the database, and we are given a name and timezone in the inputs
   // we can create a new user directly to avoid the welcome step
@@ -23,9 +21,9 @@ export const me = publicProcedure.input(ZAuthMeSchema).query(async ({ ctx, input
       timezone: input.timezone,
       organizationName: `${input.name}'s Organization`,
     }
-    const createdProfile = await createProfile({ user: user, profileCreateInput: profileCreateInput, db: ctx.db })
+    const createdProfile = await createProfile({ user: ctx.user, profileCreateInput: profileCreateInput, db: ctx.db })
 
     realProfile = createdProfile.createdProfile
   }
-  return { user: user, profile: realProfile }
+  return { user: ctx.user, profile: realProfile }
 })
