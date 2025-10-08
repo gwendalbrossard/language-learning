@@ -100,7 +100,7 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
     void endLessonSession()
   }, SESSION_TIMEOUT_MS)
 
-  const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview"
+  const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-mini"
   const ws = new WebSocket(url, {
     headers: {
       Authorization: "Bearer " + env.OPENAI_API_KEY,
@@ -121,7 +121,7 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
         type: "session.update",
         session: {
           type: "realtime",
-          model: "gpt-4o-mini-realtime-preview",
+          model: "gpt-realtime-mini",
           audio: {
             input: {
               format: {
