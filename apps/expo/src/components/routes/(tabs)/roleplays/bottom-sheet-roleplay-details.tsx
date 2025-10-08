@@ -40,7 +40,7 @@ const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ rolepl
         await queryClient.fetchQuery(
           trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: data.id, organizationId: currentOrganizationId }),
         )
-        router.push(`/roleplay-session/${data.id}`)
+        router.replace(`/roleplay-session/${data.id}`)
       },
     }),
   )
