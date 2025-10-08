@@ -30,6 +30,13 @@ model LessonSession {
   userSpeakingDuration Int    @default(0)
   aiSpeakingDuration   Int    @default(0)
 
+  tokensInputText        Int @default(0)
+  tokensInputTextCached  Int @default(0)
+  tokensInputAudio       Int @default(0)
+  tokensInputAudioCached Int @default(0)
+  tokensOutputText       Int @default(0)
+  tokensOutputAudio      Int @default(0)
+
   lessonId String
   lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 

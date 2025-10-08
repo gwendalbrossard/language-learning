@@ -24,33 +24,43 @@ const Progress = forwardRef<ProgressRef>((_, ref) => {
   const stats = [
     {
       emoji: "🗣️",
-      title: "Minutes Spoken",
-      value: 12,
+      title: "Seconds Spoken",
+      value: profileMe.data.secondsSpoken,
     },
     {
       emoji: "💬",
       title: "Words Spoken",
-      value: 12,
+      value: profileMe.data.wordsSpoken,
+    },
+    {
+      emoji: "📚",
+      title: "Seconds In Lessons",
+      value: profileMe.data.secondsInLessons,
+    },
+    {
+      emoji: "🎬",
+      title: "Seconds In Roleplays",
+      value: profileMe.data.secondsInRoleplays,
     },
     {
       emoji: "🎓",
       title: "Lessons Done",
-      value: 12,
+      value: profileMe.data.lessonsDone,
     },
     {
       emoji: "🎭",
       title: "Roleplays Done",
-      value: 12,
+      value: profileMe.data.roleplaysDone,
     },
     {
       emoji: "📘",
       title: "Vocab Learned",
-      value: 951,
+      value: profileMe.data.vocabularyLearned,
     },
     {
       emoji: "🔥",
       title: "Days of Practice",
-      value: 12,
+      value: profileMe.data.daysOfPractice,
     },
   ]
 
@@ -83,7 +93,7 @@ const Progress = forwardRef<ProgressRef>((_, ref) => {
                   <View className="flex flex-row gap-2 rounded-2xl border-2 border-neutral-100 bg-white p-3">
                     <Text className="text-2xl">{stat.emoji}</Text>
                     <View className="flex flex-1 flex-col">
-                      <Text className="line-clamp-1 text-lg font-bold text-neutral-700">{stat.value.toLocaleString()}</Text>
+                      <Text className="line-clamp-1 text-lg font-bold text-neutral-700">{stat.value}</Text>
                       <Text className="-mt-1 line-clamp-1 text-xs font-medium text-neutral-400">{stat.title}</Text>
                     </View>
                   </View>

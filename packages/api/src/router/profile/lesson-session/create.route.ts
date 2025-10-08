@@ -4,6 +4,7 @@ import { lessonSelect, lessonSessionSelect } from "@acme/db"
 import { ZProfileLessonSessionCreateSchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../../trpc"
+import { incrementProfileStats } from "../../../utils/profile"
 
 export const create = organizationProcedure.input(ZProfileLessonSessionCreateSchema).mutation(async ({ ctx, input }) => {
   const lesson = await ctx.db.lesson.findFirst({
@@ -17,6 +18,8 @@ export const create = organizationProcedure.input(ZProfileLessonSessionCreateSch
     data: { lessonId: input.lessonId, profileId: ctx.profile.id, organizationId: ctx.organization.id },
     select: lessonSessionSelect,
   })
+
+  await incrementProfileStats({ lessonsDone: 1, profileId: ctx.profile.id })
 
   return createdLessonSession
 })

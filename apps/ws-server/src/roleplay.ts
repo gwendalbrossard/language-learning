@@ -9,6 +9,7 @@ import { env } from "~/env.server"
 import { calculateAudioDuration, parseWAVFile } from "./utils/audio"
 import { getFeedback } from "./utils/get-feedback"
 import { getRoleplayInstructions } from "./utils/get-roleplay-instructions"
+import { incrementProfileStats } from "./utils/profile"
 
 type Props = {
   roleplaySessionId: string
@@ -43,6 +44,10 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
   // Speaking duration tracking
   let totalUserSpeakingDuration = 0 // in seconds
   let totalAiSpeakingDuration = 0 // in seconds
+  let wordsSpokenCount = 0 // in words
+
+  let tokensInputTextCached = 0 // in tokens
+  let tokensInputAudioCached = 0 // in tokens
 
   const checkSessionTimeout = () => {
     const elapsed = Date.now() - sessionStartTime
@@ -75,6 +80,15 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
 
     // Update final duration before ending
     const finalDuration = await updateRoleplaySessionDuration()
+
+    // Update profile stats
+    await incrementProfileStats({
+      profileId: profile.id,
+      secondsSpoken: totalUserSpeakingDuration,
+      secondsListening: totalAiSpeakingDuration,
+      secondsInRoleplays: finalDuration,
+      wordsSpoken: wordsSpokenCount,
+    })
 
     console.log(`🔴 Roleplay session ended after ${finalDuration}s for profileId: ${profile.id} and roleplaySessionId: ${roleplaySessionId}`)
     socket.emit("sessionEnded")
@@ -175,6 +189,14 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
       }
       case "conversation.item.input_audio_transcription.completed": {
         console.log("conversation.item.input_audio_transcription.completed")
+        console.log("parsedMessage.transcript", parsedMessage)
+
+        // Count words spoken by user
+        const wordCount = parsedMessage.transcript
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0).length
+        wordsSpokenCount = wordsSpokenCount + wordCount
 
         // Store user message
         const userMessage = await prisma.roleplaySessionMessage.create({
@@ -315,6 +337,52 @@ export const handleRoleplaySession = async ({ roleplaySessionId, profile, organi
       }
       case "response.done": {
         console.log("response.done")
+
+        const usage = parsedMessage.response.usage
+        if (!usage) break
+
+        const currentTotalTextTokens = usage.input_token_details?.text_tokens ?? 0
+        const currentTotalCachedTextTokens = usage.input_token_details?.cached_tokens_details?.text_tokens ?? 0
+        const currentTotalAudioTokens = usage.input_token_details?.audio_tokens ?? 0
+        const currentTotalCachedAudioTokens = usage.input_token_details?.cached_tokens_details?.audio_tokens ?? 0
+
+        // Calculate incremental values
+        const incrementalCachedTextTokens = currentTotalCachedTextTokens - tokensInputTextCached
+        const incrementalCachedAudioTokens = currentTotalCachedAudioTokens - tokensInputAudioCached
+
+        // New non-cached tokens = current total - current cached
+        const incrementalTextTokens = currentTotalTextTokens - currentTotalCachedTextTokens
+        const incrementalAudioTokens = currentTotalAudioTokens - currentTotalCachedAudioTokens
+
+        // Update cumulative totals for next iteration
+        tokensInputTextCached = currentTotalCachedTextTokens
+        tokensInputAudioCached = currentTotalCachedAudioTokens
+
+        const tokensOutputTextIncremental = usage.output_token_details?.text_tokens ?? 0
+        const tokensOutputAudioIncremental = usage.output_token_details?.audio_tokens ?? 0
+
+        await incrementProfileStats({
+          profileId: profile.id,
+          tokensInputText: incrementalTextTokens,
+          tokensInputTextCached: incrementalCachedTextTokens,
+          tokensInputAudio: incrementalAudioTokens,
+          tokensInputAudioCached: incrementalCachedAudioTokens,
+          tokensOutputText: tokensOutputTextIncremental,
+          tokensOutputAudio: tokensOutputAudioIncremental,
+        })
+
+        await prisma.roleplaySession.update({
+          where: { id: roleplaySessionId },
+          data: {
+            tokensInputText: { increment: incrementalTextTokens },
+            tokensInputTextCached: { increment: incrementalCachedTextTokens },
+            tokensInputAudio: { increment: incrementalAudioTokens },
+            tokensInputAudioCached: { increment: incrementalCachedAudioTokens },
+            tokensOutputText: { increment: tokensOutputTextIncremental },
+            tokensOutputAudio: { increment: tokensOutputAudioIncremental },
+          },
+        })
+
         break
       }
       case "rate_limits.updated": {

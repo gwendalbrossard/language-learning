@@ -9,6 +9,7 @@ import { env } from "~/env.server"
 import { calculateAudioDuration, parseWAVFile } from "./utils/audio"
 import { getAction } from "./utils/get-action"
 import { getLessonInstructions } from "./utils/get-lesson-instructions"
+import { incrementProfileStats } from "./utils/profile"
 
 type Props = {
   lessonSessionId: string
@@ -41,6 +42,11 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
   // Speaking duration tracking
   let totalUserSpeakingDuration = 0 // in seconds
   let totalAiSpeakingDuration = 0 // in seconds
+  let vocabularyLearnedCount = 0 // in units
+  let wordsSpokenCount = 0 // in words
+
+  let tokensInputTextCached = 0 // in tokens
+  let tokensInputAudioCached = 0 // in tokens
 
   const checkSessionTimeout = () => {
     const elapsed = Date.now() - sessionStartTime
@@ -73,6 +79,16 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
 
     // Update final duration before ending
     const finalDuration = await updateLessonSessionDuration()
+
+    // Update profile stats
+    await incrementProfileStats({
+      profileId: profile.id,
+      secondsSpoken: totalUserSpeakingDuration,
+      secondsListening: totalAiSpeakingDuration,
+      secondsInLessons: finalDuration,
+      vocabularyLearned: vocabularyLearnedCount,
+      wordsSpoken: wordsSpokenCount,
+    })
 
     console.log(`🔴 Lesson session ended after ${finalDuration}s for profileId: ${profile.id} and lessonSessionId: ${lessonSessionId}`)
     socket.emit("sessionEnded")
@@ -173,6 +189,13 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
       }
       case "conversation.item.input_audio_transcription.completed": {
         console.log("conversation.item.input_audio_transcription.completed")
+
+        // Count words spoken by user
+        const wordCount = parsedMessage.transcript
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0).length
+        wordsSpokenCount = wordsSpokenCount + wordCount
 
         // Store user message
         const _userMessage = await prisma.lessonSessionMessage.create({
@@ -315,6 +338,8 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
               translation: actionResult.targetContentTranslated,
             },
           })
+
+          vocabularyLearnedCount = vocabularyLearnedCount + 1
         }
 
         console.log("actionResult", actionResult)
@@ -343,6 +368,52 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
       }
       case "response.done": {
         console.log("response.done")
+
+        const usage = parsedMessage.response.usage
+        if (!usage) break
+
+        const currentTotalTextTokens = usage.input_token_details?.text_tokens ?? 0
+        const currentTotalCachedTextTokens = usage.input_token_details?.cached_tokens_details?.text_tokens ?? 0
+        const currentTotalAudioTokens = usage.input_token_details?.audio_tokens ?? 0
+        const currentTotalCachedAudioTokens = usage.input_token_details?.cached_tokens_details?.audio_tokens ?? 0
+
+        // Calculate incremental values
+        const incrementalCachedTextTokens = currentTotalCachedTextTokens - tokensInputTextCached
+        const incrementalCachedAudioTokens = currentTotalCachedAudioTokens - tokensInputAudioCached
+
+        // New non-cached tokens = current total - current cached
+        const incrementalTextTokens = currentTotalTextTokens - currentTotalCachedTextTokens
+        const incrementalAudioTokens = currentTotalAudioTokens - currentTotalCachedAudioTokens
+
+        // Update cumulative totals for next iteration
+        tokensInputTextCached = currentTotalCachedTextTokens
+        tokensInputAudioCached = currentTotalCachedAudioTokens
+
+        const tokensOutputTextIncremental = usage.output_token_details?.text_tokens ?? 0
+        const tokensOutputAudioIncremental = usage.output_token_details?.audio_tokens ?? 0
+
+        await incrementProfileStats({
+          profileId: profile.id,
+          tokensInputText: incrementalTextTokens,
+          tokensInputTextCached: incrementalCachedTextTokens,
+          tokensInputAudio: incrementalAudioTokens,
+          tokensInputAudioCached: incrementalCachedAudioTokens,
+          tokensOutputText: tokensOutputTextIncremental,
+          tokensOutputAudio: tokensOutputAudioIncremental,
+        })
+
+        await prisma.lessonSession.update({
+          where: { id: lessonSessionId },
+          data: {
+            tokensInputText: { increment: incrementalTextTokens },
+            tokensInputTextCached: { increment: incrementalCachedTextTokens },
+            tokensInputAudio: { increment: incrementalAudioTokens },
+            tokensInputAudioCached: { increment: incrementalCachedAudioTokens },
+            tokensOutputText: { increment: tokensOutputTextIncremental },
+            tokensOutputAudio: { increment: tokensOutputAudioIncremental },
+          },
+        })
+
         break
       }
       case "rate_limits.updated": {

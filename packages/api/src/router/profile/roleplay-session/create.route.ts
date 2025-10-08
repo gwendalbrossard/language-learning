@@ -4,6 +4,7 @@ import { roleplaySelect, roleplaySessionSelect } from "@acme/db"
 import { ZProfileRoleplaySessionCreateSchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../../trpc"
+import { incrementProfileStats } from "../../../utils/profile"
 
 export const create = organizationProcedure.input(ZProfileRoleplaySessionCreateSchema).mutation(async ({ ctx, input }) => {
   const roleplay = await ctx.db.roleplay.findFirst({
@@ -17,6 +18,8 @@ export const create = organizationProcedure.input(ZProfileRoleplaySessionCreateS
     data: { roleplayId: input.roleplayId, profileId: ctx.profile.id, organizationId: ctx.organization.id },
     select: roleplaySessionSelect,
   })
+
+  await incrementProfileStats({ roleplaysDone: 1, profileId: ctx.profile.id })
 
   return createdRoleplaySession
 })

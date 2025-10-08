@@ -8,6 +8,13 @@ model Profile {
   learningLanguage      String                @default("fr-FR") /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "es-MX", "ja-JP" // TODO: Remove default value when we have a way to set the learning language.
   learningLanguageLevel LearningLanguageLevel @default(INTERMEDIATE) /// TODO: Remove default value when we have a way to set the learning language level.
 
+  tokensInputText        Int @default(0)
+  tokensInputTextCached  Int @default(0)
+  tokensInputAudio       Int @default(0)
+  tokensInputAudioCached Int @default(0)
+  tokensOutputText       Int @default(0)
+  tokensOutputAudio      Int @default(0)
+
   secondsSpoken       Int     @default(0)
   secondsListening    Int     @default(0)
   secondsInLessons    Int     @default(0)
