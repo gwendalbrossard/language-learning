@@ -8,6 +8,7 @@ import type { RouterOutputs } from "~/utils/api"
 import { difficulties, getDifficultyName } from "~/components/common/difficulty"
 import { DifficultyIcon, FilterOption, FilterSection } from "~/components/common/filters"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
+import * as BottomSheet from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 
@@ -47,12 +48,12 @@ const BottomSheetLessonFilters = forwardRef<BottomSheetModal, Props>(
       >
         <View className="flex-1">
           {/* Fixed Header */}
-          <View className="px-4 pb-4 pt-2">
-            <Text className="text-center text-lg font-semibold">Filter Lessons</Text>
-          </View>
+          <BottomSheet.Header>
+            <BottomSheet.HeaderTitle>Filter Lessons</BottomSheet.HeaderTitle>
+          </BottomSheet.Header>
 
           {/* Scrollable Content with Footer Space */}
-          <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+          <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
             <View className="flex flex-col gap-6">
               {/* Category Filter */}
               <FilterSection title="Category">
@@ -105,7 +106,7 @@ const BottomSheetLessonFilters = forwardRef<BottomSheetModal, Props>(
           </ScrollView>
 
           {/* Fixed Footer with Buttons */}
-          <View className="border-t border-neutral-100 bg-white px-4 pb-10 pt-4">
+          <View className="border-t-2 border-neutral-100 bg-white px-4 pb-10 pt-4">
             <View className="flex flex-col gap-3">
               <Button.Root variant="secondary" onPress={clearAllFilters} disabled={!hasActiveFilters} className="w-full">
                 <Button.Text>Clear All Filters</Button.Text>
