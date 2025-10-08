@@ -10,6 +10,7 @@ import { roleplayCategoryRouter } from "./roleplay-category/_router"
 import { roleplaySessionRouter } from "./roleplay-session/_router"
 import { roleplayRouter } from "./roleplay/_router"
 import { streakDays } from "./streak-days.route"
+import { updateStreakDay } from "./update-streak-day"
 
 export const profileRouter = {
   create: create,
@@ -22,4 +23,5 @@ export const profileRouter = {
   roleplay: roleplayRouter,
   roleplayCategory: roleplayCategoryRouter,
   roleplaySession: roleplaySessionRouter,
+  updateStreakDay: updateStreakDay,
 } satisfies TRPCRouterRecord

@@ -2,11 +2,11 @@ import { addDays, differenceInCalendarDays, startOfDay } from "date-fns"
 import { toZonedTime } from "date-fns-tz"
 
 import { profileSelect } from "@acme/db"
-import { ZProfileUpdateStreakDayCreateSchema } from "@acme/validators"
+import { ZProfileUpdateStreakDaySchema } from "@acme/validators"
 
 import { organizationProcedure } from "../../trpc"
 
-export const updateStreakDay = organizationProcedure.input(ZProfileUpdateStreakDayCreateSchema).mutation(async ({ ctx }) => {
+export const updateStreakDay = organizationProcedure.input(ZProfileUpdateStreakDaySchema).mutation(async ({ ctx }) => {
   // Get current time in profile's timezone
   const now = new Date()
   const profileLocalDate = toZonedTime(now, ctx.profile.timezone)

@@ -1,6 +1,6 @@
 import { z } from "zod/v4"
 
-export const ZProfileUpdateStreakDayCreateSchema = z.object({
+export const ZProfileUpdateStreakDaySchema = z.object({
   organizationId: z.string().min(1),
 })
-export type TProfileUpdateStreakDayCreateSchema = z.infer<typeof ZProfileUpdateStreakDayCreateSchema>
+export type TProfileUpdateStreakDaySchema = z.infer<typeof ZProfileUpdateStreakDaySchema>
