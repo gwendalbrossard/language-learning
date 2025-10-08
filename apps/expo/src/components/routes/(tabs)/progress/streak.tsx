@@ -8,6 +8,7 @@ import { Text } from "~/ui/text"
 import { trpc } from "~/utils/api"
 import { calculateCurrentWeekProgress, DayStatus } from "~/utils/streak"
 import { cn } from "~/utils/utils"
+import { useUserStore } from "~/utils/zustand/user-store"
 
 type DayIndicatorProps = {
   status: DayStatus
@@ -39,7 +40,12 @@ const Streak: FC = () => {
   const profileMe = useQuery(trpc.profile.me.queryOptions())
   if (!profileMe.data) throw new Error("Failed to fetch profile")
 
-  const profileStreakDays = useQuery(trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined }))
+  const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
+  if (!currentOrganizationId) throw new Error("Current organization ID not found")
+
+  const profileStreakDays = useQuery(
+    trpc.profile.streakDays.queryOptions({ startDate: undefined, endDate: undefined, organizationId: currentOrganizationId }),
+  )
   if (!profileStreakDays.data) throw new Error("Streak days not found")
 
   const { daysLabels, weekProgress } = calculateCurrentWeekProgress(profileStreakDays.data, profileMe.data.timezone)
