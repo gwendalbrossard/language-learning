@@ -7,6 +7,7 @@ export const roleplaySessionSelect = Prisma.validator<Prisma.RoleplaySessionSele
   duration: true,
   userSpeakingDuration: true,
   aiSpeakingDuration: true,
+  feedback: true,
   roleplay: { select: roleplaySelect },
   messages: { select: roleplaySessionMessageSelect },
   createdAt: true,

@@ -39,6 +39,8 @@ model RoleplaySession {
   tokensOutputText       Int @default(0)
   tokensOutputAudio      Int @default(0)
 
+  feedback Json?
+
   roleplayId String
   roleplay   Roleplay @relation(fields: [roleplayId], references: [id], onDelete: Cascade)
 
