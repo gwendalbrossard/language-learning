@@ -105,7 +105,7 @@ const Progress = forwardRef<ProgressRef>((_, ref) => {
       </View>
 
       {/* Hidden shareable component for image generation */}
-      <View style={{ position: "absolute", top: -1000, left: 0 }}>
+      <View style={{ position: "absolute", top: -10000, left: -10000 }}>
         <ViewShot ref={shareableRef} options={{ fileName: "progress-stats", format: "png", quality: 0.9 }}>
           <ShareableStats stats={stats} />
         </ViewShot>
