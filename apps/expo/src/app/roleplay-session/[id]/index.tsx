@@ -70,9 +70,6 @@ const RoleplaySession: FC = () => {
 
   const profileUpdateStreakDayMutation = useMutation(
     trpc.profile.updateStreakDay.mutationOptions({
-      onSuccess: (updateStreakDay) => {
-        router.replace(`/roleplay-session/${id}/ended?showStreak=${updateStreakDay.showStreak}`)
-      },
       onError: (error) => {
         console.error("Failed to update streak day:", error)
         Alert.alert("Error", "Failed to update streak day. Please try again.")
@@ -106,6 +103,7 @@ const RoleplaySession: FC = () => {
 
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
   const [recordingLevel, setRecordingLevel] = useState(0)
   const [playbackLevel, setPlaybackLevel] = useState(0)
 
@@ -186,8 +184,18 @@ const RoleplaySession: FC = () => {
   }, [id])
 
   const goToEnded = () => {
+    setIsNavigating(true)
     profileUpdateStreakDayMutation.mutate({ organizationId: currentOrganizationId })
   }
+
+  // Navigate when both mutations are successful
+  useEffect(() => {
+    if (profileRoleplaySessionGenerateFeedbackMutation.isSuccess && profileUpdateStreakDayMutation.isSuccess) {
+      const showStreak = profileUpdateStreakDayMutation.data.showStreak
+      setIsNavigating(false)
+      router.replace(`/roleplay-session/${id}/ended?showStreak=${showStreak}`)
+    }
+  }, [profileRoleplaySessionGenerateFeedbackMutation.isSuccess, profileUpdateStreakDayMutation.isSuccess, profileUpdateStreakDayMutation.data, id])
 
   useEffect(() => {
     initializeSocket()
@@ -576,7 +584,13 @@ const RoleplaySession: FC = () => {
             </>
           )}
           {sessionEnded && (
-            <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={profileUpdateStreakDayMutation.isPending}>
+            <Button.Root
+              className="w-full"
+              size="lg"
+              variant="primary"
+              onPress={goToEnded}
+              loading={isNavigating}
+            >
               <Button.Icon icon={PlayIcon} />
               <Button.Text>Review Session</Button.Text>
             </Button.Root>
