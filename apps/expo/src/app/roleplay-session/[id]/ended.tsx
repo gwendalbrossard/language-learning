@@ -1,10 +1,12 @@
 import type { FC } from "react"
 import { forwardRef, useRef } from "react"
 import { router, useLocalSearchParams } from "expo-router"
+import * as Sharing from "expo-sharing"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { useQuery } from "@tanstack/react-query"
 import { Dimensions, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import ViewShot from "react-native-view-shot"
 
 import type { TRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 import { ZRoleplaySessionGetFeedbackSchema } from "@acme/validators"
@@ -13,6 +15,7 @@ import * as BottomSheet from "~/ui/bottom-sheet"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
+import ShareableRating from "~/components/routes/roleplay-session/[id]/ended/shareable-rating"
 import { trpc } from "~/utils/api"
 import { cn } from "~/utils/utils"
 import { useUserStore } from "~/utils/zustand/user-store"
@@ -164,6 +167,7 @@ BottomSheetEndedCardDetails.displayName = "BottomSheetEndedCardDetails"
 
 const RoleplaySessionIdEnded: FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>()
+  const shareableRef = useRef<ViewShot>(null)
 
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
@@ -180,6 +184,23 @@ const RoleplaySessionIdEnded: FC = () => {
   if (!feedback.success) throw new Error("Invalid feedback")
 
   const stats = createStatsFromFeedback(feedback.data)
+
+  const handleShareRating = async () => {
+    if (!shareableRef.current?.capture) {
+      console.error("Shareable ref not found")
+      return
+    }
+
+    try {
+      const uri = await shareableRef.current.capture()
+      await Sharing.shareAsync(uri, {
+        mimeType: "image/png",
+        dialogTitle: "Share your roleplay rating",
+      })
+    } catch (error) {
+      console.error("Error sharing rating:", error)
+    }
+  }
 
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-white p-4">
@@ -203,13 +224,26 @@ const RoleplaySessionIdEnded: FC = () => {
 
         {/* Actions */}
         <View className="flex flex-col gap-2">
-          <Button.Root variant="ghost" className="w-full">
+          <Button.Root variant="ghost" className="w-full" onPress={handleShareRating}>
             <Button.Text>Share Rating</Button.Text>
           </Button.Root>
           <Button.Root variant="primary" className="w-full" onPress={() => router.replace(`/(tabs)/roleplays`)}>
             <Button.Text>Continue</Button.Text>
           </Button.Root>
         </View>
+      </View>
+
+      {/* Hidden shareable component for image generation */}
+      <View style={{ position: "absolute", top: -10000, left: -10000 }}>
+        <ViewShot ref={shareableRef} options={{ fileName: "roleplay-rating", format: "png", quality: 0.9 }}>
+          <ShareableRating
+            stats={stats.map(stat => ({
+              title: stat.title,
+              value: stat.value,
+              color: stat.color,
+            }))}
+          />
+        </ViewShot>
       </View>
     </SafeAreaView>
   )
