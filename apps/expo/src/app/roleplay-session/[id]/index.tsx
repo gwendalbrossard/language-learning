@@ -129,6 +129,17 @@ const RoleplaySession: FC = () => {
   const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
   const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
 
+  const endSession = useCallback(() => {
+    setSessionEnded(true)
+
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+    }
+
+    // Trigger feedback generation immediately when session ends
+    void profileRoleplaySessionGenerateFeedbackMutation.mutateAsync({ roleplaySessionId: id, organizationId: currentOrganizationId })
+  }, [id, currentOrganizationId, profileRoleplaySessionGenerateFeedbackMutation])
+
   const initializeSocket = useCallback((): void => {
     if (!id) throw new Error("Session ID is required")
 
@@ -181,7 +192,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id])
+  }, [id, currentOrganizationId, endSession])
 
   const goToEnded = () => {
     setIsNavigating(true)
@@ -240,7 +251,7 @@ const RoleplaySession: FC = () => {
         clearInterval(timerIntervalRef.current)
       }
     }
-  }, [initializeSocket])
+  }, [initializeSocket, endSession])
 
   // Animate scale based on audio levels with immediate response for 240fps
   useEffect(() => {
@@ -290,17 +301,6 @@ const RoleplaySession: FC = () => {
       console.error("Failed to initialize audio:", error)
       Alert.alert("Error", "Failed to initialize audio. Please check permissions.")
     }
-  }
-
-  const endSession = () => {
-    setSessionEnded(true)
-
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-    }
-
-    // Trigger feedback generation immediately when session ends
-    void profileRoleplaySessionGenerateFeedbackMutation.mutateAsync({ roleplaySessionId: id, organizationId: currentOrganizationId })
   }
 
   const handleEndSession = () => {
