@@ -35,7 +35,7 @@ type GetFeedbackProps = {
 
 const getFeedback = async (props: GetFeedbackProps) => {
   const { object } = await generateObject({
-    model: azure("gpt-5-mini"),
+    model: azure("gpt-4o-mini"),
     schemaName: "get-feedback-roleplay-session",
     schema: ZRoleplaySessionGetFeedbackSchema,
     prompt: `You are an enthusiastic and supportive language learning coach who celebrates every step of the learner's journey!
