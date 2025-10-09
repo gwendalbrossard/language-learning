@@ -192,7 +192,7 @@ const RoleplaySession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id, currentOrganizationId, endSession])
+  }, [id])
 
   const goToEnded = () => {
     setIsNavigating(true)
@@ -251,7 +251,7 @@ const RoleplaySession: FC = () => {
         clearInterval(timerIntervalRef.current)
       }
     }
-  }, [initializeSocket, endSession])
+  }, [initializeSocket])
 
   // Animate scale based on audio levels with immediate response for 240fps
   useEffect(() => {
@@ -584,13 +584,7 @@ const RoleplaySession: FC = () => {
             </>
           )}
           {sessionEnded && (
-            <Button.Root
-              className="w-full"
-              size="lg"
-              variant="primary"
-              onPress={goToEnded}
-              loading={isNavigating}
-            >
+            <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={isNavigating}>
               <Button.Icon icon={PlayIcon} />
               <Button.Text>Review Session</Button.Text>
             </Button.Root>
