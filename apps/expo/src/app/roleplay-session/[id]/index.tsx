@@ -68,6 +68,29 @@ const RoleplaySession: FC = () => {
     }),
   )
 
+  const profileUpdateStreakDayMutation = useMutation(
+    trpc.profile.updateStreakDay.mutationOptions({
+      onError: (error) => {
+        console.error("Failed to update streak day:", error)
+        Alert.alert("Error", "Failed to update streak day. Please try again.")
+      },
+    }),
+  )
+
+  const profileRoleplaySessionGenerateFeedbackMutation = useMutation(
+    trpc.profile.roleplaySession.generateFeedback.mutationOptions({
+      onSuccess: async (_data) => {
+        await queryClient.invalidateQueries(
+          trpc.profile.roleplaySession.get.queryOptions({ roleplaySessionId: id, organizationId: currentOrganizationId }),
+        )
+      },
+      onError: (error) => {
+        console.error("Failed to generate feedback:", error)
+        Alert.alert("Error", "Failed to generate feedback. Please try again.")
+      },
+    }),
+  )
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -160,10 +183,12 @@ const RoleplaySession: FC = () => {
   }, [id])
 
   const goToEnded = async () => {
-    await queryClient.invalidateQueries(
-      trpc.profile.roleplaySession.get.queryOptions({ organizationId: currentOrganizationId, roleplaySessionId: id }),
-    )
-    router.replace(`/roleplay-session/${id}/ended`)
+    const [updateStreakDay, _] = await Promise.all([
+      profileUpdateStreakDayMutation.mutateAsync({ organizationId: currentOrganizationId }),
+      profileRoleplaySessionGenerateFeedbackMutation.mutateAsync({ roleplaySessionId: id, organizationId: currentOrganizationId }),
+    ])
+
+    router.replace(`/roleplay-session/${id}/ended?showStreak=${updateStreakDay.showStreak}`)
   }
 
   useEffect(() => {
@@ -549,7 +574,13 @@ const RoleplaySession: FC = () => {
             </>
           )}
           {sessionEnded && (
-            <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={profileRoleplaySessionGet.isRefetching}>
+            <Button.Root
+              className="w-full"
+              size="lg"
+              variant="primary"
+              onPress={goToEnded}
+              loading={profileRoleplaySessionGenerateFeedbackMutation.isPending || profileUpdateStreakDayMutation.isPending}
+            >
               <Button.Icon icon={PlayIcon} />
               <Button.Text>Review Session</Button.Text>
             </Button.Root>
