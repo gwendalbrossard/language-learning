@@ -5,7 +5,7 @@ import { TouchableOpacity, View } from "react-native"
 
 import { Text } from "~/ui/text"
 import { cn } from "~/utils/utils"
-import BottomSheetEndedCardDetails from "./bottom-sheet-details"
+import BottomSheetStatCardDetails from "./bottom-sheet-stat-card-details"
 
 export type Color = "yellow" | "green" | "teal" | "sky" | "indigo" | "purple"
 
@@ -45,7 +45,7 @@ const StatCard: FC<StatCardProps> = ({ title, value, color, feedback }) => {
         </View>
       </TouchableOpacity>
 
-      <BottomSheetEndedCardDetails
+      <BottomSheetStatCardDetails
         ref={bottomSheetRef}
         title={title}
         value={value}

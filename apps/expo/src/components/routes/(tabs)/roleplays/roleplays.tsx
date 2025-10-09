@@ -72,7 +72,7 @@ const Roleplays: FC = () => {
       >
         <Text className="text-[40px]">{roleplay.emoji}</Text>
         <Text className="line-clamp-2 text-base font-semibold leading-5 text-neutral-700">{roleplay.title}</Text>
-        <Text className="mt-auto line-clamp-1 text-xs font-medium text-neutral-400">{roleplay.category.name}</Text>
+        <Text className="mt-auto line-clamp-1 text-xs font-semibold text-neutral-400">{roleplay.category.name}</Text>
       </Pressable>
     )
   }
@@ -82,7 +82,7 @@ const Roleplays: FC = () => {
   return (
     <View className="flex flex-col gap-4">
       <View className="flex flex-row items-center justify-between">
-        <Text className="text-xl font-semibold">Roleplays</Text>
+        <Text className="text-xl font-semibold text-neutral-700">Roleplays</Text>
 
         <View className="flex flex-row items-center gap-2">
           <Button.Root className={cn("w-fit")} size="xs" variant={"black"} onPress={() => roleplayFiltersBottomSheetRef.current?.present()}>

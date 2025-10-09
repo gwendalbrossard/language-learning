@@ -13,7 +13,7 @@ import { getDifficultyIcon, getDifficultyName } from "~/components/common/diffic
 import * as Badge from "~/ui/badge"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
-import { Text, TextDescription } from "~/ui/text"
+import { Text } from "~/ui/text"
 import { queryClient, trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
@@ -69,11 +69,11 @@ const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ rolepl
             <View className="flex flex-col items-center gap-4">
               <Text className="text-4xl">{roleplay.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
-                <Text className="text-center text-2xl font-semibold">{roleplay.title}</Text>
+                <Text className="text-center text-2xl font-semibold text-neutral-900">{roleplay.title}</Text>
 
                 {/* Category and difficulty */}
                 <View className="flex flex-row items-center gap-2.5">
-                  <Badge.Root variant="white" size="sm">
+                  <Badge.Root variant="white" size="md">
                     <Badge.Text>
                       {roleplay.category.emoji} {roleplay.category.name}
                     </Badge.Text>
@@ -89,8 +89,8 @@ const BottomSheetRoleplayDetails = forwardRef<BottomSheetModal, Props>(({ rolepl
 
             {/* Description */}
             <View className="flex flex-col gap-1">
-              <Text className="text-xl font-semibold">About This Roleplay</Text>
-              <TextDescription className="text-base leading-6">{roleplay.description}</TextDescription>
+              <Text className="text-lg font-semibold text-neutral-900">About This Roleplay</Text>
+              <Text className="font-base text-base font-medium leading-6 text-neutral-500">{roleplay.description}</Text>
             </View>
           </View>
 

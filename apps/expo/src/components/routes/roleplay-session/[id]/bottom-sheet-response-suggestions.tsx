@@ -47,11 +47,11 @@ const getDifficultyColor = (difficulty: Suggestion["difficulty"]): Badge.BadgePr
 
 const SuggestionCard: FC<SuggestionCardProps> = ({ suggestion }) => {
   return (
-    <View className="shadow-custom-xs relative flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white px-3.5 py-4">
-      <Text className="text-sm text-neutral-600">{suggestion.text}</Text>
-      <View className="h-px w-full bg-neutral-200" />
-      <Text className="text-sm text-neutral-600">{suggestion.translation}</Text>
-      <Badge.Root variant={getDifficultyColor(suggestion.difficulty)} size="sm" className="absolute -right-2 -top-2">
+    <View className="relative flex flex-col gap-3 rounded-xl border-2 border-neutral-100 bg-white px-3.5 py-4">
+      <Text className="text-base font-medium text-neutral-700">{suggestion.text}</Text>
+      <View className="h-0.5 w-full bg-neutral-100" />
+      <Text className="text-sm font-medium text-neutral-500">{suggestion.translation}</Text>
+      <Badge.Root variant={getDifficultyColor(suggestion.difficulty)} size="md" className="absolute -right-2 -top-3">
         <Badge.Text>{getDifficultyLabel(suggestion.difficulty)}</Badge.Text>
       </Badge.Root>
     </View>
@@ -75,9 +75,9 @@ export const BottomSheetResponseSuggestions = forwardRef<BottomSheetModal, Props
           <Text className="text-center text-lg font-semibold">Response Suggestions</Text>
         </View>
 
-        <ScrollView className="flex-1 px-4 py-6">
+        <ScrollView className="mb-4 flex-1 px-4 py-6">
           {suggestions.length > 0 ? (
-            <View className="flex flex-1 flex-col gap-4">
+            <View className="flex flex-1 flex-col gap-6">
               {suggestions.map((suggestion) => (
                 <SuggestionCard key={suggestion.difficulty} suggestion={suggestion} />
               ))}

@@ -36,7 +36,13 @@ const Banner: FC<BannerProps> = ({ onShare }) => {
               <Text className="text-xl font-bold text-white">Progress</Text>
               <Text className="text-sm text-white">Track your progress and stay motivated.</Text>
             </View>
-            <Button.Root variant="secondary" size="xs" className="self-start" onPress={onShare}>
+            <Button.Root
+              variant="secondary"
+              size="xs"
+              style={{ boxShadow: "inset 0 0 0 3px rgba(255, 255, 255, 0.1)" }}
+              className="self-start"
+              onPress={onShare}
+            >
               <Button.Text>Share Progress</Button.Text>
               <Share width={20} height={20} color="#00A025" />
             </Button.Root>

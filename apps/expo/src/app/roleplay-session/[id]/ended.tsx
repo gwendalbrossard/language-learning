@@ -1,5 +1,6 @@
+import type { BottomSheetModal } from "@gorhom/bottom-sheet"
 import type { FC } from "react"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { router, useLocalSearchParams } from "expo-router"
 import * as Sharing from "expo-sharing"
 import { useQuery } from "@tanstack/react-query"
@@ -11,6 +12,7 @@ import type { TRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 import { ZRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 
 import type { StatCardProps } from "~/components/routes/roleplay-session/[id]/ended/stat-card"
+import BottomSheetStreak from "~/components/common/bottom-sheet-streak"
 import ShareableRating from "~/components/routes/roleplay-session/[id]/ended/shareable-rating"
 import StatCard from "~/components/routes/roleplay-session/[id]/ended/stat-card"
 import * as Button from "~/ui/button"
@@ -60,8 +62,9 @@ const createStatsFromFeedback = (feedback: TRoleplaySessionGetFeedbackSchema): S
 ]
 
 const RoleplaySessionIdEnded: FC = () => {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, showStreak } = useLocalSearchParams<{ id: string; showStreak: string }>()
   const shareableRef = useRef<ViewShot>(null)
+  const bottomSheetStreakRef = useRef<BottomSheetModal>(null)
 
   const currentOrganizationId = useUserStore((state) => state.currentOrganizationId)
   if (!currentOrganizationId) throw new Error("Current organization ID not found")
@@ -78,6 +81,12 @@ const RoleplaySessionIdEnded: FC = () => {
   if (!feedback.success) throw new Error("Invalid feedback")
 
   const stats = createStatsFromFeedback(feedback.data)
+
+  useEffect(() => {
+    if (showStreak === "true") {
+      bottomSheetStreakRef.current?.present()
+    }
+  }, [showStreak])
 
   const handleShareRating = async () => {
     if (!shareableRef.current?.capture) {
@@ -139,6 +148,8 @@ const RoleplaySessionIdEnded: FC = () => {
           />
         </ViewShot>
       </View>
+
+      <BottomSheetStreak ref={bottomSheetStreakRef} />
     </SafeAreaView>
   )
 }

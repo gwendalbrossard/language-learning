@@ -33,7 +33,13 @@ const Banner: FC = () => {
               <Text className="text-xl font-bold text-white">Lesson Mode</Text>
               <Text className="text-sm text-white">Learn new vocabulary and practice it in a conversation.</Text>
             </View>
-            <Button.Root variant="secondary" size="xs" className="self-start" onPress={() => router.push("/create-lesson")}>
+            <Button.Root
+              variant="secondary"
+              size="xs"
+              style={{ boxShadow: "inset 0 0 0 3px rgba(255, 255, 255, 0.1)" }}
+              className="self-start"
+              onPress={() => router.push("/create-lesson")}
+            >
               <Button.Text>Create Lesson</Button.Text>
               <Sparkles width={20} height={20} color="#3980F6" />
             </Button.Root>

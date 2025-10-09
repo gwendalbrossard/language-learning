@@ -14,10 +14,10 @@ type BadgeVariantProps = VariantProps<typeof badgeVariants>
 type BadgeBaseProps = {} & BadgeVariantProps
 type BadgeProps = BadgeBaseProps & SlottableViewProps
 
-const badgeVariants = cva("flex w-fit flex-row items-center border", {
+const badgeVariants = cva("flex w-fit flex-row items-center border-2", {
   variants: {
     variant: {
-      white: "shadow-custom-xs border-neutral-300 bg-white",
+      white: "border-neutral-100 bg-white",
       error: "border-error-200 bg-error-50",
       primary: "border-primary-200 bg-primary-50",
       success: "border-success-200 bg-success-50",
@@ -67,10 +67,10 @@ Badge.displayName = "Badge"
 type BadgeTextRef = React.ComponentRef<typeof RNText>
 type BadgeTextProps = React.ComponentPropsWithoutRef<typeof RNText> & VariantProps<typeof badgeTextVariants>
 
-const badgeTextVariants = cva("font-medium", {
+const badgeTextVariants = cva("font-semibold", {
   variants: {
     variant: {
-      white: "text-neutral-700",
+      white: "text-neutral-600",
       error: "text-error-700",
       primary: "text-primary-700",
       success: "text-success-700",

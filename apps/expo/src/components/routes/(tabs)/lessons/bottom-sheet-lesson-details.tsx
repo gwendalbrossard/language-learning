@@ -13,7 +13,7 @@ import { getDifficultyIcon, getDifficultyName } from "~/components/common/diffic
 import * as Badge from "~/ui/badge"
 import { BottomSheetBackdrop } from "~/ui/bottom-sheet"
 import * as Button from "~/ui/button"
-import { Text, TextDescription } from "~/ui/text"
+import { Text } from "~/ui/text"
 import { queryClient, trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
@@ -67,11 +67,11 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
             <View className="flex flex-col items-center gap-4">
               <Text className="text-4xl">{lesson.emoji}</Text>
               <View className="flex flex-col items-center gap-2">
-                <Text className="text-center text-2xl font-semibold">{lesson.title}</Text>
+                <Text className="text-center text-2xl font-semibold text-neutral-900">{lesson.title}</Text>
 
                 {/* Category and difficulty */}
                 <View className="flex flex-row items-center gap-2.5">
-                  <Badge.Root variant="white" size="sm">
+                  <Badge.Root variant="white" size="md">
                     <Badge.Text>
                       {lesson.category.emoji} {lesson.category.name}
                     </Badge.Text>
@@ -86,9 +86,9 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
             </View>
 
             {/* Description */}
-            <View className="flex flex-col gap-3">
-              <Text className="text-lg font-semibold">About This Lesson</Text>
-              <TextDescription className="text-base leading-6">{lesson.description}</TextDescription>
+            <View className="flex flex-col gap-1">
+              <Text className="text-lg font-semibold text-neutral-900">About This Lesson</Text>
+              <Text className="font-base text-base font-medium leading-6 text-neutral-500">{lesson.description}</Text>
             </View>
           </View>
 
