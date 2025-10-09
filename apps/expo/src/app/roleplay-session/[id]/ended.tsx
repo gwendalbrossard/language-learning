@@ -10,11 +10,11 @@ import ViewShot from "react-native-view-shot"
 import type { TRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 import { ZRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 
+import type { StatCardProps } from "~/components/routes/roleplay-session/[id]/ended/stat-card"
+import ShareableRating from "~/components/routes/roleplay-session/[id]/ended/shareable-rating"
+import StatCard from "~/components/routes/roleplay-session/[id]/ended/stat-card"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
-import ShareableRating from "~/components/routes/roleplay-session/[id]/ended/shareable-rating"
-import type { StatCardProps } from "~/components/routes/roleplay-session/[id]/ended/stat-card"
-import StatCard from "~/components/routes/roleplay-session/[id]/ended/stat-card"
 import { trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
@@ -106,9 +106,9 @@ const RoleplaySessionIdEnded: FC = () => {
         </View>
 
         {/* Stats Grid */}
-        <View className="gap-5">
+        <View className="gap-4">
           {Array.from({ length: Math.ceil(stats.length / STATS_COLUMNS) }, (_, rowIndex) => (
-            <View key={rowIndex} className="flex-row gap-5">
+            <View key={rowIndex} className="flex-row gap-4">
               {stats.slice(rowIndex * STATS_COLUMNS, rowIndex * STATS_COLUMNS + STATS_COLUMNS).map((stat, colIndex) => (
                 <StatCard key={`${rowIndex}-${colIndex}`} {...stat} />
               ))}
