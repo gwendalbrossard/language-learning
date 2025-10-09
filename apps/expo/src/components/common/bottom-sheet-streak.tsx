@@ -20,15 +20,15 @@ type DayIndicatorProps = {
 }
 const DayIndicator: React.FC<DayIndicatorProps> = ({ status, day }) => {
   return (
-    <View className="items-center">
-      <Text className="mb-2 text-sm text-neutral-500">{day}</Text>
+    <View className="flex flex-col items-center gap-2">
+      <Text className="text-xs font-semibold text-neutral-400">{day}</Text>
       <View
         className={cn(
-          "size-7 items-center justify-center rounded-full border",
+          "size-7 items-center justify-center rounded-full border-2",
           status === DayStatus.COMPLETED && "border-success-500 bg-success-500",
-          status === DayStatus.UPCOMING && "border-neutral-200 bg-neutral-200",
+          status === DayStatus.UPCOMING && "border-neutral-100 bg-neutral-100",
           status === DayStatus.MISSED && "border-neutral-300 bg-neutral-300",
-          status === DayStatus.PENDING && "border-neutral-300 bg-neutral-100",
+          status === DayStatus.PENDING && "border-neutral-300 bg-neutral-50",
         )}
       >
         {status === DayStatus.COMPLETED && <CheckIcon size={16} strokeWidth={4} stroke="white" color="white" />}
@@ -87,7 +87,7 @@ const BottomSheetStreak = forwardRef<BottomSheetModal, object>((_, ref) => {
               <Text className="text-center text-2xl font-bold text-warning-400">days of progress</Text>
             </View>
             {/* Weekly Progress */}
-            <View className="mb-4 w-full max-w-[90%] rounded-xl bg-neutral-50 p-4">
+            <View className="mb-4 w-full max-w-[90%] rounded-2xl border-2 border-neutral-100 bg-neutral-50 p-4">
               <View className="flex-row justify-between gap-2">
                 {daysLabels.map((day, index) => (
                   <DayIndicator key={day + index} day={day} status={weekProgress[index] ?? DayStatus.UPCOMING} />
@@ -96,7 +96,7 @@ const BottomSheetStreak = forwardRef<BottomSheetModal, object>((_, ref) => {
             </View>
 
             {/* Message */}
-            <Text className="text-center text-sm text-neutral-500">Keep going! Every day counts towards your journey.</Text>
+            <Text className="text-center text-sm font-medium text-neutral-400">Keep going! Every day counts towards your journey.</Text>
           </View>
 
           {/* Footer */}
