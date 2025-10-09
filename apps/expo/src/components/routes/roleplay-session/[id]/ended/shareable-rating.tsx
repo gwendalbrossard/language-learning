@@ -1,26 +1,17 @@
 import type { FC } from "react"
 import { View } from "react-native"
 
+import type { Color } from "./stat-card"
 import { Text } from "~/ui/text"
 import { cn } from "~/utils/utils"
+import { COLOR_MAP } from "./stat-card"
 
-type Color = "yellow" | "green" | "teal" | "sky" | "indigo" | "purple"
-
-interface ShareableRatingProps {
+type ShareableRatingProps = {
   stats: {
     title: string
     value: number
     color: Color
   }[]
-}
-
-const COLOR_MAP: Record<Color, { bg: string; progressBg: string }> = {
-  yellow: { bg: "bg-[#FFED87]", progressBg: "bg-[#FFED87]/30" },
-  green: { bg: "bg-[#9FEED9]", progressBg: "bg-[#9FEED9]/30" },
-  teal: { bg: "bg-[#EB71A8]", progressBg: "bg-[#EB71A8]/30" },
-  sky: { bg: "bg-[#90C2FF]", progressBg: "bg-[#90C2FF]/30" },
-  indigo: { bg: "bg-[#CD82FF]", progressBg: "bg-[#CD82FF]/30" },
-  purple: { bg: "bg-[#FF988A]", progressBg: "bg-[#FF988A]/30" },
 }
 
 const ShareableRating: FC<ShareableRatingProps> = ({ stats }) => {
