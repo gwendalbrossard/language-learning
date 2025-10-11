@@ -10,6 +10,8 @@ export const env = createEnv({
     AUTH_SECRET: z.string().min(1),
     AZURE_API_KEY: z.string().min(1),
     AZURE_RESOURCE_NAME: z.string().min(1),
+    AZURE_SPEECH_KEY: z.string().min(1),
+    AZURE_SPEECH_REGION: z.string().min(1),
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     OPENAI_API_KEY: z.string().min(1),
