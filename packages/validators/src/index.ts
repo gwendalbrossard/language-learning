@@ -26,6 +26,7 @@ export * from "./router/profile/streak-days.schema"
 export * from "./router/profile/update-streak-day.schema"
 
 export * from "./router/profile/utils/get-pronunciation.schema"
+export * from "./router/profile/utils/get-translation.schema"
 
 export * from "./router/user/delete.schema"
 
