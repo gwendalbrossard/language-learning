@@ -68,6 +68,12 @@ Translate the target content into the user's native language (${profile.nativeLa
 - Natural in the target language
 - Helpful for learning comprehension
 
+== Target Content Romanization ==
+If the target content is in a non-Roman script (e.g., Japanese, Russian, Korean, Arabic, Chinese, etc.), provide a romanized version to help with pronunciation and reading. This should be:
+- Accurate phonetic representation in Roman characters
+- Following standard romanization systems (e.g., Hepburn for Japanese, Pinyin for Chinese, etc.)
+- Set to null if the content is already in Roman script or romanization is not applicable
+
 == Vocabulary Type (for "REPEAT" actions only) ==
 When the action type is "REPEAT", also identify the vocabulary type:
 - "WORD": Single vocabulary words (e.g., "hello", "merci", "casa")
@@ -87,7 +93,8 @@ Analyze the AI tutor's message to identify:
 1. What the AI is asking the user to do ("REPEAT" or "ANSWER")
 2. The specific content (words, phrases, expressions, questions) the user should focus on
 3. The translation of that content into the user's native language (${profile.nativeLanguage})
-4. For "REPEAT" actions: the vocabulary type (WORD, PHRASE, or EXPRESSION)`,
+4. The romanized version of the content (if applicable for non-Roman scripts)
+5. For "REPEAT" actions: the vocabulary type (WORD, PHRASE, or EXPRESSION)`,
     temperature: 0.3,
   })
 

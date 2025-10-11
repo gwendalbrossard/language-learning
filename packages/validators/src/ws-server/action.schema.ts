@@ -12,6 +12,10 @@ export const ZActionSchema = z.object({
   targetContentTranslated: z
     .string()
     .describe("The target content translated into the user's native language for better understanding"),
+  targetContentRomanized: z
+    .string()
+    .nullable()
+    .describe("The target content romanized for non-Roman scripts (e.g., Japanese, Russian, Korean, etc.)"),
   vocabularyType: z
     .enum(LessonSessionVocabularyType)
     .optional()
