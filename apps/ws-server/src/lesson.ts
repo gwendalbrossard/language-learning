@@ -204,41 +204,13 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
         wordsSpokenCount = wordsSpokenCount + wordCount
 
         // Store user message
-        const _userMessage = await prisma.lessonSessionMessage.create({
+        await prisma.lessonSessionMessage.create({
           data: {
             sessionId: lessonSessionId,
             role: LessonSessionMessageRole.USER,
             content: parsedMessage.transcript,
           },
         })
-
-        /* const lessonSessionMessages = await prisma.lessonSessionMessage.findMany({
-          where: { sessionId: lessonSessionId },
-        })
-
-        const feedbackResult = await getFeedback({
-          transcript: parsedMessage.transcript,
-          learningLanguage: profile.learningLanguage,
-          nativeLanguage: profile.nativeLanguage,
-          difficulty: profile.learningLanguageLevel,
-          roleplaySessionMessages: lessonSessionMessages,
-        })
-
-        // Update user message with feedback
-        await prisma.roleplaySessionMessage.update({
-          where: { id: userMessage.id },
-          data: {
-            feedback: feedbackResult,
-          },
-        })
-
-        await updateLessonSessionDuration()
-
-        // Emit comprehensive feedback result
-        socket.emit("feedback", {
-          messageId: parsedMessage.item_id,
-          feedback: feedbackResult,
-        }) */
 
         break
       }
