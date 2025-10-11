@@ -165,6 +165,12 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
       }
       case "conversation.item.added": {
         console.log("conversation.item.added")
+        console.log("parsedMessage", parsedMessage)
+
+        // Skip if this is the first item, as that's the initial empty user message
+        if (parsedMessage.previous_item_id === null) {
+          break
+        }
 
         if (parsedMessage.item.type === "message" && parsedMessage.item.role === "user") {
           socket.emit("userTextDelta", {
@@ -242,6 +248,31 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
       }
       case "session.updated": {
         console.log("session.updated")
+
+        // Send empty user message to trigger conversation start
+        ws.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "message",
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: "",
+                },
+              ],
+            },
+          }),
+        )
+
+        // Create a response from the model to start the conversation
+        ws.send(
+          JSON.stringify({
+            type: "response.create",
+          }),
+        )
+
         break
       }
       case "input_audio_buffer.speech_started": {

@@ -91,13 +91,7 @@ const RoleplaySession: FC = () => {
     }),
   )
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      transcript: "Hello! How can I assist you today?",
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
 
