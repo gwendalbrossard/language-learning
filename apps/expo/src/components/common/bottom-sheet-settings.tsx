@@ -42,79 +42,81 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
   return (
     <BottomSheetModal ref={ref} backdropComponent={BottomSheetBackdrop} enablePanDownToClose stackBehavior="push">
       <BottomSheetView className="flex-1 px-4 pb-10 pt-2">
-        <View className="flex flex-col gap-3">
-          <Text className="text-center text-sm text-neutral-500" numberOfLines={1}>
-            <Text className="text-sm font-semibold">{profile.name}</Text> ({profile.email})
+        <View className="flex flex-col gap-6">
+          <Text className="text-center text-base font-semibold text-neutral-400" numberOfLines={1}>
+            <Text className="text-base text-neutral-700">{profile.name}</Text> ({profile.email})
           </Text>
 
-          {(!entitlement.loaded || !entitlement.isUnlimited) && (
+          <View className="flex flex-col gap-3">
+            {(!entitlement.loaded || !entitlement.isUnlimited) && (
+              <Button.Root
+                size="lg"
+                variant="secondary"
+                disabled={entitlement.isUnlimited}
+                onPress={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  bottomSheetPaywallRef.current?.present()
+                }}
+              >
+                <Button.Icon icon={ZapIcon} />
+                <Button.Text>Upgrade to unlimited</Button.Text>
+              </Button.Root>
+            )}
+
             <Button.Root
-              size="md"
+              size="lg"
               variant="secondary"
-              disabled={entitlement.isUnlimited}
-              onPress={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                bottomSheetPaywallRef.current?.present()
+              onPress={async () => {
+                if (await StoreReview.hasAction()) {
+                  await StoreReview.requestReview()
+                }
+                refCurrent.current.close()
               }}
             >
-              <Button.Icon icon={ZapIcon} />
-              <Button.Text>Upgrade to unlimited</Button.Text>
+              <Button.Icon icon={StarIcon} />
+              <Button.Text>Rate us</Button.Text>
             </Button.Root>
-          )}
 
-          <Button.Root
-            size="md"
-            variant="secondary"
-            onPress={async () => {
-              if (await StoreReview.hasAction()) {
-                await StoreReview.requestReview()
-              }
-              refCurrent.current.close()
-            }}
-          >
-            <Button.Icon icon={StarIcon} />
-            <Button.Text>Rate us</Button.Text>
-          </Button.Root>
+            <Button.Root
+              size="lg"
+              variant="secondary"
+              onPress={async () => {
+                await Linking.openURL("mailto:support@studyunfold.com")
+              }}
+            >
+              <Button.Icon icon={LifeBuoyIcon} />
+              <Button.Text>Contact support</Button.Text>
+            </Button.Root>
 
-          <Button.Root
-            size="md"
-            variant="secondary"
-            onPress={async () => {
-              await Linking.openURL("mailto:support@studyunfold.com")
-            }}
-          >
-            <Button.Icon icon={LifeBuoyIcon} />
-            <Button.Text>Contact support</Button.Text>
-          </Button.Root>
+            <Button.Root
+              size="lg"
+              variant="secondary"
+              loading={userDelete.isPending}
+              onPress={() => {
+                Alert.alert("Delete account", "Are you sure you want to delete your account? This action is irreversible.", [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Delete", onPress: () => userDelete.mutate({}) },
+                ])
+              }}
+            >
+              <Button.Icon icon={TrashIcon} />
+              <Button.Text>Delete account</Button.Text>
+            </Button.Root>
 
-          <Button.Root
-            size="md"
-            variant="secondary"
-            loading={userDelete.isPending}
-            onPress={() => {
-              Alert.alert("Delete account", "Are you sure you want to delete your account? This action is irreversible.", [
-                { text: "Cancel", style: "cancel" },
-                { text: "Delete", onPress: () => userDelete.mutate({}) },
-              ])
-            }}
-          >
-            <Button.Icon icon={TrashIcon} />
-            <Button.Text>Delete account</Button.Text>
-          </Button.Root>
-
-          <Button.Root
-            size="md"
-            variant="secondary"
-            onPress={async () => {
-              router.replace("/auth")
-              await authClient.signOut()
-              await queryClient.invalidateQueries()
-            }}
-          >
-            <Button.Icon icon={LogOutIcon} />
-            <Button.Text>Sign out</Button.Text>
-          </Button.Root>
+            <Button.Root
+              size="lg"
+              variant="secondary"
+              onPress={async () => {
+                router.replace("/auth")
+                await authClient.signOut()
+                await queryClient.invalidateQueries()
+              }}
+            >
+              <Button.Icon icon={LogOutIcon} />
+              <Button.Text>Sign out</Button.Text>
+            </Button.Root>
+          </View>
 
           <View className="flex flex-row justify-evenly">
             <Pressable
@@ -122,14 +124,14 @@ const BottomSheetSettings = forwardRef<BottomSheetModal, object>((_, ref) => {
                 await Linking.openURL("https://studyunfold.com/privacy")
               }}
             >
-              <Text className="text-xs font-medium text-neutral-400">Privacy policy</Text>
+              <Text className="text-xs font-semibold text-neutral-400">Privacy policy</Text>
             </Pressable>
             <Pressable
               onPress={async () => {
                 await Linking.openURL("https://studyunfold.com/terms")
               }}
             >
-              <Text className="text-xs font-medium text-neutral-400">Terms of service</Text>
+              <Text className="text-xs font-semibold text-neutral-400">Terms of service</Text>
             </Pressable>
           </View>
         </View>
