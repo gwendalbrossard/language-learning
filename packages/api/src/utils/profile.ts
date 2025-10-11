@@ -7,6 +7,10 @@ export type IncrementProfileStats = {
   tokensInputAudioCached?: number
   tokensOutputText?: number
   tokensOutputAudio?: number
+  tokensTranslationInput?: number
+  tokensTranslationOutput?: number
+  tokensPronunciationInput?: number
+  tokensPronunciationOutput?: number
   secondsSpoken?: number
   secondsListening?: number
   secondsInLessons?: number
@@ -29,6 +33,10 @@ export async function incrementProfileStats({
   tokensInputAudioCached = 0,
   tokensOutputText = 0,
   tokensOutputAudio = 0,
+  tokensTranslationInput = 0,
+  tokensTranslationOutput = 0,
+  tokensPronunciationInput = 0,
+  tokensPronunciationOutput = 0,
   secondsSpoken = 0,
   secondsListening = 0,
   secondsInLessons = 0,
@@ -50,6 +58,10 @@ export async function incrementProfileStats({
       tokensInputAudioCached: { increment: tokensInputAudioCached },
       tokensOutputText: { increment: tokensOutputText },
       tokensOutputAudio: { increment: tokensOutputAudio },
+      tokensTranslationInput: { increment: tokensTranslationInput },
+      tokensTranslationOutput: { increment: tokensTranslationOutput },
+      tokensPronunciationInput: { increment: tokensPronunciationInput },
+      tokensPronunciationOutput: { increment: tokensPronunciationOutput },
       secondsSpoken: { increment: secondsSpoken },
       secondsListening: { increment: secondsListening },
       secondsInLessons: { increment: secondsInLessons },

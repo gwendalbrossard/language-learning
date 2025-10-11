@@ -2,6 +2,7 @@ import { ZProfileUtilsGetPronunciationSchema } from "@acme/validators"
 
 import { env } from "../../../env.server"
 import { organizationProcedure } from "../../../trpc"
+import { incrementProfileStats } from "../../../utils/profile"
 
 interface SpeechAudioDelta {
   type: "speech.audio.delta"
@@ -19,7 +20,7 @@ interface SpeechAudioDone {
 
 type SpeechSSEEvent = SpeechAudioDelta | SpeechAudioDone
 
-export const getPronunciation = organizationProcedure.input(ZProfileUtilsGetPronunciationSchema).mutation(async ({ input }) => {
+export const getPronunciation = organizationProcedure.input(ZProfileUtilsGetPronunciationSchema).mutation(async ({ ctx, input }) => {
   // Make raw HTTP request to get SSE stream with token usage
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
@@ -99,8 +100,11 @@ export const getPronunciation = organizationProcedure.input(ZProfileUtilsGetPron
     reader.releaseLock()
   }
 
-  // TODO: Track the token usage, and add it to the profile stats
-  console.log("Token usage:", tokenUsage)
+  await incrementProfileStats({
+    profileId: ctx.profile.id,
+    tokensPronunciationInput: tokenUsage?.input_tokens ?? 0,
+    tokensPronunciationOutput: tokenUsage?.output_tokens ?? 0,
+  })
 
   // Combine all audio chunks
   const combinedAudio = Buffer.concat(audioChunks)

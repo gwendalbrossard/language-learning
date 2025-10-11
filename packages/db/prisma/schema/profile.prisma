@@ -15,6 +15,12 @@ model Profile {
   tokensOutputText       Int @default(0)
   tokensOutputAudio      Int @default(0)
 
+  tokensTranslationInput  Int @default(0)
+  tokensTranslationOutput Int @default(0)
+
+  tokensPronunciationInput  Int @default(0)
+  tokensPronunciationOutput Int @default(0)
+
   secondsSpoken       Int     @default(0)
   secondsListening    Int     @default(0)
   secondsInLessons    Int     @default(0)

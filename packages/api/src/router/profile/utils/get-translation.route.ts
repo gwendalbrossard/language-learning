@@ -5,6 +5,7 @@ import { ZProfileUtilsGetTranslationResponseSchema, ZProfileUtilsGetTranslationS
 
 import { env } from "../../../env.server"
 import { organizationProcedure } from "../../../trpc"
+import { incrementProfileStats } from "../../../utils/profile"
 
 interface SpeechAudioDelta {
   type: "speech.audio.delta"
@@ -22,7 +23,7 @@ interface SpeechAudioDone {
 
 type SpeechSSEEvent = SpeechAudioDelta | SpeechAudioDone
 
-export const getTranslation = organizationProcedure.input(ZProfileUtilsGetTranslationSchema).mutation(async ({ input }) => {
+export const getTranslation = organizationProcedure.input(ZProfileUtilsGetTranslationSchema).mutation(async ({ ctx, input }) => {
   const { object } = await generateObject({
     model: azure("gpt-4o-mini"),
     schemaName: "get-translation",
@@ -160,8 +161,11 @@ IMPORTANT: Consider the language learning context - the translation should help 
     reader.releaseLock()
   }
 
-  // TODO: Track the token usage, and add it to the profile stats
-  console.log("Token usage:", tokenUsage)
+  await incrementProfileStats({
+    profileId: ctx.profile.id,
+    tokensTranslationInput: tokenUsage?.input_tokens ?? 0,
+    tokensTranslationOutput: tokenUsage?.output_tokens ?? 0,
+  })
 
   // Combine all audio chunks
   const combinedAudio = Buffer.concat(audioChunks)
