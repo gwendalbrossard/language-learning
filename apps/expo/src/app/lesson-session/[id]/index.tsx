@@ -4,7 +4,7 @@ import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { router, Stack, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { LucideVolume2, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
+import { BadgeQuestionMarkIcon, LucideVolume2, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
 import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -96,6 +96,18 @@ const LessonSession: FC = () => {
 
   const profileUtilsGetPronunciationMutation = useMutation(
     trpc.profile.utils.getPronunciation.mutationOptions({
+      onSuccess: (data) => {
+        MyModule.playAudio({ audio: data.audioBase64 })
+      },
+      onError: (error) => {
+        console.error("Failed to get pronunciation:", error)
+        Alert.alert("Error", "Failed to get pronunciation. Please try again.")
+      },
+    }),
+  )
+
+  const profileUtilsGetTranslationMutation = useMutation(
+    trpc.profile.utils.getTranslation.mutationOptions({
       onSuccess: (data) => {
         MyModule.playAudio({ audio: data.audioBase64 })
       },
@@ -509,6 +521,7 @@ const LessonSession: FC = () => {
 
   const handleGetPronunciation = async () => {
     if (!currentAction) return
+    if (currentAction.actionType !== "REPEAT") return
 
     await profileUtilsGetPronunciationMutation.mutateAsync({
       phrase: currentAction.targetContent,
@@ -516,6 +529,19 @@ const LessonSession: FC = () => {
       organizationId: currentOrganizationId,
     })
   }
+
+  const handleGetTranslation = async () => {
+    if (!currentAction) return
+    if (currentAction.actionType !== "ANSWER") return
+
+    await profileUtilsGetTranslationMutation.mutateAsync({
+      phrase: currentAction.targetContent,
+      sourceLanguage: profileMe.data.nativeLanguage,
+      targetLanguage: profileMe.data.learningLanguage,
+      organizationId: currentOrganizationId,
+    })
+  }
+
   return (
     <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
       {/* Progress Bar Timer */}
@@ -573,7 +599,7 @@ const LessonSession: FC = () => {
             </View>
           )}
           {/* Action Display */}
-          {currentAction && currentAction.actionType === "REPEAT" && !sessionEnded && (
+          {/*           {currentAction && currentAction.actionType === "REPEAT" && !sessionEnded && (
             <View className="mx-4 w-full rounded-2xl border-2 border-neutral-100 px-4 py-2">
               <View className="flex flex-row items-center gap-3">
                 <TouchableOpacity
@@ -590,22 +616,22 @@ const LessonSession: FC = () => {
               </View>
             </View>
           )}
-          {currentAction && !sessionEnded && (
-            <View className="mx-4 mb-8 w-full rounded-2xl border-2 border-neutral-100">
-              {/* <View className="px-4 py-2">
-                <Text className="text-center text-lg font-medium text-neutral-900">
-                  {currentAction.actionType === "REPEAT" ? "Repeat after me" : "Answer the question"}
-                </Text>
-              </View>
-              <View className="h-0.5 bg-neutral-100" /> */}
+           */}
+
+          {!sessionEnded && currentAction && currentAction.actionType === "REPEAT" && (
+            <View className="w-full rounded-2xl border-2 border-neutral-100">
               <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="text-center text-lg font-medium text-neutral-900">{currentAction.targetContent}</Text>
-                {currentAction.actionType === "REPEAT" && (
-                  <Text className="text-center text-sm font-medium text-neutral-400">{currentAction.targetContentTranslated}</Text>
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.targetContent}</Text>
+                {currentAction.targetContentRomanized && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
                 )}
               </View>
               <View className="h-0.5 bg-neutral-100" />
-              <View className="flex flex-row items-center justify-center gap-5 p-2 px-4 py-2">
+              <View className="flex flex-col gap-1 px-4 py-2">
+                <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentTranslated}</Text>
+              </View>
+              <View className="h-0.5 bg-neutral-100" />
+              <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
                 <TouchableOpacity
                   onPress={handleGetPronunciation}
                   className="size-7 items-center justify-center rounded-xl"
@@ -613,15 +639,50 @@ const LessonSession: FC = () => {
                 >
                   <Volume2Icon size={24} className="text-neutral-400" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => console.log("I have been pressed")} className="size-7 items-center justify-center rounded-xl">
-                  <Volume2Icon size={24} className="text-neutral-400" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => console.log("I have been pressed")} className="size-7 items-center justify-center rounded-xl">
-                  <Volume2Icon size={24} className="text-neutral-400" />
+              </View>
+            </View>
+          )}
+
+          {!sessionEnded && currentAction && currentAction.actionType === "ANSWER" && (
+            <View className="w-full rounded-2xl border-2 border-neutral-100">
+              <View className="flex flex-col gap-1 px-4 py-2">
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.targetContent}</Text>
+                {currentAction.targetContentRomanized && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
+                )}
+              </View>
+              <View className="h-0.5 bg-neutral-100" />
+              <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
+                <TouchableOpacity onPress={handleGetTranslation} className="size-7 items-center justify-center rounded-xl" disabled={!currentAction}>
+                  <BadgeQuestionMarkIcon size={24} className="text-neutral-400" />
                 </TouchableOpacity>
               </View>
             </View>
           )}
+
+          {/* {currentAction && !sessionEnded && (
+            <View className="mx-4 flex w-full flex-col gap-6">
+              <View className="flex flex-col gap-1">
+                <Text className="font-shantell-semibold text-center text-xl text-neutral-900">{currentAction.targetContent}</Text>
+                {currentAction.targetContentRomanized && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
+                )}
+                {currentAction.actionType === "REPEAT" && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentTranslated}</Text>
+                )}
+              </View>
+
+              <View className="flex flex-row items-center justify-center gap-5">
+                <TouchableOpacity
+                  onPress={handleGetPronunciation}
+                  className="size-7 items-center justify-center rounded-xl"
+                  disabled={!currentAction}
+                >
+                  <Volume2Icon size={28} className="text-neutral-400" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )} */}
         </View>
 
         {JSON.stringify(currentAction)}
