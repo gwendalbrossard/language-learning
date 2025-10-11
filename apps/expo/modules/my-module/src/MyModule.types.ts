@@ -4,6 +4,10 @@ export interface AudioEventInfo {
   delta: string
 }
 
+export interface SimpleAudioInfo {
+  audio: string
+}
+
 export interface LevelUpdateEvent {
   level: number
 }
@@ -51,4 +55,10 @@ export interface MyModuleType {
    * @returns Promise that resolves to base64 audio string or null if failed
    */
   stopRecording(): Promise<string | null>
+
+  /**
+   * Play a complete audio file directly (no streaming, no level monitoring)
+   * @param audioInfo Object containing audio (base64 audio data)
+   */
+  playAudio(audioInfo: SimpleAudioInfo): void
 }

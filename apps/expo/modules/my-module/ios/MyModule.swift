@@ -20,6 +20,10 @@
         }
       }
 
+      Function("playAudio") { (eventInfo: [String: Any]) in
+        SimpleAudioPlayer.shared.playAudio(eventInfo: eventInfo)
+      }
+
       OnCreate {
         // Set up playback level update callback
         PlayAudioContinuouslyManager.shared.onPlaybackLevelUpdate = { [weak self] level in
@@ -397,5 +401,48 @@
 
           // Ensure result is always valid
           return max(0.0, min(1.0, result))
+      }
+  }
+
+  // MARK: - SimpleAudioPlayer Implementation
+
+  class SimpleAudioPlayer: NSObject {
+      static let shared = SimpleAudioPlayer()
+
+      private var audioPlayer: AVAudioPlayer?
+
+      private override init() {
+          super.init()
+      }
+
+      func playAudio(eventInfo: [String: Any]) {
+          guard let base64String = eventInfo["audio"] as? String else {
+              print("No audio data provided")
+              return
+          }
+
+          guard let audioData = Data(base64Encoded: base64String) else {
+              print("Invalid base64 audio data")
+              return
+          }
+
+          // Configure audio session
+          do {
+              let audioSession = AVAudioSession.sharedInstance()
+              try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+              try audioSession.overrideOutputAudioPort(.speaker)
+              try audioSession.setActive(true)
+          } catch {
+              print("Failed to configure audio session: \(error)")
+              return
+          }
+
+          // Create and play audio
+          do {
+              audioPlayer = try AVAudioPlayer(data: audioData)
+              audioPlayer?.play()
+          } catch {
+              print("Failed to create or play audio: \(error)")
+          }
       }
   }

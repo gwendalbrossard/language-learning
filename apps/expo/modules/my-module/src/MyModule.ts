@@ -1,7 +1,7 @@
 import type { EmitterSubscription } from "react-native"
 import { NativeModule, requireNativeModule } from "expo"
 
-import type { AudioEventInfo, LevelUpdateEvent, MyModuleType } from "./MyModule.types"
+import type { AudioEventInfo, LevelUpdateEvent, MyModuleType, SimpleAudioInfo } from "./MyModule.types"
 
 declare class MyModule extends NativeModule implements MyModuleType {
   processAudioChunk(eventInfo: AudioEventInfo): void
@@ -12,6 +12,7 @@ declare class MyModule extends NativeModule implements MyModuleType {
   requestRecordingPermissions(): Promise<boolean>
   startRecording(): Promise<void>
   stopRecording(): Promise<string | null>
+  playAudio(audioInfo: SimpleAudioInfo): void
 }
 
 // This call loads the native module object from the JSI.
