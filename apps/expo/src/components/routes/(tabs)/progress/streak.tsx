@@ -54,12 +54,12 @@ const Streak: FC = () => {
     {
       emoji: "🔥",
       title: "Current Streak",
-      value: profileMe.data.secondsSpoken,
+      value: profileMe.data.currentStreak,
     },
     {
       emoji: "⚡️",
       title: "Longest Streak",
-      value: profileMe.data.wordsSpoken,
+      value: profileMe.data.longestStreak,
     },
   ]
 
