@@ -4,7 +4,7 @@ import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { router, Stack, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { BadgeQuestionMarkIcon, LucideVolume2, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
+import { BadgeQuestionMarkIcon, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
 import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -36,6 +36,18 @@ interface Message {
 }
 
 type Suggestion = RouterOutputs["profile"]["roleplaySession"]["getResponseSuggestions"]["suggestions"][number]
+
+type CurrentAction = {
+  action: TActionSchema
+  pronunciation: {
+    audioBase64: string
+  } | null
+  translation: {
+    audioBase64: string
+    translation: string
+    translationRomanized: string | null
+  } | null
+}
 
 const LessonSession: FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -98,6 +110,11 @@ const LessonSession: FC = () => {
     trpc.profile.utils.getPronunciation.mutationOptions({
       onSuccess: (data) => {
         MyModule.playAudio({ audio: data.audioBase64 })
+
+        setCurrentAction((prev) => {
+          if (!prev) return null
+          return { ...prev, pronunciation: { audioBase64: data.audioBase64 } }
+        })
       },
       onError: (error) => {
         console.error("Failed to get pronunciation:", error)
@@ -110,10 +127,18 @@ const LessonSession: FC = () => {
     trpc.profile.utils.getTranslation.mutationOptions({
       onSuccess: (data) => {
         MyModule.playAudio({ audio: data.audioBase64 })
+
+        setCurrentAction((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            translation: { audioBase64: data.audioBase64, translation: data.translation, translationRomanized: data.translationRomanized },
+          }
+        })
       },
       onError: (error) => {
-        console.error("Failed to get pronunciation:", error)
-        Alert.alert("Error", "Failed to get pronunciation. Please try again.")
+        console.error("Failed to get translation:", error)
+        Alert.alert("Error", "Failed to get translation. Please try again.")
       },
     }),
   )
@@ -127,7 +152,7 @@ const LessonSession: FC = () => {
   ])
   const [isRecording, setIsRecording] = useState(false)
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
-  const [currentAction, setCurrentAction] = useState<TActionSchema | null>(null)
+  const [currentAction, setCurrentAction] = useState<CurrentAction | null>(null)
 
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
@@ -433,8 +458,12 @@ const LessonSession: FC = () => {
       return updatedMessages
     })
 
-    // Set the current action for display
-    setCurrentAction(data.action)
+    // Set the current action for display with empty cache
+    setCurrentAction({
+      action: data.action,
+      pronunciation: null,
+      translation: null,
+    })
   }
 
   const startRecording = async (): Promise<void> => {
@@ -521,10 +550,17 @@ const LessonSession: FC = () => {
 
   const handleGetPronunciation = async () => {
     if (!currentAction) return
-    if (currentAction.actionType !== "REPEAT") return
+    if (currentAction.action.actionType !== "REPEAT") return
 
+    // Use cached pronunciation if available
+    if (currentAction.pronunciation) {
+      MyModule.playAudio({ audio: currentAction.pronunciation.audioBase64 })
+      return
+    }
+
+    // Fetch pronunciation if not cached
     await profileUtilsGetPronunciationMutation.mutateAsync({
-      phrase: currentAction.targetContent,
+      phrase: currentAction.action.targetContent,
       language: profileMe.data.learningLanguage,
       organizationId: currentOrganizationId,
     })
@@ -532,10 +568,17 @@ const LessonSession: FC = () => {
 
   const handleGetTranslation = async () => {
     if (!currentAction) return
-    if (currentAction.actionType !== "ANSWER") return
+    if (currentAction.action.actionType !== "ANSWER") return
 
+    // Use cached translation if available
+    if (currentAction.translation) {
+      MyModule.playAudio({ audio: currentAction.translation.audioBase64 })
+      return
+    }
+
+    // Fetch translation if not cached
     await profileUtilsGetTranslationMutation.mutateAsync({
-      phrase: currentAction.targetContent,
+      phrase: currentAction.action.targetContent,
       sourceLanguage: profileMe.data.nativeLanguage,
       targetLanguage: profileMe.data.learningLanguage,
       organizationId: currentOrganizationId,
@@ -618,17 +661,17 @@ const LessonSession: FC = () => {
           )}
            */}
 
-          {!sessionEnded && currentAction && currentAction.actionType === "REPEAT" && (
+          {!sessionEnded && currentAction && currentAction.action.actionType === "REPEAT" && (
             <View className="w-full rounded-2xl border-2 border-neutral-100">
               <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.targetContent}</Text>
-                {currentAction.targetContentRomanized && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
+                {currentAction.action.targetContentRomanized && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
                 )}
               </View>
               <View className="h-0.5 bg-neutral-100" />
               <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentTranslated}</Text>
+                <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentTranslated}</Text>
               </View>
               <View className="h-0.5 bg-neutral-100" />
               <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
@@ -643,14 +686,27 @@ const LessonSession: FC = () => {
             </View>
           )}
 
-          {!sessionEnded && currentAction && currentAction.actionType === "ANSWER" && (
+          {!sessionEnded && currentAction && currentAction.action.actionType === "ANSWER" && (
             <View className="w-full rounded-2xl border-2 border-neutral-100">
               <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.targetContent}</Text>
-                {currentAction.targetContentRomanized && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
+                {currentAction.action.targetContentRomanized && (
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
                 )}
               </View>
+              {currentAction.translation && (
+                <>
+                  <View className="h-0.5 bg-neutral-100" />
+                  <View className="flex flex-col gap-1 px-4 py-2">
+                    <Text className="font-shantell-medium text-center text-base text-neutral-700">{currentAction.translation.translation}</Text>
+                    {currentAction.translation.translationRomanized && (
+                      <Text className="font-shantell-medium text-center text-sm text-neutral-400">
+                        {currentAction.translation.translationRomanized}
+                      </Text>
+                    )}
+                  </View>
+                </>
+              )}
               <View className="h-0.5 bg-neutral-100" />
               <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
                 <TouchableOpacity onPress={handleGetTranslation} className="size-7 items-center justify-center rounded-xl" disabled={!currentAction}>
@@ -659,30 +715,6 @@ const LessonSession: FC = () => {
               </View>
             </View>
           )}
-
-          {/* {currentAction && !sessionEnded && (
-            <View className="mx-4 flex w-full flex-col gap-6">
-              <View className="flex flex-col gap-1">
-                <Text className="font-shantell-semibold text-center text-xl text-neutral-900">{currentAction.targetContent}</Text>
-                {currentAction.targetContentRomanized && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentRomanized}</Text>
-                )}
-                {currentAction.actionType === "REPEAT" && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.targetContentTranslated}</Text>
-                )}
-              </View>
-
-              <View className="flex flex-row items-center justify-center gap-5">
-                <TouchableOpacity
-                  onPress={handleGetPronunciation}
-                  className="size-7 items-center justify-center rounded-xl"
-                  disabled={!currentAction}
-                >
-                  <Volume2Icon size={28} className="text-neutral-400" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )} */}
         </View>
 
         {JSON.stringify(currentAction)}

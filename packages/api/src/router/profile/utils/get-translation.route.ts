@@ -171,5 +171,5 @@ IMPORTANT: Consider the language learning context - the translation should help 
   // Convert to base64
   const base64 = combinedAudio.toString("base64")
 
-  return { audioBase64: base64 }
+  return { audioBase64: base64, translation: object.translation, translationRomanized: object.translationRomanized }
 })
