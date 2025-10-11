@@ -7,6 +7,7 @@ export const env = createEnv({
     ASSETS_DOMAIN: z.string().min(1),
     AZURE_API_KEY: z.string().min(1),
     AZURE_RESOURCE_NAME: z.string().min(1),
+    OPENAI_API_KEY: z.string().min(1),
     R2_ACCESS_KEY_ID: z.string().min(1),
     R2_BUCKET_PRIVATE: z.string().min(1),
     R2_BUCKET_PUBLIC: z.string().min(1),

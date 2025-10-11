@@ -25,6 +25,7 @@
     "@aws-sdk/s3-request-presigner": "^3.879.0",
     "@t3-oss/env-core": "catalog:",
     "@trpc/server": "catalog:",
+    "openai": "^6.2.0",
     "posthog-node": "^5.8.1",
     "superjson": "2.2.2",
     "zod": "catalog:"
