@@ -564,7 +564,7 @@ const RoleplaySession: FC = () => {
 
               {/* Record */}
               <View className="flex flex-col items-center gap-5">
-                <Text className="text-xs font-medium text-neutral-500">Hold to speak</Text>
+                <Text className="font-shantell-medium text-xs text-neutral-400">Hold to speak</Text>
                 <Pressable
                   onPressIn={() => void startRecording()}
                   onPressOut={() => void stopRecording()}

@@ -641,25 +641,6 @@ const LessonSession: FC = () => {
               <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
             </View>
           )}
-          {/* Action Display */}
-          {/*           {currentAction && currentAction.actionType === "REPEAT" && !sessionEnded && (
-            <View className="mx-4 w-full rounded-2xl border-2 border-neutral-100 px-4 py-2">
-              <View className="flex flex-row items-center gap-3">
-                <TouchableOpacity
-                  onPress={handleGetPronunciation}
-                  className="size-7 items-center justify-center rounded-xl"
-                  disabled={!currentAction}
-                >
-                  <Volume2Icon size={24} className="text-neutral-400" />
-                </TouchableOpacity>
-                <View>
-                  <Text className="text-lg font-medium text-neutral-900">{currentAction.targetContent}</Text>
-                  <Text className="text-sm font-medium text-neutral-400">{currentAction.targetContentTranslated}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-           */}
 
           {!sessionEnded && currentAction && currentAction.action.actionType === "REPEAT" && (
             <View className="w-full rounded-2xl border-2 border-neutral-100">
@@ -735,7 +716,7 @@ const LessonSession: FC = () => {
 
               {/* Record */}
               <View className="flex flex-col items-center gap-5">
-                <Text className="text-xs font-medium text-neutral-500">Hold to speak</Text>
+                <Text className="font-shantell-medium text-xs text-neutral-400">Hold to speak</Text>
                 <Pressable
                   onPressIn={() => void startRecording()}
                   onPressOut={() => void stopRecording()}
