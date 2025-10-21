@@ -8,7 +8,7 @@ import { PlayIcon, SettingsIcon, XIcon } from "lucide-react-native"
 import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
-import Rive from "rive-react-native"
+import Rive, { AutoBind, useRive, useRiveNumber, useRiveString } from "rive-react-native"
 import { io } from "socket.io-client"
 
 import type { RouterOutputs } from "@acme/api"
@@ -100,6 +100,14 @@ const RoleplaySession: FC = () => {
   const [isNavigating, setIsNavigating] = useState(false)
   const [recordingLevel, setRecordingLevel] = useState(0)
   const [playbackLevel, setPlaybackLevel] = useState(0)
+
+  // Smooth interpolated values for Rive
+  const [smoothVolume, setSmoothVolume] = useState(0)
+
+  // Rive animation - states and volume only
+  const [setRiveRef, riveRef] = useRive()
+  const [_states, setStates] = useRiveString(riveRef, "States")
+  const [_volume, setVolume] = useRiveNumber(riveRef, "Volume")
 
   const animatedScale = useRef(new Animated.Value(80)).current
 
@@ -246,6 +254,53 @@ const RoleplaySession: FC = () => {
       }
     }
   }, [initializeSocket])
+
+  // Update Rive states only (safe, no frequent updates)
+  useEffect(() => {
+    if (!riveRef) return
+
+    if (isRecording) {
+      setStates("Listening")
+    } else if (isAssistantSpeaking) {
+      setStates("Talking")
+    } else {
+      setStates("Idle")
+    }
+  }, [isRecording, isAssistantSpeaking, riveRef, setStates])
+
+  // Smooth interpolation for volume only
+  useEffect(() => {
+    const targetVolume = (isRecording ? recordingLevel : playbackLevel) * 100
+
+    // Smooth interpolation function (linear interpolation with damping)
+    const lerp = (current: number, target: number, factor: number) => {
+      return current + (target - current) * factor
+    }
+
+    const updateSmoothValues = () => {
+      setSmoothVolume((prev) => lerp(prev, targetVolume, 0.25)) // 25% each frame - more responsive but still smooth
+    }
+
+    // Update at 60fps for ultra-smooth animation
+    const animationFrame = requestAnimationFrame(updateSmoothValues)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [recordingLevel, playbackLevel, isRecording])
+
+  // Update Rive with smooth values (throttled to avoid overwhelming Rive)
+  const lastRiveUpdate = useRef(0)
+  useEffect(() => {
+    if (!riveRef) return
+
+    const now = Date.now()
+    // Update Rive at 30fps (smooth but not overwhelming)
+    if (now - lastRiveUpdate.current >= 33) {
+      const volumeValue = Math.round(smoothVolume)
+
+      console.log("Setting Rive volume:", volumeValue)
+      setVolume(volumeValue)
+      lastRiveUpdate.current = now
+    }
+  }, [smoothVolume, riveRef, setVolume])
 
   // Animate scale based on audio levels with immediate response for 240fps
   useEffect(() => {
@@ -529,7 +584,13 @@ const RoleplaySession: FC = () => {
 
         {/* Main content area */}
         <View className="flex-1 flex-col items-center px-4">
-          <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "50%", height: "30%" }} />
+          <Rive
+            ref={setRiveRef}
+            url="https://assets.studyunfold.com/rives/floral.riv"
+            style={{ width: "500%", height: "50%" }}
+            dataBinding={AutoBind(true)}
+            stateMachineName="State Machine 1"
+          />
 
           {sessionEnded && (
             <View className="items-center">
