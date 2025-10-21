@@ -69,6 +69,7 @@
       // Level monitoring
       private var playbackLevelTimer: Timer?
       var onPlaybackLevelUpdate: ((Float) -> Void)?
+      private var currentAudioLevel: Float = 0.0
 
       private override init() {
           super.init()
@@ -94,6 +95,25 @@
 
           audioEngine.attach(playerNode)
           audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: audioFormat)
+
+          // Install audio tap to monitor real volume levels
+          audioEngine.mainMixerNode.installTap(onBus: 0, bufferSize: 1024, format: audioFormat) { [weak self] (buffer, time) in
+              guard let channelData = buffer.floatChannelData else { return }
+              let channelDataPointer = channelData[0]
+              let frameLength = Int(buffer.frameLength)
+
+              if frameLength > 0 {
+                  // Calculate RMS (Root Mean Square) for volume level
+                  var sum: Float = 0.0
+                  for i in 0..<frameLength {
+                      let sample = channelDataPointer[i]
+                      sum += sample * sample
+                  }
+
+                  let rms = sqrt(sum / Float(frameLength))
+                  self?.currentAudioLevel = rms
+              }
+          }
 
           do {
               try audioEngine.start()
@@ -254,12 +274,9 @@
       }
 
       private func calculateAudioLevel(from node: AVAudioMixerNode) -> Float {
-          // More realistic level calculation - simulate audio envelope
-          let baseLevel = Float.random(in: 0.2...0.8)
-          let variation = Float.random(in: -0.1...0.1)
-          let level = baseLevel + variation
-
-          return min(max(level, 0.0), 1.0)
+          // Use the real-time audio level captured by the tap
+          let normalizedLevel = min(max(currentAudioLevel * 5.0, 0.0), 1.0) // Scale RMS to 0-1 range
+          return normalizedLevel
       }
   }
 
