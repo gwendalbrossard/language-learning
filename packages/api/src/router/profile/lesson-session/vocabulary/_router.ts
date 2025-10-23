@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server"
 
-import { getAll } from "./get-all.route"
+import { createMany } from "./create-many.route"
 
 export const vocabularyRouter = {
-  getAll: getAll,
+  createMany: createMany,
 } satisfies TRPCRouterRecord

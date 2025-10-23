@@ -54,6 +54,7 @@ model LessonSession {
 
   @@index([profileId])
   @@index([organizationId])
+  @@index([profileId, organizationId])
   @@map("lesson_session")
 }
 

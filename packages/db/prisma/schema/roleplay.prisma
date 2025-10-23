@@ -57,6 +57,7 @@ model RoleplaySession {
 
   @@index([profileId])
   @@index([organizationId])
+  @@index([profileId, organizationId])
   @@map("roleplay_session")
 }
 

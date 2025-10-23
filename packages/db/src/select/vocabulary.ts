@@ -7,6 +7,8 @@ export const vocabularySelect = Prisma.validator<Prisma.VocabularySelect>()({
   romanization: true,
   translation: true,
   learningLanguage: true,
+  phraseExample: true,
+  phraseExampleTranslation: true,
   audioStorageKey: true,
   masteredAt: true,
 
