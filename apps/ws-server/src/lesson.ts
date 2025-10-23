@@ -338,6 +338,7 @@ export const handleLessonSession = async ({ lessonSessionId, profile, organizati
               sessionId: lessonSessionId,
               type: actionResult.vocabularyType,
               text: actionResult.targetContent,
+              romanization: actionResult.targetContentRomanized,
               translation: actionResult.targetContentTranslated,
             },
           })

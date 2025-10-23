@@ -56,5 +56,6 @@ export const prefetchMain = async () => {
     queryClient.fetchQuery(trpc.profile.roleplayCategory.getAll.queryOptions({ organizationId: currentOrganizationId })),
     queryClient.fetchQuery(trpc.profile.lesson.getAll.queryOptions({ organizationId: currentOrganizationId })),
     queryClient.fetchQuery(trpc.profile.lessonCategory.getAll.queryOptions({ organizationId: currentOrganizationId })),
+    queryClient.fetchQuery(trpc.profile.vocabulary.getAll.queryOptions({ organizationId: currentOrganizationId })),
   ])
 }

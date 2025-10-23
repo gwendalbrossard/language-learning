@@ -4,8 +4,8 @@ export const lessonSessionVocabularySelect = Prisma.validator<Prisma.LessonSessi
   id: true,
   type: true,
   text: true,
+  romanization: true,
   translation: true,
-  information: true,
 
   createdAt: true,
   updatedAt: true,

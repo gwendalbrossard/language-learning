@@ -54,6 +54,7 @@ model Profile {
   lessons            Lesson[]
   lessonSessions     LessonSession[]
   lessonCategories   LessonCategory[]
+  vocabularies       Vocabulary[]
 
   @@map("profile")
 }

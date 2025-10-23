@@ -24,6 +24,8 @@ export * from "./router/profile/roleplay-session/get-all.schema"
 export * from "./router/profile/roleplay-session/get-response-suggestions.schema"
 export * from "./router/profile/streak-days.schema"
 export * from "./router/profile/update-streak-day.schema"
+export * from "./router/profile/vocabulary/create-many.schema"
+export * from "./router/profile/vocabulary/get-all.schema"
 
 export * from "./router/profile/utils/get-pronunciation.schema"
 export * from "./router/profile/utils/get-translation.schema"

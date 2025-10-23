@@ -107,11 +107,11 @@ model LessonCategory {
 }
 
 model LessonSessionVocabulary {
-  id          String                      @id @default(cuid())
-  type        LessonSessionVocabularyType
-  text        String
-  translation String
-  information String?
+  id           String                      @id @default(cuid())
+  type         LessonSessionVocabularyType
+  text         String
+  romanization String?
+  translation  String
 
   sessionId String
   session   LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)

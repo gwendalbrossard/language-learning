@@ -1,0 +1,30 @@
+model Vocabulary {
+  id               String         @id @default(cuid())
+  type             VocabularyType
+  text             String
+  romanization     String?
+  translation      String
+  learningLanguage String /// BCP 47 language tag (ISO 639 + ISO 3166), e.g. "en-US", "es-MX", "ja-JP"
+  audioStorageKey  String?
+  masteredAt       DateTime?
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([organizationId])
+  @@index([profileId, organizationId])
+  @@map("vocabulary")
+}
+
+enum VocabularyType {
+  WORD
+  PHRASE
+  EXPRESSION
+}

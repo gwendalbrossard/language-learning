@@ -3,6 +3,7 @@ import type {
   LessonSessionVocabularyType as LessonSessionVocabularyTypeOrigin,
   MemberRole as MemberRoleOrigin,
   RoleplaySessionMessageRole as RoleplaySessionMessageRoleOrigin,
+  VocabularyType as VocabularyTypeOrigin,
 } from "@acme/db"
 
 export const MemberRole = {
@@ -37,3 +38,11 @@ export const LessonSessionVocabularyType = {
 } as const satisfies Record<LessonSessionVocabularyTypeOrigin, string>
 
 export type LessonSessionVocabularyType = LessonSessionVocabularyTypeOrigin
+
+export const VocabularyType = {
+  WORD: "WORD",
+  PHRASE: "PHRASE",
+  EXPRESSION: "EXPRESSION",
+} as const satisfies Record<VocabularyTypeOrigin, string>
+
+export type VocabularyType = VocabularyTypeOrigin
