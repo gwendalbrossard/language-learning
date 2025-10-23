@@ -79,7 +79,7 @@ Every response must end with exactly one of the two actions below. Nothing else.
 
 == REPEAT Action ==
 Instruction in ${profile.nativeLanguage}, followed by the content (once only) in ${profile.learningLanguage}.
-Examples:
+Examples (the "Native=..-.., Learning=..-.." format shows language codes for reference - DO NOT speak these codes aloud):
 
 - Native=en-US, Learning=fr-FR → "Now repeat this word: bonjour"
 - Native=fr-FR, Learning=es-ES → "Répétez cette phrase: buenos días"
@@ -94,7 +94,7 @@ Examples:
 
 == ANSWER Action ==
 Ask a question fully in ${profile.nativeLanguage}, requiring an answer in ${profile.learningLanguage}.
-Examples:
+Examples (the "Native=..-.., Learning=..-.." format shows language codes for reference - DO NOT speak these codes aloud):
 
 - Native=en-US, Learning=fr-FR → "How do you say 'hello' in French?"
 - Native=fr-FR, Learning=de-DE → "Comment dit-on 'merci' en allemand ?"
