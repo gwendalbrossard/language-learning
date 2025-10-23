@@ -5,7 +5,7 @@ import { z } from "zod/v4"
 import { lessonCategorySelect, lessonSelect } from "@acme/db"
 import { ZProfileLessonCreateSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 
 // TODO: Update schema and prompt
 const ZLessonGenerateSchema = z.object({
@@ -23,7 +23,7 @@ const ZLessonGenerateSchema = z.object({
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
 
-export const create = organizationProcedure.input(ZProfileLessonCreateSchema).mutation(async ({ ctx, input }) => {
+export const create = organizationUnlimitedProcedure.input(ZProfileLessonCreateSchema).mutation(async ({ ctx, input }) => {
   // Fetch all available categories for the user
   const lessonCategories = await ctx.db.lessonCategory.findMany({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },

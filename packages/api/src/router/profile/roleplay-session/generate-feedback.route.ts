@@ -6,27 +6,29 @@ import type { ProfileSelected, RoleplaySessionSelected } from "@acme/db"
 import { roleplaySessionSelect } from "@acme/db"
 import { ZProfileRoleplaySessionGenerateFeedbackSchema, ZRoleplaySessionGetFeedbackSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 
-export const generateFeedback = organizationProcedure.input(ZProfileRoleplaySessionGenerateFeedbackSchema).mutation(async ({ ctx, input }) => {
-  const roleplaySession = await ctx.db.roleplaySession.findFirst({
-    where: { AND: [{ id: input.roleplaySessionId }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] },
-    select: roleplaySessionSelect,
+export const generateFeedback = organizationUnlimitedProcedure
+  .input(ZProfileRoleplaySessionGenerateFeedbackSchema)
+  .mutation(async ({ ctx, input }) => {
+    const roleplaySession = await ctx.db.roleplaySession.findFirst({
+      where: { AND: [{ id: input.roleplaySessionId }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] },
+      select: roleplaySessionSelect,
+    })
+
+    if (!roleplaySession) throw new TRPCError({ code: "NOT_FOUND", message: "Roleplay session not found" })
+    if (roleplaySession.feedback !== null) throw new TRPCError({ code: "BAD_REQUEST", message: "Feedback already generated" })
+
+    const feedback = await getFeedback({ roleplaySession: roleplaySession, profile: ctx.profile })
+
+    const updatedRoleplaySession = await ctx.db.roleplaySession.update({
+      where: { id: input.roleplaySessionId },
+      data: { feedback: feedback },
+      select: roleplaySessionSelect,
+    })
+
+    return updatedRoleplaySession
   })
-
-  if (!roleplaySession) throw new TRPCError({ code: "NOT_FOUND", message: "Roleplay session not found" })
-  if (roleplaySession.feedback !== null) throw new TRPCError({ code: "BAD_REQUEST", message: "Feedback already generated" })
-
-  const feedback = await getFeedback({ roleplaySession: roleplaySession, profile: ctx.profile })
-
-  const updatedRoleplaySession = await ctx.db.roleplaySession.update({
-    where: { id: input.roleplaySessionId },
-    data: { feedback: feedback },
-    select: roleplaySessionSelect,
-  })
-
-  return updatedRoleplaySession
-})
 
 type GetFeedbackProps = {
   roleplaySession: RoleplaySessionSelected

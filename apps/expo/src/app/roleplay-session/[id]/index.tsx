@@ -85,8 +85,11 @@ const RoleplaySession: FC = () => {
         )
       },
       onError: (error) => {
-        console.error("Failed to generate feedback:", error)
-        Alert.alert("Error", "Failed to generate feedback. Please try again.")
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
       },
     }),
   )

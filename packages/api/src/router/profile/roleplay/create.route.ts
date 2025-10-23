@@ -5,7 +5,7 @@ import { z } from "zod/v4"
 import { roleplayCategorySelect, roleplaySelect } from "@acme/db"
 import { ZProfileRoleplayCreateSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 
 const ZRoleplayGenerateSchema = z.object({
   title: z
@@ -20,7 +20,7 @@ const ZRoleplayGenerateSchema = z.object({
   categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
 })
 
-export const create = organizationProcedure.input(ZProfileRoleplayCreateSchema).mutation(async ({ ctx, input }) => {
+export const create = organizationUnlimitedProcedure.input(ZProfileRoleplayCreateSchema).mutation(async ({ ctx, input }) => {
   // Fetch all available categories for the user
   const roleplayCategories = await ctx.db.roleplayCategory.findMany({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },

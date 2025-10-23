@@ -3,10 +3,10 @@ import { TRPCError } from "@trpc/server"
 import { roleplaySelect, roleplaySessionSelect } from "@acme/db"
 import { ZProfileRoleplaySessionCreateSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 import { incrementProfileStats } from "../../../utils/profile"
 
-export const create = organizationProcedure.input(ZProfileRoleplaySessionCreateSchema).mutation(async ({ ctx, input }) => {
+export const create = organizationUnlimitedProcedure.input(ZProfileRoleplaySessionCreateSchema).mutation(async ({ ctx, input }) => {
   const roleplay = await ctx.db.roleplay.findFirst({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
     select: roleplaySelect,

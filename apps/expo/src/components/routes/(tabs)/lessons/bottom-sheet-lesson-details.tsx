@@ -4,7 +4,7 @@ import { router } from "expo-router"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { useMutation } from "@tanstack/react-query"
 import { Play } from "lucide-react-native"
-import { Dimensions, View } from "react-native"
+import { Alert, Dimensions, View } from "react-native"
 
 import type { Difficulty } from "~/components/common/difficulty"
 import type { DifficultyIconProps } from "~/components/common/filters"
@@ -39,6 +39,13 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
         }
         await queryClient.fetchQuery(trpc.profile.lessonSession.get.queryOptions({ lessonSessionId: data.id, organizationId: currentOrganizationId }))
         router.replace(`/lesson-session/${data.id}`)
+      },
+      onError: (error) => {
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
       },
     }),
   )

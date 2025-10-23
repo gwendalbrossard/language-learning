@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ChevronLeftIcon } from "lucide-react-native"
 import { useForm } from "react-hook-form"
-import { TouchableOpacity, View } from "react-native"
+import { Alert, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import type { TProfileRoleplayCreateSchema } from "@acme/validators"
@@ -52,6 +52,13 @@ const CreateRoleplay: FC = () => {
 
         router.replace(`/roleplay-session/${data.id}`)
       },
+      onError: (error) => {
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
+      },
     }),
   )
 
@@ -62,6 +69,13 @@ const CreateRoleplay: FC = () => {
           queryClient.invalidateQueries(trpc.profile.roleplay.getAll.queryFilter({ organizationId: currentOrganizationId })),
           profileRoleplaySessionCreateMutation.mutateAsync({ roleplayId: data.id, organizationId: currentOrganizationId }),
         ])
+      },
+      onError: (error) => {
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
       },
     }),
   )

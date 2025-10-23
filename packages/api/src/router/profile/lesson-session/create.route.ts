@@ -3,10 +3,10 @@ import { TRPCError } from "@trpc/server"
 import { lessonSelect, lessonSessionSelect } from "@acme/db"
 import { ZProfileLessonSessionCreateSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 import { incrementProfileStats } from "../../../utils/profile"
 
-export const create = organizationProcedure.input(ZProfileLessonSessionCreateSchema).mutation(async ({ ctx, input }) => {
+export const create = organizationUnlimitedProcedure.input(ZProfileLessonSessionCreateSchema).mutation(async ({ ctx, input }) => {
   const lesson = await ctx.db.lesson.findFirst({
     where: { OR: [{ isPublic: true }, { AND: [{ isPublic: false }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }] }] },
     select: lessonSelect,

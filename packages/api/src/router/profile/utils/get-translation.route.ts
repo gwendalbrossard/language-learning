@@ -4,7 +4,7 @@ import { generateObject } from "ai"
 import { ZProfileUtilsGetTranslationResponseSchema, ZProfileUtilsGetTranslationSchema } from "@acme/validators"
 
 import { env } from "../../../env.server"
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 import { incrementProfileStats } from "../../../utils/profile"
 
 interface SpeechAudioDelta {
@@ -23,7 +23,7 @@ interface SpeechAudioDone {
 
 type SpeechSSEEvent = SpeechAudioDelta | SpeechAudioDone
 
-export const getTranslation = organizationProcedure.input(ZProfileUtilsGetTranslationSchema).mutation(async ({ ctx, input }) => {
+export const getTranslation = organizationUnlimitedProcedure.input(ZProfileUtilsGetTranslationSchema).mutation(async ({ ctx, input }) => {
   const { object } = await generateObject({
     model: azure("gpt-4o-mini"),
     schemaName: "get-translation",

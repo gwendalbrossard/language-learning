@@ -1,7 +1,7 @@
 import { ZProfileUtilsGetPronunciationSchema } from "@acme/validators"
 
 import { env } from "../../../env.server"
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 import { incrementProfileStats } from "../../../utils/profile"
 
 interface SpeechAudioDelta {
@@ -20,7 +20,7 @@ interface SpeechAudioDone {
 
 type SpeechSSEEvent = SpeechAudioDelta | SpeechAudioDone
 
-export const getPronunciation = organizationProcedure.input(ZProfileUtilsGetPronunciationSchema).mutation(async ({ ctx, input }) => {
+export const getPronunciation = organizationUnlimitedProcedure.input(ZProfileUtilsGetPronunciationSchema).mutation(async ({ ctx, input }) => {
   // Make raw HTTP request to get SSE stream with token usage
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
