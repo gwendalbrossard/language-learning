@@ -12,15 +12,15 @@ const ZLessonGenerateSchema = z.object({
   title: z
     .string()
     .describe(
-      "A short, clear title that summarizes the lesson topic and learning focus. No mention of 'lesson', 'practice', 'conversation' or similar terms.",
+      "A concise and clear title summarizing the lesson topic and vocabulary focus. Avoid using words like 'lesson', 'practice', or 'conversation'. Focus on the content being taught.",
     ),
   description: z
     .string()
     .describe(
-      "An expanded version of the provided topic with corrected grammar and proper capitalization. Should describe what vocabulary and language skills will be covered.",
+      "A 1-2 short sentences description of the lesson topic with correct grammar and capitalization. Clearly state which vocabulary, phrases, or language skills will be learned and practiced.",
     ),
-  emoji: z.string().describe("A single emoji that accurately represents the lesson topic, vocabulary theme, or primary subject matter"),
-  categoryId: z.string().describe("The ID of the most appropriate category from the provided list"),
+  emoji: z.string().describe("A single emoji that represents the lesson topic, vocabulary theme, or primary subject matter."),
+  categoryId: z.string().describe("The ID of the most appropriate category from the provided list, reflecting the lesson's main focus."),
 })
 
 export const create = organizationUnlimitedProcedure.input(ZProfileLessonCreateSchema).mutation(async ({ ctx, input }) => {
@@ -35,9 +35,9 @@ export const create = organizationUnlimitedProcedure.input(ZProfileLessonCreateS
     model: azure("gpt-5-mini"),
     schemaName: "lesson-generate",
     schema: ZLessonGenerateSchema,
-    prompt: `You are an expert language learning lesson designer. Based on the provided lesson description, generate a polished title, description, emoji, and category selection.
+    prompt: `You are an expert language lesson designer. Based on the provided lesson details, generate a polished title, description, emoji, and category selection.
 
-CRITICAL: This is for structured language lessons focused on vocabulary introduction and conversational practice. The lesson must be optimized for natural voice conversations with clear learning objectives.
+CRITICAL: Lessons are structured to introduce vocabulary and enable natural conversational practice. Focus on clear learning objectives and structured outcomes, not roleplays.
 
 You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the instructions to follow or additional context for you to use in crafting your response.
 In AsciiDoc:
@@ -66,27 +66,44 @@ ${JSON.stringify(
   2,
 )}
 
+= EXAMPLES =
+Here are example lessons that match our structured style:
+
+- Title: "Family Members and Relationships"  
+  Description: "Learn vocabulary for family members like mother, father, brother, sister, and practice describing family relationships."  
+  Emoji: "👨‍👩‍👧‍👦"  
+
+- Title: "Restaurant Vocabulary"  
+  Description: "Learn essential vocabulary for ordering food, describing dishes, and dining experiences."  
+  Emoji: "🍕"  
+
+- Title: "Daily Routines and Time"  
+  Description: "Practice describing daily activities, telling time, and talking about schedules."  
+  Emoji: "⏰"  
+
 = TASK =
-Generate the following components for a structured language lesson:
+Generate the following lesson components based on the topic:
 
 == Title ==
-Create a short, clear title that summarizes the lesson topic and learning focus. Examples: "Family Members and Relationships", "Ordering Food at a Restaurant", "Daily Routines and Time". Do not mention "lesson", "practice", "conversation" or similar terms. Keep it concise and focused on the content being taught.
+Create a short, clear title summarizing the vocabulary or topic focus. Keep it concise, informative, and aligned with structured learning. Avoid words like 'lesson' or 'practice'.
 
 == Description ==
-Expand on the provided topic with corrected grammar and proper capitalization. Describe what vocabulary and language skills will be covered in this lesson. The description should be exactly 1 or 2 sentences long and clearly indicate the learning objectives.
+Write 1-2 short sentences describing the lesson topic. Correct grammar and capitalization. Specify the vocabulary, phrases, and skills learners will acquire.
 
 == Emoji ==
-Choose a single emoji that accurately represents the lesson topic, vocabulary theme, or primary subject matter being taught.
+Choose a single emoji representing the lesson topic, vocabulary theme, or subject matter.
 
 == Category Selection ==
-Choose the most appropriate category ID from the available categories list above based on the lesson topic and vocabulary focus.
+Select the most suitable category ID from the list based on lesson topic and vocabulary focus.
 
 = REQUIREMENTS =
-- Keep the title focused on the vocabulary/topic being taught
-- The description should clearly indicate what will be learned (vocabulary, phrases, skills)
-- Consider the learner's proficiency level and difficulty when crafting the content
-- Focus on structured learning outcomes rather than roleplays
-- The response should always be in ${ctx.profile.nativeLanguage}, regardless of the learning language`,
+- Keep title concise and focused on content
+- Description must clearly state learning objectives and covered vocabulary
+- Consider learner proficiency and difficulty level
+- Prioritize structured learning outcomes over casual conversation
+- Response must be in ${ctx.profile.nativeLanguage}, regardless of the learning language
+
+`,
     temperature: 0.3,
   })
 
