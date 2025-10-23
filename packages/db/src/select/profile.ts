@@ -23,7 +23,6 @@ export const profileSelect = Prisma.validator<Prisma.ProfileSelect>()({
   currentStreak: true,
   longestStreak: true,
   lastStreakDay: { select: streakDaySelect },
-  revenueCatCustomer: true,
   createdAt: true,
 })
 

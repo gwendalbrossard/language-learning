@@ -5,6 +5,8 @@ model Organization {
   logo     String?
   metadata Json
 
+  revenueCatCustomer Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -7,6 +7,7 @@ export const organizationSelect = Prisma.validator<Prisma.OrganizationSelect>()(
   slug: true,
   logo: true,
   metadata: true,
+  revenueCatCustomer: true,
   members: { select: memberSelect },
 })
 

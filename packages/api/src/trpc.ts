@@ -16,6 +16,7 @@ import { organizationSelect, prisma, profileSelect, userSelect } from "@acme/db"
 import { POSTHOG_EVENTS } from "@acme/shared/posthog"
 
 import { posthogNodeCapture } from "./utils/posthog"
+import { isUnlimited } from "./utils/revenuecat"
 
 /**
  * 1. CONTEXT
@@ -237,3 +238,22 @@ export const organizationProcedure = t.procedure
       },
     })
   })
+
+/**
+ * Protected (authenticated) procedure with organization membership and unlimited plan requirement
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users who are members
+ * of a specific organization AND have an unlimited plan, use this. It extends organizationProcedure
+ * with an additional check for unlimited access via RevenueCat entitlements.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const organizationUnlimitedProcedure = organizationProcedure.use(({ ctx, next }) => {
+  if (!isUnlimited(ctx.organization)) {
+    throw new TRPCError({ code: "PAYMENT_REQUIRED", message: "You need to upgrade your plan to have access to this feature." })
+  }
+
+  return next({
+    ctx,
+  })
+})

@@ -34,8 +34,7 @@ model Profile {
   longestStreak       Int     @default(0)
   completedOnboarding Boolean @default(false)
 
-  metadata           Json  @default("{}")
-  revenueCatCustomer Json?
+  metadata Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
