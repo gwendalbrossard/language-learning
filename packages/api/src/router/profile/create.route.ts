@@ -42,6 +42,7 @@ export const createProfile = async (props: CreateProfileProps): Promise<CreatePr
         email: props.user.email,
         name: props.profileCreateInput.name,
         timezone: props.profileCreateInput.timezone,
+        metadata: {},
       },
       select: profileSelect,
     })
