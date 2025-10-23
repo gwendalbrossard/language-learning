@@ -16,10 +16,12 @@ import MyModule from "../../../../modules/my-module"
 type VocabularyCardProps = {
   vocabulary: RouterOutputs["profile"]["lessonSession"]["get"]["vocabulary"][number]
   onPlayPronunciation: (text: string) => void
+  isSelected: boolean
+  onToggleSelect: (vocabularyId: string) => void
 }
-const VocabularyCard: FC<VocabularyCardProps> = ({ vocabulary, onPlayPronunciation }) => {
+const VocabularyCard: FC<VocabularyCardProps> = ({ vocabulary, onPlayPronunciation, isSelected, onToggleSelect }) => {
   return (
-    <View className="flex w-full flex-row items-center justify-between gap-2 px-3.5 py-2.5">
+    <View className="flex w-full flex-row items-center justify-between gap-2 py-3 pl-4 pr-2">
       {/* Left */}
       <View className="flex flex-1 flex-row items-center gap-4">
         <TouchableOpacity onPress={() => onPlayPronunciation(vocabulary.text)}>
@@ -34,8 +36,8 @@ const VocabularyCard: FC<VocabularyCardProps> = ({ vocabulary, onPlayPronunciati
 
       {/* Right */}
       <View className="shrink-0">
-        <TouchableOpacity onPress={() => console.log("bookmark")}>
-          <BookmarkIcon size={24} className="text-neutral-400" />
+        <TouchableOpacity className="items-center justify-center rounded-lg p-2" onPress={() => onToggleSelect(vocabulary.id)}>
+          <BookmarkIcon size={24} className={isSelected ? "text-primary-500" : "text-neutral-400"} fill={isSelected ? "#3b82f6" : "none"} />
         </TouchableOpacity>
       </View>
     </View>
@@ -56,8 +58,8 @@ const LessonSessionIdEnded: FC = () => {
   )
   if (!profileLessonSessionGet.data) throw new Error("Lesson session not found")
 
-  // Cache for pronunciation audio to avoid duplicate fetches
   const [pronunciationCache, setPronunciationCache] = useState<Record<string, string>>({})
+  const [selectedVocabulary, setSelectedVocabulary] = useState<Set<string>>(new Set())
 
   const profileUtilsGetPronunciationMutation = useMutation(
     trpc.profile.utils.getPronunciation.mutationOptions({
@@ -69,6 +71,21 @@ const LessonSessionIdEnded: FC = () => {
           ...prev,
           [variables.phrase]: data.audioBase64,
         }))
+      },
+      onError: (error) => {
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
+      },
+    }),
+  )
+
+  const profileLessonSessionVocabularyCreateManyMutation = useMutation(
+    trpc.profile.lessonSession.vocabulary.createMany.mutationOptions({
+      onSuccess: () => {
+        router.replace(`/(tabs)/lessons`)
       },
       onError: (error) => {
         if (error.data?.code === "PAYMENT_REQUIRED") {
@@ -93,6 +110,43 @@ const LessonSessionIdEnded: FC = () => {
       language: profileMe.data.learningLanguage,
       organizationId: currentOrganizationId,
     })
+  }
+
+  const handleToggleVocabulary = (vocabularyId: string) => {
+    setSelectedVocabulary((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(vocabularyId)) {
+        newSet.delete(vocabularyId)
+      } else {
+        newSet.add(vocabularyId)
+      }
+      return newSet
+    })
+  }
+
+  const handleToggleAll = () => {
+    if (selectedVocabulary.size === profileLessonSessionGet.data.vocabulary.length) {
+      // If all are selected, deselect all
+      setSelectedVocabulary(new Set())
+    } else {
+      // Select all
+      setSelectedVocabulary(new Set(profileLessonSessionGet.data.vocabulary.map((v) => v.id)))
+    }
+  }
+
+  const handleContinue = async () => {
+    if (selectedVocabulary.size > 0) {
+      // Get the vocabulary texts for selected items
+      const selectedVocabularyTexts = profileLessonSessionGet.data.vocabulary.filter((v) => selectedVocabulary.has(v.id)).map((v) => v.text)
+
+      await profileLessonSessionVocabularyCreateManyMutation.mutateAsync({
+        vocabulary: selectedVocabularyTexts,
+        lessonSessionId: id,
+        organizationId: currentOrganizationId,
+      })
+    } else {
+      router.replace(`/(tabs)/lessons`)
+    }
   }
 
   const stats = [
@@ -148,15 +202,21 @@ const LessonSessionIdEnded: FC = () => {
             <View className="flex flex-col gap-2">
               <View className="flex flex-row items-center justify-between gap-2">
                 <Text className="text-lg font-semibold text-neutral-700">Review New Vocabulary</Text>
-                <TouchableOpacity onPress={() => console.log("bookmark")} className="flex flex-row items-center gap-1">
-                  <Text className="text-sm font-semibold text-neutral-400">Save all</Text>
-                  <BookmarkIcon size={18} className="text-neutral-400" />
+                <TouchableOpacity onPress={handleToggleAll}>
+                  <Text className="text-sm font-semibold text-neutral-400">
+                    {selectedVocabulary.size === profileLessonSessionGet.data.vocabulary.length ? "Unselect all" : "Select all"}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View className="flex flex-col rounded-2xl border-2 border-neutral-100">
                 {profileLessonSessionGet.data.vocabulary.map((vocabulary, i) => (
                   <React.Fragment key={vocabulary.id}>
-                    <VocabularyCard vocabulary={vocabulary} onPlayPronunciation={handlePlayPronunciation} />
+                    <VocabularyCard
+                      vocabulary={vocabulary}
+                      onPlayPronunciation={handlePlayPronunciation}
+                      isSelected={selectedVocabulary.has(vocabulary.id)}
+                      onToggleSelect={handleToggleVocabulary}
+                    />
                     {i < profileLessonSessionGet.data.vocabulary.length - 1 && <View className="h-0.5 bg-neutral-100" />}
                   </React.Fragment>
                 ))}
@@ -167,7 +227,12 @@ const LessonSessionIdEnded: FC = () => {
 
         {/* Actions */}
         <View className="flex flex-col gap-2">
-          <Button.Root variant="primary" className="w-full" onPress={() => router.replace(`/(tabs)/lessons`)}>
+          <Button.Root
+            variant="primary"
+            className="w-full"
+            onPress={handleContinue}
+            loading={profileLessonSessionVocabularyCreateManyMutation.isPending}
+          >
             <Button.Text>Continue</Button.Text>
           </Button.Root>
         </View>
