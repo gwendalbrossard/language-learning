@@ -701,8 +701,6 @@ const LessonSession: FC = () => {
           )}
         </View>
 
-        {JSON.stringify(currentAction)}
-
         {/* Bottom */}
         <View className="mt-20 flex w-full flex-row items-end justify-center gap-8 px-4">
           {!sessionEnded && (
