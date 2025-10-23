@@ -8,6 +8,7 @@ import { ZPracticeSchema } from "@acme/validators"
 import { auth } from "./auth"
 import { handleLessonSession } from "./lesson"
 import { handleRoleplaySession } from "./roleplay"
+import { isUnlimited } from "./utils/revenuecat"
 
 // Express setup
 const app = express()
@@ -79,6 +80,11 @@ io.on("connection", async (socket) => {
   }
 
   const organization = member.organization
+
+  if (!isUnlimited(organization)) {
+    socket.disconnect()
+    return
+  }
 
   if ("roleplaySessionId" in parsedPractice.data) {
     console.log("Roleplay session ID", parsedPractice.data.roleplaySessionId)
