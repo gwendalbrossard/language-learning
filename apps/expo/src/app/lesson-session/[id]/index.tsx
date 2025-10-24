@@ -1,10 +1,11 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
+import type { LucideIcon } from "lucide-react-native"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { router, Stack, useLocalSearchParams } from "expo-router"
+import { router, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { BadgeQuestionMarkIcon, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
+import { BadgeQuestionMarkIcon, LightbulbIcon, NotepadTextIcon, PlayIcon, SettingsIcon, Volume2Icon, XIcon } from "lucide-react-native"
 import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -589,152 +590,134 @@ const LessonSession: FC = () => {
   }
 
   return (
-    <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
-      {/* Progress Bar Timer */}
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
+      <View className="flex flex-1 flex-col">
+        {/* Header */}
+        <View className="flex py-4">
+          <Text className="mx-auto line-clamp-1 max-w-[80%] text-center text-xl font-semibold text-neutral-700">
+            {profileLessonSessionGet.data.lesson.title}
+          </Text>
+        </View>
 
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: () => <Text className="text-lg font-semibold text-neutral-700">{profileLessonSessionGet.data.lesson.title}</Text>,
-          headerLeft: () => <View />,
-          /* headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeftIcon size={24} className="text-neutral-500" />
-            </TouchableOpacity>
-          ), */
-          /*  headerLeft: () => (
-            <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-custom-xs">
-              <Text className="text-sm font-medium text-neutral-700">{formatTime(timeRemaining)}</Text>
-            </View>
-          ), */
-          /* headerRight: () => (
-            <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
-              <Button.Icon icon={CircleStopIcon} />
-              <Button.Text>End</Button.Text>
-            </Button.Root>
-          ), */
-          /*   headerRight: () => (
-            <View className="flex flex-row items-center gap-2">
-              <Pressable className="flex size-12 flex-row items-center justify-center rounded-full bg-error-600 shadow-custom-xs" onPress={handleEndSession}>
-                <PhoneOff size={16} className="text-white" />
-              </Pressable>
-            </View>
-          ), */
-          headerRight: () => <View />,
-        }}
-      />
-      <View className="flex flex-1 flex-col pt-4">
         {/* Progress Bar Timer */}
-        <View className="flex flex-row items-center gap-3 px-4">
-          {/* <Text className="text-sm">⌛️</Text> */}
+        <View className="mt-2 flex flex-row items-center gap-3 px-4">
           <View className="h-4 flex-1 rounded-full bg-neutral-200">
             <Reanimated.View className="h-full rounded-full bg-success-400" style={progressAnimatedStyle} />
           </View>
-          {/* <Text className="text-sm">⏳</Text> */}
         </View>
 
         {/* Main content area */}
-        <View className="flex-1 flex-col items-center px-4">
-          <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "50%", height: "30%" }} />
-
-          {sessionEnded && (
-            <View className="items-center">
-              <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Your session has ended!</Text>
-              <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
+        <View className="mt-6 flex-1 flex-col items-center px-4">
+          <View className="relative flex h-[60%] w-full items-center justify-center">
+            <View className="absolute inset-0">
+              <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "100%" }} />
             </View>
-          )}
+            <Pressable
+              onPressIn={() => void startRecording()}
+              onPressOut={() => void stopRecording()}
+              className="flex h-full w-full items-center justify-center"
+            />
+          </View>
 
-          {!sessionEnded && currentAction && currentAction.action.actionType === "REPEAT" && (
-            <View className="w-full rounded-2xl border-2 border-neutral-100">
-              <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
-                {currentAction.action.targetContentRomanized && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
+          <View className="flex h-[40%] w-full flex-col items-center justify-center">
+            {sessionEnded && (
+              <View className="items-center">
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Your session has ended!</Text>
+                <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
+              </View>
+            )}
+
+            {!sessionEnded && !currentAction && (
+              <View className="items-center">
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Generating the content...</Text>
+                <Text className="font-shantell-medium text-center text-base text-neutral-500">
+                  Please wait while we prepare the content for your lesson.
+                </Text>
+              </View>
+            )}
+
+            {!sessionEnded && currentAction && currentAction.action.actionType === "REPEAT" && (
+              <View className="w-full rounded-2xl border-2 border-neutral-100">
+                <View className="flex flex-col gap-1 px-4 py-2">
+                  <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
+                  {currentAction.action.targetContentRomanized && (
+                    <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
+                  )}
+                </View>
+                <View className="h-0.5 bg-neutral-100" />
+                <View className="flex flex-col gap-1 px-4 py-2">
+                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentTranslated}</Text>
+                </View>
+                <View className="h-0.5 bg-neutral-100" />
+                <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
+                  <TouchableOpacity
+                    onPress={handleGetPronunciation}
+                    className="size-7 items-center justify-center rounded-xl"
+                    disabled={!currentAction}
+                  >
+                    <Volume2Icon size={24} className="text-neutral-400" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {!sessionEnded && currentAction && currentAction.action.actionType === "ANSWER" && (
+              <View className="w-full rounded-2xl border-2 border-neutral-100">
+                <View className="flex flex-col gap-1 px-4 py-2">
+                  <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
+                  {currentAction.action.targetContentRomanized && (
+                    <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
+                  )}
+                </View>
+                {currentAction.translation && (
+                  <>
+                    <View className="h-0.5 bg-neutral-100" />
+                    <View className="flex flex-col gap-1 px-4 py-2">
+                      <Text className="font-shantell-medium text-center text-base text-neutral-700">{currentAction.translation.translation}</Text>
+                      {currentAction.translation.translationRomanized && (
+                        <Text className="font-shantell-medium text-center text-sm text-neutral-400">
+                          {currentAction.translation.translationRomanized}
+                        </Text>
+                      )}
+                    </View>
+                  </>
                 )}
+                <View className="h-0.5 bg-neutral-100" />
+                <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
+                  <TouchableOpacity
+                    onPress={handleGetTranslation}
+                    className="size-7 items-center justify-center rounded-xl"
+                    disabled={!currentAction}
+                  >
+                    <BadgeQuestionMarkIcon size={24} className="text-neutral-400" />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View className="h-0.5 bg-neutral-100" />
-              <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentTranslated}</Text>
-              </View>
-              <View className="h-0.5 bg-neutral-100" />
-              <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
-                <TouchableOpacity
-                  onPress={handleGetPronunciation}
-                  className="size-7 items-center justify-center rounded-xl"
-                  disabled={!currentAction}
-                >
-                  <Volume2Icon size={24} className="text-neutral-400" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {!sessionEnded && currentAction && currentAction.action.actionType === "ANSWER" && (
-            <View className="w-full rounded-2xl border-2 border-neutral-100">
-              <View className="flex flex-col gap-1 px-4 py-2">
-                <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
-                {currentAction.action.targetContentRomanized && (
-                  <Text className="font-shantell-medium text-center text-base text-neutral-400">{currentAction.action.targetContentRomanized}</Text>
-                )}
-              </View>
-              {currentAction.translation && (
-                <>
-                  <View className="h-0.5 bg-neutral-100" />
-                  <View className="flex flex-col gap-1 px-4 py-2">
-                    <Text className="font-shantell-medium text-center text-base text-neutral-700">{currentAction.translation.translation}</Text>
-                    {currentAction.translation.translationRomanized && (
-                      <Text className="font-shantell-medium text-center text-sm text-neutral-400">
-                        {currentAction.translation.translationRomanized}
-                      </Text>
-                    )}
-                  </View>
-                </>
-              )}
-              <View className="h-0.5 bg-neutral-100" />
-              <View className="flex flex-row items-center justify-center gap-5 px-4 py-2">
-                <TouchableOpacity onPress={handleGetTranslation} className="size-7 items-center justify-center rounded-xl" disabled={!currentAction}>
-                  <BadgeQuestionMarkIcon size={24} className="text-neutral-400" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+            )}
+          </View>
         </View>
 
         {/* Bottom */}
-        <View className="mt-20 flex w-full flex-row items-end justify-center gap-8 px-4">
+        <View className="mt-6 flex w-full flex-row items-end justify-center px-4">
           {!sessionEnded && (
-            <>
-              {/* Help */}
-              <View className="flex w-[90px] flex-col items-center gap-3">
-                <TouchableOpacity
-                  onPress={() => bottomSheetSettingsRef.current?.present()}
-                  className={cn("size-14 items-center justify-center rounded-full bg-neutral-100")}
-                >
-                  <SettingsIcon size={24} className="text-neutral-500" />
-                </TouchableOpacity>
-              </View>
-
+            <View className="flex w-full flex-row items-end justify-evenly gap-4">
+              {/* <OptionButton Icon={NotepadTextIcon} onPress={() => bottomSheetTranscriptRef.current?.present()} />
+              <OptionButton Icon={LightbulbIcon} onPress={() => bottomSheetResponseSuggestionsRef.current?.present()} /> */}
+              <OptionButton Icon={SettingsIcon} onPress={() => bottomSheetSettingsRef.current?.present()} />
               {/* Record */}
               <View className="flex flex-col items-center gap-5">
-                <Text className="font-shantell-medium text-xs text-neutral-400">Hold to speak</Text>
+                {/* <Text className="font-shantell-medium text-xs text-neutral-400">Hold to speak</Text> */}
                 <Pressable
                   onPressIn={() => void startRecording()}
                   onPressOut={() => void stopRecording()}
-                  className={cn(`flex size-24 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
+                  className={cn(`flex size-24 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-neutral-800")}
                 >
                   <Microphone color="white" height={56} width={56} />
                   {/* {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />} */}
                 </Pressable>
               </View>
-
-              {/* Transcript */}
-              <View className="flex w-[90px] flex-col items-center gap-3">
-                <TouchableOpacity onPress={() => handleEndSession()} className="size-14 items-center justify-center rounded-full bg-neutral-100">
-                  <XIcon size={24} className="text-neutral-500" />
-                </TouchableOpacity>
-              </View>
-            </>
+              <OptionButton Icon={XIcon} onPress={() => handleEndSession()} />
+            </View>
           )}
           {sessionEnded && (
             <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={isNavigating}>
@@ -758,3 +741,15 @@ const LessonSession: FC = () => {
 }
 
 export default LessonSession
+
+type OptionButtonProps = {
+  Icon: LucideIcon
+  onPress: () => void
+}
+const OptionButton: FC<OptionButtonProps> = ({ Icon, onPress }) => {
+  return (
+    <TouchableOpacity onPress={onPress} className={cn("size-16 items-center justify-center rounded-full bg-neutral-100")}>
+      <Icon size={26} strokeWidth={2.5} className="text-neutral-500" />
+    </TouchableOpacity>
+  )
+}
