@@ -6,7 +6,7 @@ import { z } from "zod/v4"
 import { RoleplaySessionMessageRole } from "@acme/db"
 import { ZProfileRoleplaySessionGetResponseSuggestionsSchema } from "@acme/validators"
 
-import { organizationProcedure } from "../../../trpc"
+import { organizationUnlimitedProcedure } from "../../../trpc"
 
 const ZResponseSuggestionsSchema = z.object({
   suggestions: z
@@ -21,7 +21,7 @@ const ZResponseSuggestionsSchema = z.object({
     .describe("Array of 3 response suggestions with varying difficulty levels"),
 })
 
-export const getResponseSuggestions = organizationProcedure
+export const getResponseSuggestions = organizationUnlimitedProcedure
   .input(ZProfileRoleplaySessionGetResponseSuggestionsSchema)
   .mutation(async ({ ctx, input }) => {
     const roleplaySession = await ctx.db.roleplaySession.findFirst({
