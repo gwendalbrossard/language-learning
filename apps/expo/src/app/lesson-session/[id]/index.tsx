@@ -5,17 +5,7 @@ import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { router, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import {
-  BadgeQuestionMarkIcon,
-  ClockIcon,
-  EllipsisIcon,
-  LanguagesIcon,
-  LightbulbIcon,
-  NotepadTextIcon,
-  PlayIcon,
-  Volume2Icon,
-  XIcon,
-} from "lucide-react-native"
+import { BadgeQuestionMarkIcon, ClockIcon, LanguagesIcon, LightbulbIcon, NotepadTextIcon, PlayIcon, Volume2Icon, XIcon } from "lucide-react-native"
 import { ActivityIndicator, Alert, Animated, Image, Pressable, StyleSheet, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -25,6 +15,7 @@ import type { RouterOutputs } from "@acme/api"
 import type { TActionSchema, TPracticeSchema } from "@acme/validators"
 
 import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
+import { BottomSheetInformation } from "~/components/routes/lesson-session/[id]/bottom-sheet-information"
 import { BottomSheetResponseSuggestions } from "~/components/routes/lesson-session/[id]/bottom-sheet-response-suggestions"
 import { BottomSheetTranscript } from "~/components/routes/lesson-session/[id]/bottom-sheet-transcript"
 import { BottomSheetVocabularySuggestions } from "~/components/routes/lesson-session/[id]/bottom-sheet-vocabulary-suggestions"
@@ -191,6 +182,7 @@ const LessonSession: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const bottomSheetInformationRef = useRef<BottomSheetModal>(null)
   const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
   const bottomSheetVocabularySuggestionsRef = useRef<BottomSheetModal>(null)
   const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
@@ -611,23 +603,34 @@ const LessonSession: FC = () => {
     })
   }
 
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60)
+
+    return `${minutes} minutes left`
+  }
+
   return (
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col">
         {/* Header */}
 
         <View className="flex flex-row items-center justify-between gap-5 px-4 py-4">
-          <TouchableOpacity onPress={() => router.back()} className={cn("size-10 items-center justify-center rounded-full bg-neutral-100")}>
-            <ClockIcon size={20} strokeWidth={2.5} className="text-neutral-500" />
-          </TouchableOpacity>
-          <View className="h-4 flex-1 rounded-full bg-neutral-200">
-            <Reanimated.View className="h-full rounded-full bg-success-400" style={progressAnimatedStyle} />
+          <View className="size-10 bg-transparent" />
+          <View className="relative h-10 w-2/3 rounded-full bg-neutral-200">
+            <Reanimated.View className="h-full rounded-full bg-success-100" style={progressAnimatedStyle} />
+            <View className="absolute inset-0 flex flex-row items-center justify-center gap-1.5">
+              <ClockIcon size={20} strokeWidth={2.5} className="text-neutral-500/80" />
+              <Text className="font-shantell-medium text-center text-sm text-neutral-500">
+                {formatTime(5 * 60 - (Date.now() - sessionStartTimeRef.current) / 1000)}
+              </Text>
+            </View>
           </View>
+
           <TouchableOpacity
-            onPress={() => bottomSheetTranscriptRef.current?.present()}
+            onPress={() => bottomSheetInformationRef.current?.present()}
             className={cn("size-10 items-center justify-center rounded-full bg-neutral-100")}
           >
-            <NotepadTextIcon size={20} strokeWidth={2.5} className="text-neutral-500" />
+            <Text className="font-shantell-medium text-lg text-neutral-500">i</Text>
           </TouchableOpacity>
         </View>
 
@@ -735,7 +738,7 @@ const LessonSession: FC = () => {
         </View>
 
         {/* Bottom */}
-        <View className="mt-6 flex w-full flex-col items-end justify-center px-4">
+        <View className="mb-2 mt-6 flex w-full flex-col items-end justify-center px-4">
           {!sessionEnded && (
             <View className="flex w-full flex-row items-end justify-evenly gap-4">
               <OptionButton
@@ -748,7 +751,7 @@ const LessonSession: FC = () => {
                 onPress={() => void handleGetVocabularySuggestions()}
                 loading={profileGetVocabularySuggestionsMutation.isPending}
               />
-              <OptionButton Icon={EllipsisIcon} onPress={() => console.log("TODO: Settings")} />
+              <OptionButton Icon={NotepadTextIcon} onPress={() => bottomSheetTranscriptRef.current?.present()} />
               <OptionButton Icon={XIcon} onPress={() => handleEndSession()} />
             </View>
           )}
@@ -761,6 +764,7 @@ const LessonSession: FC = () => {
         </View>
       </View>
 
+      <BottomSheetInformation ref={bottomSheetInformationRef} lessonSession={profileLessonSessionGet.data} />
       <BottomSheetTranscript ref={bottomSheetTranscriptRef} messages={messages} />
       <BottomSheetResponseSuggestions ref={bottomSheetResponseSuggestionsRef} suggestions={getCurrentResponseSuggestions()} />
       <BottomSheetVocabularySuggestions ref={bottomSheetVocabularySuggestionsRef} suggestions={getCurrentVocabularySuggestions()} />
