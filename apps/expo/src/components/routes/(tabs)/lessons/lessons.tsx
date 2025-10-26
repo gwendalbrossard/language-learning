@@ -138,7 +138,7 @@ const Lessons: FC = () => {
         filteredCount={filteredLessons.length}
       />
 
-      <BottomSheetLessonDetails ref={lessonDetailsBottomSheetRef} lesson={selectedLesson} onClose={handleCloseDetails} />
+      {selectedLesson && <BottomSheetLessonDetails ref={lessonDetailsBottomSheetRef} lesson={selectedLesson} onClose={handleCloseDetails} />}
     </View>
   )
 }

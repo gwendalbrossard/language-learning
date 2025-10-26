@@ -138,7 +138,9 @@ const Roleplays: FC = () => {
         filteredCount={filteredRoleplays.length}
       />
 
-      <BottomSheetRoleplayDetails ref={roleplayDetailsBottomSheetRef} roleplay={selectedRoleplay} onClose={handleCloseDetails} />
+      {selectedRoleplay && (
+        <BottomSheetRoleplayDetails ref={roleplayDetailsBottomSheetRef} roleplay={selectedRoleplay} onClose={handleCloseDetails} />
+      )}
     </View>
   )
 }
