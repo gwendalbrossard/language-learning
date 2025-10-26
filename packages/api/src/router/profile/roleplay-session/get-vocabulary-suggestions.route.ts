@@ -3,27 +3,27 @@ import { TRPCError } from "@trpc/server"
 import { generateObject } from "ai"
 import { z } from "zod/v4"
 
-import type { LessonSessionSelected, ProfileSelected } from "@acme/db"
-import { lessonSessionSelect, VocabularyType } from "@acme/db"
-import { ZProfileLessonSessionGetVocabularySuggestionsSchema } from "@acme/validators"
+import type { ProfileSelected, RoleplaySessionSelected } from "@acme/db"
+import { roleplaySessionSelect, VocabularyType } from "@acme/db"
+import { ZProfileRoleplaySessionGetVocabularySuggestionsSchema } from "@acme/validators"
 
 import { organizationUnlimitedProcedure } from "../../../trpc"
 
 export const getVocabularySuggestions = organizationUnlimitedProcedure
-  .input(ZProfileLessonSessionGetVocabularySuggestionsSchema)
+  .input(ZProfileRoleplaySessionGetVocabularySuggestionsSchema)
   .mutation(async ({ ctx, input }) => {
-    const lessonSession = await ctx.db.lessonSession.findFirst({
+    const roleplaySession = await ctx.db.roleplaySession.findFirst({
       where: {
-        AND: [{ id: input.lessonSessionId }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }],
+        AND: [{ id: input.roleplaySessionId }, { profileId: ctx.profile.id }, { organizationId: ctx.organization.id }],
       },
-      select: lessonSessionSelect,
+      select: roleplaySessionSelect,
     })
 
-    if (!lessonSession) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Lesson session not found" })
+    if (!roleplaySession) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Roleplay session not found" })
     }
 
-    const vocabularySuggestions = await generateVocabularySuggestions({ lessonSession: lessonSession, profile: ctx.profile })
+    const vocabularySuggestions = await generateVocabularySuggestions({ roleplaySession: roleplaySession, profile: ctx.profile })
 
     return vocabularySuggestions
   })
@@ -52,13 +52,13 @@ const ZVocabularySuggestionSchema = z.object({
 })
 
 type GetVocabularySuggestionsProps = {
-  lessonSession: LessonSessionSelected
+  roleplaySession: RoleplaySessionSelected
   profile: ProfileSelected
 }
-const generateVocabularySuggestions = async ({ lessonSession, profile }: GetVocabularySuggestionsProps) => {
-  const prompt = `You are an expert language tutor generating vocabulary suggestions for a structured lesson.
+const generateVocabularySuggestions = async ({ roleplaySession, profile }: GetVocabularySuggestionsProps) => {
+  const prompt = `You are an expert language tutor generating vocabulary suggestions for a roleplay scenario.
 
-CRITICAL: Generate 10 vocabulary items (words, phrases, and expressions) that are relevant to this lesson context. Focus on providing a balanced mix of vocabulary types that will help learners expand their language skills.
+CRITICAL: Generate 10 vocabulary items (words, phrases, and expressions) that are relevant to this roleplay scenario context. Focus on providing a balanced mix of vocabulary types that will help learners expand their language skills.
 
 You will be provided with sections delimited exclusively using AsciiDoc title formatting. These sections contain either the prompt to follow or additional context for you to use in crafting your response.
 In AsciiDoc:
@@ -69,35 +69,35 @@ In AsciiDoc:
 Only the AsciiDoc titles delimit the sections. Nothing else is used for this purpose.
 
 = TASK =
-Generate 10 vocabulary suggestions that are relevant to this lesson context. Include a balanced mix of words, phrases, and expressions that learners should know for this topic.
+Generate 10 vocabulary suggestions that are relevant to this roleplay scenario context. Include a balanced mix of words, phrases, and expressions that learners should know for this scenario.
 
 = LEARNER PROFILE =
 - Learning Language: ${profile.learningLanguage}
 - Native Language: ${profile.nativeLanguage}
 - Learning Language Level: ${profile.learningLanguageLevel}
 
-= LESSON CONTEXT =
-== Lesson Details ==
-- Title: "${lessonSession.lesson.title}"
-- Description: ${lessonSession.lesson.description}
+= ROLEPLAY SCENARIO CONTEXT =
+== Scenario Details ==
+- Title: "${roleplaySession.roleplay.title}"
+- Description: ${roleplaySession.roleplay.description}
 
 = REQUIREMENTS =
 
 == Vocabulary Types ==
 Include a balanced mix of:
 === WORD ===
-Single words that are fundamental to the lesson topic
+Single words that are fundamental to the roleplay scenario
 
 === PHRASE ===
-Multi-word expressions with specific meanings relevant to the lesson
+Multi-word expressions with specific meanings relevant to the scenario
 
 === EXPRESSION ===
 Idiomatic or colloquial phrases that native speakers commonly use in this context
 
 == Educational Value ==
-- Select vocabulary that directly relates to the lesson topic and goals
+- Select vocabulary that directly relates to the roleplay scenario and goals
 - Include items that learners are likely to encounter in real-world usage
-- Ensure vocabulary is appropriate for the lesson's difficulty level
+- Ensure vocabulary is appropriate for the scenario's difficulty level
 - Focus on practical, useful language items
 
 == Language Requirements ==
@@ -107,13 +107,13 @@ Idiomatic or colloquial phrases that native speakers commonly use in this contex
 - Select items that complement each other and build a cohesive vocabulary set
 
 == Contextual Relevance ==
-- All vocabulary should be directly relevant to the lesson topic
+- All vocabulary should be directly relevant to the roleplay scenario
 - Consider what vocabulary would be most useful for learners in this context
 - Include both basic and more advanced vocabulary to support different learning levels
 - Focus on vocabulary that appears in authentic language use
 
 = OUTPUT GUIDELINES =
-Generate 10 vocabulary items that form a comprehensive set for this lesson topic. Each item should include the original text, accurate translation, appropriate romanization (if needed), and correct type classification.`
+Generate 10 vocabulary items that form a comprehensive set for this roleplay scenario. Each item should include the original text, accurate translation, appropriate romanization (if needed), and correct type classification.`
 
   const result = await generateObject({
     model: azure("gpt-4o-mini"),
