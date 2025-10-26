@@ -4,7 +4,7 @@ import { router } from "expo-router"
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
 import { useMutation } from "@tanstack/react-query"
 import { Play } from "lucide-react-native"
-import { Alert, Dimensions, View } from "react-native"
+import { Alert, View } from "react-native"
 
 import type { Difficulty } from "~/components/common/difficulty"
 import type { DifficultyIconProps } from "~/components/common/filters"
@@ -18,7 +18,7 @@ import { queryClient, trpc } from "~/utils/api"
 import { useUserStore } from "~/utils/zustand/user-store"
 
 type Props = {
-  lesson: RouterOutputs["profile"]["lesson"]["getAll"][number] | null
+  lesson: RouterOutputs["profile"]["lesson"]["getAll"][number]
   onClose: () => void
 }
 
@@ -51,69 +51,65 @@ const BottomSheetLessonDetails = forwardRef<BottomSheetModal, Props>(({ lesson, 
   )
 
   const handleStartLesson = () => {
-    if (!lesson) throw new Error("Lesson not found")
     profileLessonSessionCreateMutation.mutate({ lessonId: lesson.id, organizationId: currentOrganizationId })
   }
 
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={["50%"]}
-      maxDynamicContentSize={Dimensions.get("window").height * 0.8}
+      snapPoints={["80%"]}
       backdropComponent={BottomSheetBackdrop}
       enablePanDownToClose
       stackBehavior="push"
-      enableDynamicSizing={false}
+      enableDynamicSizing={true}
       onDismiss={onClose}
     >
-      {lesson && (
-        <BottomSheetView className="h-full flex-1 justify-between px-4 pb-10 pt-2">
-          {/* Lesson Details */}
-          <View className="flex flex-col gap-6">
-            {/* Header */}
-            <View className="flex flex-col items-center gap-4">
-              <Text className="text-4xl">{lesson.emoji}</Text>
-              <View className="flex flex-col items-center gap-2">
-                <Text className="text-center text-2xl font-semibold text-neutral-900">{lesson.title}</Text>
+      <BottomSheetView className="px-4 pb-10 pt-2">
+        {/* Lesson Details */}
+        <View className="flex flex-col gap-6">
+          {/* Header */}
+          <View className="flex flex-col items-center gap-4">
+            <Text className="text-4xl">{lesson.emoji}</Text>
+            <View className="flex flex-col items-center gap-2">
+              <Text className="text-center text-2xl font-semibold text-neutral-900">{lesson.title}</Text>
 
-                {/* Category and difficulty */}
-                <View className="flex flex-row items-center gap-2.5">
-                  <Badge.Root variant="white" size="md">
-                    <Badge.Text>
-                      {lesson.category.emoji} {lesson.category.name}
-                    </Badge.Text>
-                  </Badge.Root>
+              {/* Category and difficulty */}
+              <View className="flex flex-row items-center gap-2.5">
+                <Badge.Root variant="white" size="md">
+                  <Badge.Text>
+                    {lesson.category.emoji} {lesson.category.name}
+                  </Badge.Text>
+                </Badge.Root>
 
-                  <Badge.Root variant="white" size="sm">
-                    <DifficultyIcon difficulty={lesson.difficulty as Difficulty} />
-                    <Badge.Text>{getDifficultyName(lesson.difficulty as Difficulty)}</Badge.Text>
-                  </Badge.Root>
-                </View>
+                <Badge.Root variant="white" size="sm">
+                  <DifficultyIcon difficulty={lesson.difficulty as Difficulty} />
+                  <Badge.Text>{getDifficultyName(lesson.difficulty as Difficulty)}</Badge.Text>
+                </Badge.Root>
               </View>
             </View>
-
-            {/* Description */}
-            <View className="flex flex-col gap-1">
-              <Text className="text-lg font-semibold text-neutral-900">About This Lesson</Text>
-              <Text className="font-base text-base font-medium leading-6 text-neutral-500">{lesson.description}</Text>
-            </View>
           </View>
 
-          {/* Start Button */}
-          <View className="pt-6">
-            <Button.Root
-              className="w-full"
-              size="lg"
-              variant="primary"
-              onPress={handleStartLesson}
-              loading={profileLessonSessionCreateMutation.isPending}
-            >
-              <Button.Icon icon={Play} />
-              <Button.Text>Start Lesson</Button.Text>
-            </Button.Root>
+          {/* Description */}
+          <View className="flex flex-col gap-1">
+            <Text className="text-lg font-semibold text-neutral-900">About This Lesson</Text>
+            <Text className="font-base text-base font-medium leading-6 text-neutral-500">{lesson.description}</Text>
           </View>
-        </BottomSheetView>
-      )}
+        </View>
+
+        {/* Start Button */}
+        <View className="pt-6">
+          <Button.Root
+            className="w-full"
+            size="lg"
+            variant="primary"
+            onPress={handleStartLesson}
+            loading={profileLessonSessionCreateMutation.isPending}
+          >
+            <Button.Icon icon={Play} />
+            <Button.Text>Start Lesson</Button.Text>
+          </Button.Root>
+        </View>
+      </BottomSheetView>
     </BottomSheetModal>
   )
 })
