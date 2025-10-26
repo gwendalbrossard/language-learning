@@ -109,9 +109,8 @@ export const BottomSheetVocabularySuggestions = forwardRef<BottomSheetModal, Pro
     >
       <View className="flex-1">
         {/* Fixed Header */}
-        <View className="border-b border-neutral-200 px-4 pb-4 pt-1">
+        <View className="border-b-2 border-neutral-100 px-4 pb-4 pt-1">
           <Text className="text-center text-lg font-semibold">Vocabulary Suggestions</Text>
-          <Text className="mt-1 text-center text-sm text-neutral-500">Discover useful new words and phrases for this lesson</Text>
         </View>
 
         <ScrollView className="mb-4 flex-1 px-4 py-6">
