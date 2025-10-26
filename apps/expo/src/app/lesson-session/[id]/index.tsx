@@ -634,7 +634,7 @@ const LessonSession: FC = () => {
             )}
 
             {!sessionEnded && currentAction && currentAction.action.actionType === "REPEAT" && (
-              <View className="w-full rounded-2xl border-2 border-neutral-100">
+              <View className="w-full max-w-[90%] rounded-2xl border-2 border-neutral-100">
                 <View className="flex flex-col gap-1 px-4 py-2">
                   <Text className="font-shantell-semibold text-center text-lg text-neutral-900">{currentAction.action.targetContent}</Text>
                   {currentAction.action.targetContentRomanized && (
