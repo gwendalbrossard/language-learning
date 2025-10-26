@@ -62,8 +62,11 @@ const RoleplaySession: FC = () => {
         bottomSheetResponseSuggestionsRef.current?.present()
       },
       onError: (error) => {
-        console.error("Failed to get response suggestions:", error)
-        Alert.alert("Error", "Failed to get response suggestions. Please try again.")
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
       },
     }),
   )
@@ -548,7 +551,8 @@ const RoleplaySession: FC = () => {
           headerShown: true,
           headerShadowVisible: false,
           headerTitle: () => <Text className="text-lg font-medium text-neutral-700">{profileRoleplaySessionGet.data.roleplay.title}</Text>,
-          headerLeft: () => <View />,
+          headerLeft: () => null,
+          headerRight: () => null,
           /* headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <ChevronLeftIcon size={24} className="text-neutral-500" />
@@ -572,7 +576,6 @@ const RoleplaySession: FC = () => {
               </Pressable>
             </View>
           ), */
-          headerRight: () => <View />,
         }}
       />
       <View className="flex flex-1 flex-col pt-4">
