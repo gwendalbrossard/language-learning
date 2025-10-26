@@ -186,9 +186,11 @@ const LessonSession: FC = () => {
 
   const endSession = () => {
     setSessionEnded(true)
+    setRemainingTime(0)
 
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
     }
   }
 

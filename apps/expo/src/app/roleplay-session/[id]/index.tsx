@@ -160,9 +160,11 @@ const RoleplaySession: FC = () => {
 
   const endSession = useCallback(() => {
     setSessionEnded(true)
+    setRemainingTime(0)
 
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
     }
 
     // Trigger feedback generation immediately when session ends
