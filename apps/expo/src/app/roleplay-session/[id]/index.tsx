@@ -1,24 +1,26 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet"
+import type { LucideIcon } from "lucide-react-native"
 import type { FC } from "react"
 import type { Socket } from "socket.io-client"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { router, Stack, useLocalSearchParams } from "expo-router"
+import { router, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { PlayIcon, SettingsIcon, XIcon } from "lucide-react-native"
-import { Alert, Animated, Pressable, TouchableOpacity, View } from "react-native"
+import { ClockIcon, LanguagesIcon, LightbulbIcon, NotepadTextIcon, PlayIcon, XIcon } from "lucide-react-native"
+import { ActivityIndicator, Alert, Animated, Image, Pressable, StyleSheet, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
-import Rive, { AutoBind, useRive, useRiveNumber, useRiveString } from "rive-react-native"
+import { useRive, useRiveNumber, useRiveString } from "rive-react-native"
 import { io } from "socket.io-client"
 
 import type { RouterOutputs } from "@acme/api"
 import type { TFeedbackSchema, TPracticeSchema } from "@acme/validators"
 
 import type { LevelUpdateEvent } from "../../../../modules/my-module/src/MyModule.types"
-import Microphone from "~/components/common/svg/microphone"
+import { BottomSheetInformation } from "~/components/routes/roleplay-session/[id]/bottom-sheet-information"
 import { BottomSheetResponseSuggestions } from "~/components/routes/roleplay-session/[id]/bottom-sheet-response-suggestions"
 import BottomSheetSettings from "~/components/routes/roleplay-session/[id]/bottom-sheet-settings"
 import { BottomSheetTranscript } from "~/components/routes/roleplay-session/[id]/bottom-sheet-transcript"
+import { BottomSheetVocabularySuggestions } from "~/components/routes/roleplay-session/[id]/bottom-sheet-vocabulary-suggestions"
 import * as Button from "~/ui/button"
 import { Text } from "~/ui/text"
 import { queryClient, trpc } from "~/utils/api"
@@ -97,6 +99,21 @@ const RoleplaySession: FC = () => {
     }),
   )
 
+  const profileRoleplaySessionGetVocabularySuggestionsMutation = useMutation(
+    trpc.profile.roleplaySession.getVocabularySuggestions.mutationOptions({
+      onSuccess: () => {
+        bottomSheetVocabularySuggestionsRef.current?.present()
+      },
+      onError: (error) => {
+        if (error.data?.code === "PAYMENT_REQUIRED") {
+          Alert.alert("Subscription required", "You need to upgrade your plan to have access to this feature")
+        } else {
+          Alert.alert("An error occurred", error.message ? error.message : "An unknown error occurred")
+        }
+      },
+    }),
+  )
+
   const [messages, setMessages] = useState<Message[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
@@ -104,6 +121,8 @@ const RoleplaySession: FC = () => {
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [remainingTime, setRemainingTime] = useState(5 * 60)
+
   const [recordingLevel, setRecordingLevel] = useState(0)
   const [playbackLevel, setPlaybackLevel] = useState(0)
 
@@ -111,7 +130,7 @@ const RoleplaySession: FC = () => {
   const [smoothVolume, setSmoothVolume] = useState(0)
 
   // Rive animation - states and volume only
-  const [setRiveRef, riveRef] = useRive()
+  const [_setRiveRef, riveRef] = useRive()
   const [_states, setStates] = useRiveString(riveRef, "States")
   const [_volume, setVolume] = useRiveNumber(riveRef, "Volume")
 
@@ -133,8 +152,10 @@ const RoleplaySession: FC = () => {
   const sentUserMessageRef = useRef<string | null>(null)
   const sessionStartTimeRef = useRef<number>(Date.now())
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const bottomSheetInformationRef = useRef<BottomSheetModal>(null)
   const bottomSheetTranscriptRef = useRef<BottomSheetModal>(null)
   const bottomSheetResponseSuggestionsRef = useRef<BottomSheetModal>(null)
+  const bottomSheetVocabularySuggestionsRef = useRef<BottomSheetModal>(null)
   const bottomSheetSettingsRef = useRef<BottomSheetModal>(null)
 
   const endSession = useCallback(() => {
@@ -242,6 +263,8 @@ const RoleplaySession: FC = () => {
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
       const remaining = Math.max(0, 5 * 60 - elapsed) // 5 minutes - elapsed
+
+      setRemainingTime(remaining)
 
       if (remaining === 0) {
         endSession()
@@ -542,107 +565,111 @@ const RoleplaySession: FC = () => {
     })
   }
 
-  return (
-    <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
-      {/* Progress Bar Timer */}
+  const getCurrentVocabularySuggestions = () => {
+    return profileRoleplaySessionGetVocabularySuggestionsMutation.data?.suggestions ?? []
+  }
 
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: () => <Text className="text-lg font-medium text-neutral-700">{profileRoleplaySessionGet.data.roleplay.title}</Text>,
-          headerLeft: () => null,
-          headerRight: () => null,
-          /* headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeftIcon size={24} className="text-neutral-500" />
-            </TouchableOpacity>
-          ), */
-          /*  headerLeft: () => (
-            <View className="flex size-12 flex-row items-center justify-center rounded-full border border-neutral-300 bg-white shadow-custom-xs">
-              <Text className="text-sm font-medium text-neutral-700">{formatTime(timeRemaining)}</Text>
+  const handleGetVocabularySuggestions = async () => {
+    if (
+      profileRoleplaySessionGetVocabularySuggestionsMutation.data &&
+      profileRoleplaySessionGetVocabularySuggestionsMutation.data.suggestions.length > 0
+    ) {
+      bottomSheetVocabularySuggestionsRef.current?.present()
+      return
+    }
+
+    await profileRoleplaySessionGetVocabularySuggestionsMutation.mutateAsync({
+      roleplaySessionId: id,
+      organizationId: currentOrganizationId,
+    })
+  }
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60)
+
+    return `${minutes} minutes left`
+  }
+
+  return (
+    <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
+      <View className="flex flex-1 flex-col">
+        {/* Header */}
+        <View className="flex flex-row items-center justify-between gap-5 px-4 py-4">
+          <View className="size-10 bg-transparent" />
+          <View className="relative h-10 w-2/3 rounded-full bg-neutral-100">
+            <Reanimated.View className="h-full rounded-full bg-success-100" style={progressAnimatedStyle} />
+            <View className="absolute inset-0 flex flex-row items-center justify-center gap-1.5">
+              <ClockIcon size={20} strokeWidth={2.5} className="text-neutral-500/80" />
+              <Text className="font-shantell-medium text-center text-sm text-neutral-500">{formatTime(remainingTime)}</Text>
             </View>
-          ), */
-          /* headerRight: () => (
-            <Button.Root variant="destructive" size="sm" onPress={handleEndSession}>
-              <Button.Icon icon={CircleStopIcon} />
-              <Button.Text>End</Button.Text>
-            </Button.Root>
-          ), */
-          /*   headerRight: () => (
-            <View className="flex flex-row items-center gap-2">
-              <Pressable className="flex size-12 flex-row items-center justify-center rounded-full bg-error-600 shadow-custom-xs" onPress={handleEndSession}>
-                <PhoneOff size={16} className="text-white" />
-              </Pressable>
-            </View>
-          ), */
-        }}
-      />
-      <View className="flex flex-1 flex-col pt-4">
-        {/* Progress Bar Timer */}
-        <View className="flex flex-row items-center gap-3 px-4">
-          {/* <Text className="text-sm">⌛️</Text> */}
-          <View className="h-4 flex-1 rounded-full bg-neutral-200">
-            <Reanimated.View className="h-full rounded-full bg-success-400" style={progressAnimatedStyle} />
           </View>
-          {/* <Text className="text-sm">⏳</Text> */}
+
+          <TouchableOpacity
+            onPress={() => bottomSheetInformationRef.current?.present()}
+            className={cn("size-10 items-center justify-center rounded-full bg-neutral-100")}
+          >
+            <Text className="font-shantell-medium text-lg text-neutral-500">i</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Main content area */}
-        <View className="flex-1 flex-col items-center px-4">
-          <Rive
-            ref={setRiveRef}
-            url="https://assets.studyunfold.com/rives/floral.riv"
-            style={{ width: "500%", height: "50%" }}
-            dataBinding={AutoBind(true)}
-            stateMachineName="State Machine 1"
-          />
+        <View className="mt-6 flex-1 flex-col items-center px-4">
+          <View className="flex h-[40%] w-full flex-col items-center justify-center">
+            {sessionEnded && (
+              <View className="items-center">
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Your session has ended!</Text>
+                <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
+              </View>
+            )}
 
-          {sessionEnded && (
-            <View className="items-center">
-              <Text className="font-shantell-semibold text-center text-lg text-neutral-700">Your session has ended!</Text>
-              <Text className="font-shantell-medium text-center text-base text-neutral-500">Click on "Review Session" to continue.</Text>
+            {!sessionEnded && (
+              <View className="flex h-full flex-1 flex-col items-center justify-center">
+                <Text className="font-shantell-semibold text-center text-lg text-neutral-700">{getLatestAssistantMessage()?.transcript}</Text>
+              </View>
+            )}
+          </View>
+
+          <View className="relative flex h-[60%] w-full items-center justify-center">
+            <View className="absolute inset-0 flex items-center justify-center">
+              {/* <Rive url="https://assets.studyunfold.com/rives/fire.riv" style={{ width: "100%" }} /> */}
+              <Image
+                style={
+                  StyleSheet.create({
+                    stretch: {
+                      width: "50%",
+                      height: "50%",
+                      resizeMode: "contain",
+                    },
+                  }).stretch
+                }
+                source={{ uri: "https://assets.studyunfold.com/rose.png" }}
+              />
             </View>
-          )}
-          {!sessionEnded && (
-            <Text className="font-shantell-semibold text-center text-lg text-neutral-700">{getLatestAssistantMessage()?.transcript}</Text>
-          )}
+            <Pressable
+              onPressIn={() => void startRecording()}
+              onPressOut={() => void stopRecording()}
+              className="flex h-full w-full items-center justify-center"
+            />
+          </View>
         </View>
 
         {/* Bottom */}
-        <View className="mt-20 flex w-full flex-row items-end justify-center gap-8 px-4">
+        <View className="mb-2 mt-6 flex w-full flex-col items-end justify-center px-4">
           {!sessionEnded && (
-            <>
-              {/* Help */}
-              <View className="flex w-[90px] flex-col items-center gap-3">
-                <TouchableOpacity
-                  onPress={() => bottomSheetSettingsRef.current?.present()}
-                  className={cn("size-14 items-center justify-center rounded-full bg-neutral-100")}
-                >
-                  <SettingsIcon size={24} className="text-neutral-500" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Record */}
-              <View className="flex flex-col items-center gap-5">
-                <Text className="font-shantell-medium text-xs text-neutral-400">Hold to speak</Text>
-                <Pressable
-                  onPressIn={() => void startRecording()}
-                  onPressOut={() => void stopRecording()}
-                  className={cn(`flex size-24 items-center justify-center rounded-full`, isRecording ? "bg-error-600" : "bg-primary-600")}
-                >
-                  <Microphone color="white" height={56} width={56} />
-                  {/* {isRecording ? <Square size={56} color="white" fill="white" /> : <Mic size={56} className="text-white" />} */}
-                </Pressable>
-              </View>
-
-              {/* Transcript */}
-              <View className="flex w-[90px] flex-col items-center gap-3">
-                <TouchableOpacity onPress={() => handleEndSession()} className="size-14 items-center justify-center rounded-full bg-neutral-100">
-                  <XIcon size={24} className="text-neutral-500" />
-                </TouchableOpacity>
-              </View>
-            </>
+            <View className="flex w-full flex-row items-end justify-evenly gap-4">
+              <OptionButton
+                Icon={LightbulbIcon}
+                onPress={() => void handleGetResponseSuggestions()}
+                loading={profileGetResponseSuggestionsMutation.isPending}
+              />
+              <OptionButton
+                Icon={LanguagesIcon}
+                onPress={() => void handleGetVocabularySuggestions()}
+                loading={profileRoleplaySessionGetVocabularySuggestionsMutation.isPending}
+              />
+              <OptionButton Icon={NotepadTextIcon} onPress={() => bottomSheetTranscriptRef.current?.present()} />
+              <OptionButton Icon={XIcon} onPress={() => handleEndSession()} />
+            </View>
           )}
           {sessionEnded && (
             <Button.Root className="w-full" size="lg" variant="primary" onPress={goToEnded} loading={isNavigating}>
@@ -660,9 +687,25 @@ const RoleplaySession: FC = () => {
         onOpenResponseSuggestions={() => void handleGetResponseSuggestions()}
       />
       <BottomSheetTranscript ref={bottomSheetTranscriptRef} messages={messages} />
+      <BottomSheetVocabularySuggestions ref={bottomSheetVocabularySuggestionsRef} suggestions={getCurrentVocabularySuggestions()} />
       <BottomSheetResponseSuggestions ref={bottomSheetResponseSuggestionsRef} suggestions={getCurrentSuggestions()} />
+      <BottomSheetInformation ref={bottomSheetInformationRef} roleplaySession={profileRoleplaySessionGet.data} />
     </SafeAreaView>
   )
 }
 
 export default RoleplaySession
+
+type OptionButtonProps = {
+  Icon: LucideIcon
+  onPress: () => void
+  loading?: boolean
+}
+const OptionButton: FC<OptionButtonProps> = ({ Icon, onPress, loading }) => {
+  return (
+    <TouchableOpacity onPress={onPress} className={cn("size-16 items-center justify-center rounded-full bg-neutral-100")}>
+      {!loading && <Icon size={26} strokeWidth={2.5} className="text-neutral-500" />}
+      {loading && <ActivityIndicator size="small" color="#6B7280" />}
+    </TouchableOpacity>
+  )
+}
