@@ -161,6 +161,7 @@ const LessonSession: FC = () => {
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [remainingTime, setRemainingTime] = useState(5 * 60)
 
   // Smooth progress bar animation
   const progressWidth = useSharedValue(100)
@@ -286,6 +287,8 @@ const LessonSession: FC = () => {
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
       const remaining = Math.max(0, 5 * 60 - elapsed) // 5 minutes - elapsed
+
+      setRemainingTime(remaining)
 
       if (remaining === 0) {
         endSession()
@@ -596,13 +599,11 @@ const LessonSession: FC = () => {
 
         <View className="flex flex-row items-center justify-between gap-5 px-4 py-4">
           <View className="size-10 bg-transparent" />
-          <View className="relative h-10 w-2/3 rounded-full bg-neutral-200">
+          <View className="relative h-10 w-2/3 rounded-full bg-neutral-100">
             <Reanimated.View className="h-full rounded-full bg-success-100" style={progressAnimatedStyle} />
             <View className="absolute inset-0 flex flex-row items-center justify-center gap-1.5">
               <ClockIcon size={20} strokeWidth={2.5} className="text-neutral-500/80" />
-              <Text className="font-shantell-medium text-center text-sm text-neutral-500">
-                {formatTime(5 * 60 - (Date.now() - sessionStartTimeRef.current) / 1000)}
-              </Text>
+              <Text className="font-shantell-medium text-center text-sm text-neutral-500">{formatTime(remainingTime)}</Text>
             </View>
           </View>
 
