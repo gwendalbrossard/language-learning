@@ -35,13 +35,13 @@ const VocabularyCard: FC<VocabularyCardProps> = ({ suggestion, onPlayPronunciati
       {/* Left */}
       <View className="flex flex-1 flex-row items-center gap-4">
         <TouchableOpacity onPress={handlePlayPronunciation} disabled={isLoadingPronunciation}>
-          {isLoadingPronunciation ? (
+          {isLoadingPronunciation && (
             <View className="size-6 items-center justify-center">
               <ActivityIndicator size="small" color="#3980F6" />
             </View>
-          ) : (
-            <Volume2Icon size={24} className="text-primary-500" />
           )}
+
+          {!isLoadingPronunciation && <Volume2Icon size={24} className="text-primary-500" />}
         </TouchableOpacity>
         <View className="flex flex-1 flex-col">
           <Text className="text-base font-semibold text-neutral-700">{suggestion.text}</Text>

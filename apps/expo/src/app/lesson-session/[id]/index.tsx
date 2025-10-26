@@ -650,9 +650,15 @@ const LessonSession: FC = () => {
                   <TouchableOpacity
                     onPress={handleGetPronunciation}
                     className="size-7 items-center justify-center rounded-xl"
-                    disabled={!currentAction}
+                    disabled={profileUtilsGetPronunciationMutation.isPending}
                   >
-                    <Volume2Icon size={24} className="text-neutral-400" />
+                    {profileUtilsGetPronunciationMutation.isPending && (
+                      <View className="size-6 items-center justify-center">
+                        <ActivityIndicator size="small" color="#979FAD" />
+                      </View>
+                    )}
+
+                    {!profileUtilsGetPronunciationMutation.isPending && <Volume2Icon size={24} className="text-neutral-400" />}
                   </TouchableOpacity>
                 </View>
               </View>
