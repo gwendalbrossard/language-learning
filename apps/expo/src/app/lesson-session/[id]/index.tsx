@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { router, useLocalSearchParams } from "expo-router"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { BadgeQuestionMarkIcon, ClockIcon, LanguagesIcon, LightbulbIcon, NotepadTextIcon, PlayIcon, Volume2Icon, XIcon } from "lucide-react-native"
-import { ActivityIndicator, Alert, Animated, Image, Pressable, StyleSheet, TouchableOpacity, View } from "react-native"
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, TouchableOpacity, View } from "react-native"
 import Reanimated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { io } from "socket.io-client"
@@ -161,10 +161,6 @@ const LessonSession: FC = () => {
   const [audioInitialized, setAudioInitialized] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
-  const [recordingLevel, setRecordingLevel] = useState(0)
-  const [playbackLevel, setPlaybackLevel] = useState(0)
-
-  const animatedScale = useRef(new Animated.Value(80)).current
 
   // Smooth progress bar animation
   const progressWidth = useSharedValue(100)
@@ -248,7 +244,7 @@ const LessonSession: FC = () => {
         socketRef.current.disconnect()
       }
     })
-  }, [id])
+  }, [id, currentOrganizationId])
 
   const goToEnded = () => {
     setIsNavigating(true)
@@ -278,11 +274,11 @@ const LessonSession: FC = () => {
 
     // Add level monitoring listeners
     const recordingLevelSubscription = MyModule.addListener("onRecordingLevelUpdate", (event: LevelUpdateEvent) => {
-      setRecordingLevel(event.level)
+      console.log("Recording level:", event.level)
     })
 
     const playbackLevelSubscription = MyModule.addListener("onPlaybackLevelUpdate", (event: LevelUpdateEvent) => {
-      setPlaybackLevel(event.level)
+      console.log("Playback level:", event.level)
     })
 
     // Start the session timer
@@ -308,19 +304,6 @@ const LessonSession: FC = () => {
       }
     }
   }, [initializeSocket])
-
-  // Animate scale based on audio levels with immediate response for 240fps
-  useEffect(() => {
-    const targetScale = 80 + (isRecording ? recordingLevel : playbackLevel) * 20
-
-    // Use timing with very short duration for immediate response at 240fps
-    Animated.spring(animatedScale, {
-      toValue: targetScale,
-      tension: 200,
-      friction: 5,
-      useNativeDriver: false,
-    }).start()
-  }, [recordingLevel, playbackLevel, isRecording, animatedScale])
 
   // Super smooth continuous progress bar animation
   useEffect(() => {
@@ -494,9 +477,6 @@ const LessonSession: FC = () => {
   const stopRecording = async (): Promise<void> => {
     if (isRecording) {
       setIsRecording(false)
-
-      // Reset recording level immediately
-      setRecordingLevel(0)
 
       try {
         const base64Audio: string | null = await MyModule.stopRecording()
