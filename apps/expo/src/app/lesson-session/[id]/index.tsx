@@ -86,7 +86,7 @@ const LessonSession: FC = () => {
     }),
   )
 
-  const profileGetVocabularySuggestionsMutation = useMutation(
+  const profileLessonSessionGetVocabularySuggestionsMutation = useMutation(
     trpc.profile.lessonSession.getVocabularySuggestions.mutationOptions({
       onSuccess: () => {
         bottomSheetVocabularySuggestionsRef.current?.present()
@@ -509,7 +509,7 @@ const LessonSession: FC = () => {
   }
 
   const getCurrentVocabularySuggestions = () => {
-    return profileGetVocabularySuggestionsMutation.data?.suggestions ?? []
+    return profileLessonSessionGetVocabularySuggestionsMutation.data?.suggestions ?? []
   }
 
   const getLatestAssistantMessage = () => {
@@ -538,12 +538,15 @@ const LessonSession: FC = () => {
   }
 
   const handleGetVocabularySuggestions = async () => {
-    if (profileGetVocabularySuggestionsMutation.data && profileGetVocabularySuggestionsMutation.data.suggestions.length > 0) {
+    if (
+      profileLessonSessionGetVocabularySuggestionsMutation.data &&
+      profileLessonSessionGetVocabularySuggestionsMutation.data.suggestions.length > 0
+    ) {
       bottomSheetVocabularySuggestionsRef.current?.present()
       return
     }
 
-    await profileGetVocabularySuggestionsMutation.mutateAsync({
+    await profileLessonSessionGetVocabularySuggestionsMutation.mutateAsync({
       lessonSessionId: id,
       organizationId: currentOrganizationId,
     })
@@ -596,7 +599,6 @@ const LessonSession: FC = () => {
     <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1, backgroundColor: "white" }}>
       <View className="flex flex-1 flex-col">
         {/* Header */}
-
         <View className="flex flex-row items-center justify-between gap-5 px-4 py-4">
           <View className="size-10 bg-transparent" />
           <View className="relative h-10 w-2/3 rounded-full bg-neutral-100">
@@ -736,7 +738,7 @@ const LessonSession: FC = () => {
               <OptionButton
                 Icon={LanguagesIcon}
                 onPress={() => void handleGetVocabularySuggestions()}
-                loading={profileGetVocabularySuggestionsMutation.isPending}
+                loading={profileLessonSessionGetVocabularySuggestionsMutation.isPending}
               />
               <OptionButton Icon={NotepadTextIcon} onPress={() => bottomSheetTranscriptRef.current?.present()} />
               <OptionButton Icon={XIcon} onPress={() => handleEndSession()} />
