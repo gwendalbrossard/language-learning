@@ -113,28 +113,22 @@ export const BottomSheetVocabularySuggestions = forwardRef<BottomSheetModal, Pro
           <Text className="text-center text-lg font-semibold">Vocabulary Suggestions</Text>
         </View>
 
+        {/* Body */}
         <ScrollView className="mb-4 flex-1 px-4 py-6">
-          {suggestions.length > 0 ? (
-            <View className="flex flex-col rounded-2xl border-2 border-neutral-100">
-              {suggestions.map((suggestion, index) => (
-                <React.Fragment key={`${suggestion.text}-${index}`}>
-                  <VocabularyCard
-                    suggestion={suggestion}
-                    onPlayPronunciation={handlePlayPronunciation}
-                    isLoadingPronunciation={
-                      profileUtilsGetPronunciationMutation.variables?.phrase === suggestion.text && profileUtilsGetPronunciationMutation.isPending
-                    }
-                  />
-                  {index < suggestions.length - 1 && <View className="h-0.5 bg-neutral-100" />}
-                </React.Fragment>
-              ))}
-            </View>
-          ) : (
-            <View className="flex-1 items-center justify-center py-12">
-              <Text className="text-center text-lg font-medium text-neutral-500">No vocabulary suggestions available</Text>
-              <Text className="mt-2 text-center text-sm text-neutral-400">Complete more of the lesson to get vocabulary suggestions</Text>
-            </View>
-          )}
+          <View className="flex flex-col rounded-2xl border-2 border-neutral-100">
+            {suggestions.map((suggestion, index) => (
+              <React.Fragment key={`${suggestion.text}-${index}`}>
+                <VocabularyCard
+                  suggestion={suggestion}
+                  onPlayPronunciation={handlePlayPronunciation}
+                  isLoadingPronunciation={
+                    profileUtilsGetPronunciationMutation.variables?.phrase === suggestion.text && profileUtilsGetPronunciationMutation.isPending
+                  }
+                />
+                {index < suggestions.length - 1 && <View className="h-0.5 bg-neutral-100" />}
+              </React.Fragment>
+            ))}
+          </View>
         </ScrollView>
       </View>
     </BottomSheetModal>
